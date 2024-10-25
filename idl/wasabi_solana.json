@@ -2255,7 +2255,16 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitLpVaultArgs"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "init_or_update_permission",
@@ -6144,16 +6153,16 @@
       ]
     },
     {
-      "name": "WithdrawEvent",
+      "name": "Withdraw",
       "discriminator": [
-        22,
-        9,
-        133,
-        26,
-        160,
-        44,
-        71,
-        192
+        192,
+        241,
+        201,
+        217,
+        70,
+        150,
+        90,
+        247
       ]
     }
   ],
@@ -6440,6 +6449,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
             "name": "sender",
             "type": "pubkey"
           },
@@ -6533,6 +6546,26 @@
           {
             "name": "statuses",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitLpVaultArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -7268,22 +7301,14 @@
       }
     },
     {
-      "name": "WithdrawArgs",
+      "name": "Withdraw",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "WithdrawEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
+            "name": "vault",
+            "type": "pubkey"
+          },
           {
             "name": "sender",
             "type": "pubkey"
@@ -7302,6 +7327,18 @@
           },
           {
             "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
             "type": "u64"
           }
         ]

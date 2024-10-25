@@ -2261,7 +2261,16 @@ export type WasabiSolana = {
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "initLpVaultArgs"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "initOrUpdatePermission",
@@ -6150,16 +6159,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "withdrawEvent",
+      "name": "withdraw",
       "discriminator": [
-        22,
-        9,
-        133,
-        26,
-        160,
-        44,
-        71,
-        192
+        192,
+        241,
+        201,
+        217,
+        70,
+        150,
+        90,
+        247
       ]
     }
   ],
@@ -6446,6 +6455,10 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
             "name": "sender",
             "type": "pubkey"
           },
@@ -6539,6 +6552,26 @@ export type WasabiSolana = {
           {
             "name": "statuses",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "initLpVaultArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -7274,22 +7307,14 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "withdrawArgs",
+      "name": "withdraw",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "withdrawEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
+            "name": "vault",
+            "type": "pubkey"
+          },
           {
             "name": "sender",
             "type": "pubkey"
@@ -7308,6 +7333,18 @@ export type WasabiSolana = {
           },
           {
             "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "withdrawArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
             "type": "u64"
           }
         ]
