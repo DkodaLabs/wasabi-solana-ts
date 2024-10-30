@@ -1,5 +1,5 @@
 {
-  "address": "FL1XKFr8ZMDdEJxHDR16SJaiGyLZTk9BHFUDenGr5HEp",
+  "address": "Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96",
   "metadata": {
     "name": "wasabi_solana",
     "version": "0.1.0",
@@ -537,10 +537,10 @@
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "close_position_request",
@@ -788,12 +788,20 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "ClosePositionArgs"
-            }
-          }
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -968,10 +976,10 @@
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "close_position_request",
@@ -1116,7 +1124,7 @@
               },
               {
                 "kind": "account",
-                "path": "collateral_mint"
+                "path": "collateral"
               }
             ],
             "program": {
@@ -1159,7 +1167,7 @@
           }
         },
         {
-          "name": "collateral_mint"
+          "name": "collateral"
         },
         {
           "name": "collateral_token_program"
@@ -1285,12 +1293,20 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "ClosePositionArgs"
-            }
-          }
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -2872,10 +2888,10 @@
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "close_position_request",
@@ -3107,12 +3123,20 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "ClosePositionArgs"
-            }
-          }
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -3527,10 +3551,10 @@
           ]
         },
         {
-          "name": "collateral"
+          "name": "currency"
         },
         {
-          "name": "currency"
+          "name": "collateral"
         },
         {
           "name": "open_position_request",
@@ -3589,7 +3613,7 @@
               },
               {
                 "kind": "arg",
-                "path": "args.nonce"
+                "path": "nonce"
               }
             ]
           }
@@ -3606,9 +3630,6 @@
         },
         {
           "name": "fee_wallet",
-          "docs": [
-            "Fee wallet needs to be unique per market"
-          ],
           "writable": true
         },
         {
@@ -3679,12 +3700,28 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "OpenLongPositionArgs"
-            }
-          }
+          "name": "nonce",
+          "type": "u16"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -3710,6 +3747,10 @@
           "signer": true
         },
         {
+          "name": "position",
+          "writable": true
+        },
+        {
           "name": "short_pool",
           "docs": [
             "The ShortPool that owns the Position"
@@ -3721,127 +3762,22 @@
             "The collateral account that is the destination of the swap"
           ],
           "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "short_pool"
-              },
-              {
-                "kind": "account",
-                "path": "token_program"
-              },
-              {
-                "kind": "account",
-                "path": "collateral"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "relations": [
+            "short_pool"
+          ]
         },
         {
           "name": "currency_vault",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "short_pool"
-              },
-              {
-                "kind": "account",
-                "path": "token_program"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "collateral",
+          "writable": true,
           "relations": [
             "short_pool"
           ]
         },
         {
-          "name": "currency",
-          "relations": [
-            "short_pool"
-          ]
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
         },
         {
           "name": "lp_vault",
@@ -3859,59 +3795,9 @@
             "The LP Vault's token account."
           ],
           "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "lp_vault"
-              },
-              {
-                "kind": "account",
-                "path": "token_program"
-              },
-              {
-                "kind": "account",
-                "path": "collateral"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "relations": [
+            "lp_vault"
+          ]
         },
         {
           "name": "open_position_request",
@@ -3937,10 +3823,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "position",
-          "writable": true
         },
         {
           "name": "debt_controller",
@@ -4156,10 +4038,10 @@
           ]
         },
         {
-          "name": "collateral"
+          "name": "currency"
         },
         {
-          "name": "currency"
+          "name": "collateral"
         },
         {
           "name": "open_position_request",
@@ -4218,7 +4100,7 @@
               },
               {
                 "kind": "arg",
-                "path": "args.nonce"
+                "path": "nonce"
               }
             ]
           }
@@ -4238,13 +4120,37 @@
           "writable": true
         },
         {
-          "name": "global_settings"
-        },
-        {
-          "name": "collateral_token_program"
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "currency_token_program"
+        },
+        {
+          "name": "collateral_token_program"
         },
         {
           "name": "system_program",
@@ -4257,12 +4163,28 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "OpenShortPositionArgs"
-            }
-          }
+          "name": "nonce",
+          "type": "u16"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -4504,10 +4426,6 @@
         },
         {
           "name": "source",
-          "docs": [
-            "Source of the tokens being repaid",
-            "Does this belong to `Signer`? If so, can infer."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -4564,15 +4482,15 @@
           }
         },
         {
+          "name": "lp_vault",
+          "writable": true
+        },
+        {
           "name": "vault",
           "writable": true,
           "relations": [
             "lp_vault"
           ]
-        },
-        {
-          "name": "lp_vault",
-          "writable": true
         },
         {
           "name": "token_program"
@@ -4928,10 +4846,10 @@
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "close_position_request",
@@ -5196,12 +5114,20 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "ClosePositionArgs"
-            }
-          }
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -5376,10 +5302,10 @@
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "close_position_request",
@@ -5646,12 +5572,20 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "ClosePositionArgs"
-            }
-          }
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -6349,42 +6283,6 @@
       }
     },
     {
-      "name": "ClosePositionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "min_target_amount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this close position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "interest",
-            "docs": [
-              "The amount of interest the user must pay"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "execution_fee",
-            "docs": [
-              "The amount of the execution fee to be paid"
-            ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "ClosePositionRequest",
       "docs": [
         "An account that is used to cache data between the open position setup and cleanup instructions."
@@ -6752,57 +6650,6 @@
       }
     },
     {
-      "name": "OpenLongPositionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "nonce",
-            "docs": [
-              "The nonce of the Position"
-            ],
-            "type": "u16"
-          },
-          {
-            "name": "min_target_amount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "down_payment",
-            "docs": [
-              "The initial down payment amount required to open the position (is in `currency` for long, `",
-              "collateralCurrency` for short positions)"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "principal",
-            "docs": [
-              "The total principal amount to be borrowed for the position."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "fee",
-            "docs": [
-              "The fee to be paid for the position"
-            ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "OpenPositionRequest",
       "docs": [
         "An account that is used to cache data between the open position setup and cleanup instructions."
@@ -6833,56 +6680,6 @@
           {
             "name": "position",
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "OpenShortPositionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "nonce",
-            "docs": [
-              "The nonce of the Position"
-            ],
-            "type": "u16"
-          },
-          {
-            "name": "min_target_amount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "down_payment",
-            "docs": [
-              "The initial down payment amount required to open the position (is in `currency` for long, `collateralCurrency` for short positions)"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "principal",
-            "docs": [
-              "The total principal amount to be borrowed for the position."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "fee",
-            "docs": [
-              "The fee to be paid for the position"
-            ],
-            "type": "u64"
           }
         ]
       }
