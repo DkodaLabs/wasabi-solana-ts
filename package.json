@@ -1,5 +1,5 @@
 {
-  "name": "@dkoda/wasabi-solana",
+  "name": "wasabi-solana-ts",
   "version": "0.0.1",
   "description": "Typescript library for the Wasabi program",
   "main": "index.ts",
