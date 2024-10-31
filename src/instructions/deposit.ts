@@ -1,30 +1,80 @@
 import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
-import { PDA, getTokenProgram } from "../utils";
+import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
+import { BaseMethodConfig, handleMethodCall } from "../base";
+import {
+    MintAccounts,
+    AmountArgs,
+    TokenInstructionAccounts,
+    getTokenInstructionAccounts
+} from "./tokenAccounts";
+import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
-export type DepositArgs = {
-    amount: number, // u64
-}
+export const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, BN, TokenInstructionAccounts> = {
+    processArgs: async (args, program, accounts) => {
+        const [, mintDecimals] = await getTokenProgramAndDecimals(
+            program.provider.connection,
+            accounts.assetMint
+        );
+        return new BN(uiAmountToAmount(args.amount, mintDecimals));
+    },
 
-export type DepositAccounts = {
-    assetMint: PublicKey,
-}
+    processAccounts: async (program, accounts) => {
+        const [assetTokenProgram] = await getTokenProgramAndDecimals(
+            program.provider.connection,
+            accounts.assetMint
+        );
+
+        return getTokenInstructionAccounts(
+            program,
+            accounts.assetMint,
+            assetTokenProgram
+        );
+    },
+
+    getMethod: (program) => (args) => program.methods.deposit(args),
+
+    getRequiredAccounts: (accounts: TokenInstructionAccounts) => ({
+        owner: accounts.owner,
+        ownerAssetAccount: accounts.ownerAssetAccount,
+        ownerSharesAccount: accounts.ownerSharesAccount,
+        lpVault: accounts.lpVault,
+        vault: accounts.vault,
+        assetMint: accounts.assetMint,
+        sharesMint: accounts.sharesMint,
+        assetTokenProgram: accounts.assetTokenProgram,
+        sharesTokenProgram: accounts.sharesTokenProgram,
+    })
+};
 
 export async function createDepositInstruction(
     program: Program<WasabiSolana>,
-    args: DepositArgs,
-    accounts: DepositAccounts,
+    args: AmountArgs,
+    accounts: MintAccounts,
+    strict: boolean = true
 ): Promise<TransactionInstruction> {
-    const assetTokenProgram = await getTokenProgram(program, accounts.assetMint);
-
-    return program.methods.deposit({
-        amount: new BN(args.amount),
-    }).accounts({
-        owner: program.provider.publicKey,
-        lpVault: PDA.getLpVault(accounts.assetMint, program.programId),
-        assetMint: accounts.assetMint,
-        assetTokenProgram,
-    }).instruction();
+    return handleMethodCall(
+        program,
+        accounts,
+        depositConfig,
+        'instruction',
+        args,
+        strict
+    ) as Promise<TransactionInstruction>;
 }
 
+export async function deposit(
+    program: Program<WasabiSolana>,
+    args: AmountArgs,
+    accounts: MintAccounts,
+    strict: boolean = true
+): Promise<TransactionSignature> {
+    return handleMethodCall(
+        program,
+        accounts,
+        depositConfig,
+        'transaction',
+        args,
+        strict
+    ) as Promise<TransactionSignature>;
+}

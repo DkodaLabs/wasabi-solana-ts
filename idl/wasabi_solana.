@@ -124,12 +124,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "adminBorrowArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1639,12 +1635,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "depositArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1748,12 +1740,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "donateArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1836,12 +1824,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initDebtControllerArgs"
-            }
-          }
+          "name": "maxApy",
+          "type": "u64"
+        },
+        {
+          "name": "maxLeverage",
+          "type": "u64"
         }
       ]
     },
@@ -2640,12 +2628,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initStopLossOrderArgs"
-            }
-          }
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
         }
       ]
     },
@@ -2714,12 +2702,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initTakeProfitOrderArgs"
-            }
-          }
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
         }
       ]
     },
@@ -3349,12 +3337,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "mintArgs"
-            }
-          }
+          "name": "sharesAmount",
+          "type": "u64"
         }
       ]
     },
@@ -3788,8 +3772,7 @@ export type WasabiSolana = {
         {
           "name": "lpVault",
           "docs": [
-            "The LP Vault that the user will borrow from",
-            "In a"
+            "The LP Vault that the user will borrow from"
           ],
           "relations": [
             "position"
@@ -4397,12 +4380,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "redeemArgs"
-            }
-          }
+          "name": "sharesAmount",
+          "type": "u64"
         }
       ]
     },
@@ -4504,12 +4483,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "repayArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -4588,12 +4563,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "setMaxApyArgs"
-            }
-          }
+          "name": "maxApy",
+          "type": "u64"
         }
       ]
     },
@@ -4672,12 +4643,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "setMaxLeverageArgs"
-            }
-          }
+          "name": "maxLeverage",
+          "type": "u64"
         }
       ]
     },
@@ -5633,12 +5600,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "updateVaultMaxBorrowArgs"
-            }
-          }
+          "name": "maxBorrow",
+          "type": "u64"
         }
       ]
     },
@@ -5845,12 +5808,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "withdrawArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -6155,7 +6114,7 @@ export type WasabiSolana = {
     {
       "code": 6009,
       "name": "maxSwapExceeded",
-      "msg": "Maximum tokens swapped exceened"
+      "msg": "Maximum tokens swapped exceeded"
     },
     {
       "code": 6010,
@@ -6209,18 +6168,6 @@ export type WasabiSolana = {
     }
   ],
   "types": [
-    {
-      "name": "adminBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "authorityStatus",
       "repr": {
@@ -6376,30 +6323,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "depositArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "donateArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "globalSettings",
       "type": {
         "kind": "struct",
@@ -6414,22 +6337,6 @@ export type WasabiSolana = {
           {
             "name": "protocolFeeWallet",
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "initDebtControllerArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxApy",
-            "type": "u64"
-          },
-          {
-            "name": "maxLeverage",
-            "type": "u64"
           }
         ]
       }
@@ -6511,38 +6418,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "initStopLossOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "makerAmount",
-            "type": "u64"
-          },
-          {
-            "name": "takerAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "initTakeProfitOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "makerAmount",
-            "type": "u64"
-          },
-          {
-            "name": "takerAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "lpVault",
       "type": {
         "kind": "struct",
@@ -6594,18 +6469,6 @@ export type WasabiSolana = {
             "docs": [
               "Total amount currently borrowed from the vault that is to be paid back by the admin"
             ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "mintArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "sharesAmount",
             "type": "u64"
           }
         ]
@@ -6970,54 +6833,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "redeemArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "sharesAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "repayArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "setMaxApyArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxApy",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "setMaxLeverageArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxLeverage",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "stopLossOrder",
       "type": {
         "kind": "struct",
@@ -7092,18 +6907,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "updateVaultMaxBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxBorrow",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "withdraw",
       "type": {
         "kind": "struct",
@@ -7130,18 +6933,6 @@ export type WasabiSolana = {
           },
           {
             "name": "shares",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "withdrawArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
             "type": "u64"
           }
         ]

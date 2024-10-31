@@ -118,12 +118,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "AdminBorrowArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1633,12 +1629,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "DepositArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1742,12 +1734,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "DonateArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1830,12 +1818,12 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "InitDebtControllerArgs"
-            }
-          }
+          "name": "max_apy",
+          "type": "u64"
+        },
+        {
+          "name": "max_leverage",
+          "type": "u64"
         }
       ]
     },
@@ -2634,12 +2622,12 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "InitStopLossOrderArgs"
-            }
-          }
+          "name": "maker_amount",
+          "type": "u64"
+        },
+        {
+          "name": "taker_amount",
+          "type": "u64"
         }
       ]
     },
@@ -2708,12 +2696,12 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "InitTakeProfitOrderArgs"
-            }
-          }
+          "name": "maker_amount",
+          "type": "u64"
+        },
+        {
+          "name": "taker_amount",
+          "type": "u64"
         }
       ]
     },
@@ -3343,12 +3331,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "MintArgs"
-            }
-          }
+          "name": "shares_amount",
+          "type": "u64"
         }
       ]
     },
@@ -3782,8 +3766,7 @@
         {
           "name": "lp_vault",
           "docs": [
-            "The LP Vault that the user will borrow from",
-            "In a"
+            "The LP Vault that the user will borrow from"
           ],
           "relations": [
             "position"
@@ -4391,12 +4374,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "RedeemArgs"
-            }
-          }
+          "name": "shares_amount",
+          "type": "u64"
         }
       ]
     },
@@ -4498,12 +4477,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "RepayArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -4582,12 +4557,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "SetMaxApyArgs"
-            }
-          }
+          "name": "max_apy",
+          "type": "u64"
         }
       ]
     },
@@ -4666,12 +4637,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "SetMaxLeverageArgs"
-            }
-          }
+          "name": "max_leverage",
+          "type": "u64"
         }
       ]
     },
@@ -5627,12 +5594,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "UpdateVaultMaxBorrowArgs"
-            }
-          }
+          "name": "max_borrow",
+          "type": "u64"
         }
       ]
     },
@@ -5839,12 +5802,8 @@
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "WithdrawArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -6149,7 +6108,7 @@
     {
       "code": 6009,
       "name": "MaxSwapExceeded",
-      "msg": "Maximum tokens swapped exceened"
+      "msg": "Maximum tokens swapped exceeded"
     },
     {
       "code": 6010,
@@ -6203,18 +6162,6 @@
     }
   ],
   "types": [
-    {
-      "name": "AdminBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "AuthorityStatus",
       "repr": {
@@ -6370,30 +6317,6 @@
       }
     },
     {
-      "name": "DepositArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "DonateArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "GlobalSettings",
       "type": {
         "kind": "struct",
@@ -6408,22 +6331,6 @@
           {
             "name": "protocol_fee_wallet",
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitDebtControllerArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "max_apy",
-            "type": "u64"
-          },
-          {
-            "name": "max_leverage",
-            "type": "u64"
           }
         ]
       }
@@ -6505,38 +6412,6 @@
       }
     },
     {
-      "name": "InitStopLossOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maker_amount",
-            "type": "u64"
-          },
-          {
-            "name": "taker_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitTakeProfitOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maker_amount",
-            "type": "u64"
-          },
-          {
-            "name": "taker_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "LpVault",
       "type": {
         "kind": "struct",
@@ -6588,18 +6463,6 @@
             "docs": [
               "Total amount currently borrowed from the vault that is to be paid back by the admin"
             ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "shares_amount",
             "type": "u64"
           }
         ]
@@ -6964,54 +6827,6 @@
       }
     },
     {
-      "name": "RedeemArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "shares_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "RepayArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SetMaxApyArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "max_apy",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SetMaxLeverageArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "max_leverage",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "StopLossOrder",
       "type": {
         "kind": "struct",
@@ -7086,18 +6901,6 @@
       }
     },
     {
-      "name": "UpdateVaultMaxBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "max_borrow",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "Withdraw",
       "type": {
         "kind": "struct",
@@ -7124,18 +6927,6 @@
           },
           {
             "name": "shares",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "WithdrawArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
             "type": "u64"
           }
         ]

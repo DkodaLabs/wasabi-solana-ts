@@ -1,7 +1,9 @@
-import { PublicKey } from "@solana/web3.js";
-import { Program, utils } from "@coral-xyz/anchor";
+import { PublicKey, Connection } from "@solana/web3.js";
+import { Program, utils, BN } from "@coral-xyz/anchor";
 import { WasabiSolana } from "../idl/wasabi_solana";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, MintLayout } from "@solana/spl-token";
+
+export const WASABI_PROGRAM_ID = new PublicKey("Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96");
 
 export const SEED_PREFIX = {
     LONG_POOL: "long_pool",
@@ -9,6 +11,7 @@ export const SEED_PREFIX = {
     SUPER_ADMIN: "super_admin",
     ADMIN: "admin",
     LP_VAULT: "lp_vault",
+    EVENT_AUTHORITY: "__event_authority",
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -21,13 +24,13 @@ export async function getPermission(
     admin: PublicKey,
 ): Promise<PublicKey> {
     let permission: PublicKey;
-    const superAdmin = PDA.getSuperAdmin(program.programId);
+    const superAdmin = PDA.getSuperAdmin();
     const permissionInfo = await program.account.permission.fetch(superAdmin)
 
     if (permissionInfo.authority === admin) {
         permission = superAdmin;
     } else {
-        permission = PDA.getAdmin(admin, program.programId);
+        permission = PDA.getAdmin(admin);
     }
 
     return permission;
@@ -46,11 +49,32 @@ export async function getTokenProgram(
     }
 }
 
+export function uiAmountToAmount(uiAmount: number, decimals: number): BN {
+    return new BN(Math.floor(uiAmount * 10 ** decimals));
+}
+
+export function amountToUiAmount(amount: BN , decimals: number): number {
+    return amount.toNumber() / 10 ** decimals;
+}
+
+export async function getTokenProgramAndDecimals(
+    connection: Connection,
+    mint: PublicKey,
+): Promise<[PublicKey, number] | null> {
+    const mintInfo = await connection.getAccountInfo(mint);
+
+    if (mintInfo.owner !== TOKEN_PROGRAM_ID || mintInfo.owner !== TOKEN_2022_PROGRAM_ID) {
+        return null;
+    } else {
+        let mintDecimals = MintLayout.decode(mintInfo.data).decimals;
+        return [mintInfo.owner, mintDecimals];
+    }
+}
+
 export const PDA = {
     getLongPool(
         quoteMint: PublicKey,
         baseMint: PublicKey,
-        programId: PublicKey,
     ): PublicKey {
         return findProgramAddress(
             [
@@ -58,14 +82,13 @@ export const PDA = {
                 quoteMint.toBuffer(),
                 baseMint.toBuffer(),
             ],
-            programId,
+            WASABI_PROGRAM_ID,
         );
     },
 
     getShortPool(
         quoteMint: PublicKey,
         baseMint: PublicKey,
-        programId: PublicKey,
     ): PublicKey {
         return findProgramAddress(
             [
@@ -73,34 +96,51 @@ export const PDA = {
                 quoteMint.toBuffer(),
                 baseMint.toBuffer(),
             ],
-            programId,
+            WASABI_PROGRAM_ID,
         );
     },
 
-    getSuperAdmin(programId: PublicKey): PublicKey {
+    getSuperAdmin(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.SUPER_ADMIN)],
-            programId,
+            WASABI_PROGRAM_ID,
         );
     },
 
-    getAdmin(admin: PublicKey, programId: PublicKey): PublicKey {
+    getAdmin(admin: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.ADMIN),
                 admin.toBuffer(),
             ],
-            programId,
+            WASABI_PROGRAM_ID,
         );
     },
 
-    getLpVault(mint: PublicKey, programId: PublicKey): PublicKey {
+    getLpVault(mint: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.LP_VAULT),
                 mint.toBuffer(),
             ],
-            programId,
+            WASABI_PROGRAM_ID,
         );
+    },
+
+    getSharesMint(lpVault: PublicKey, mint: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                lpVault.toBuffer(),
+                mint.toBuffer(),
+            ],
+            WASABI_PROGRAM_ID,
+        );
+    },
+
+    getEventAuthority(): PublicKey {
+        return findProgramAddress(
+            [utils.bytes.utf8.encode(SEED_PREFIX.EVENT_AUTHORITY)],
+            WASABI_PROGRAM_ID,
+        )
     }
 }

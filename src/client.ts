@@ -29,4 +29,7 @@ export class WasabiClient {
         this.program = new Program(idl, provider);
         this.wallet = wallet;
     }
+
+    //TODO: Send instructions
 }
+
