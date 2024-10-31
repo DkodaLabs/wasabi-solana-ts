@@ -10,43 +10,25 @@ import {
 import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
-export const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, BN, TokenInstructionAccounts> = {
-    processArgs: async (args, program, accounts) => {
-        const [, mintDecimals] = await getTokenProgramAndDecimals(
-            program.provider.connection,
-            accounts.assetMint
-        );
-        return new BN(uiAmountToAmount(args.amount, mintDecimals));
-    },
-
-    processAccounts: async (program, accounts) => {
-        const [assetTokenProgram] = await getTokenProgramAndDecimals(
+const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, TokenInstructionAccounts> = {
+    process: async (program, accounts, args) => {
+        const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
             program.provider.connection,
             accounts.assetMint
         );
 
-        return getTokenInstructionAccounts(
+        const processedAccounts = await getTokenInstructionAccounts(
             program,
             accounts.assetMint,
             assetTokenProgram
         );
+
+        return {
+            accounts: processedAccounts,
+            args: args ? new BN(uiAmountToAmount(args.amount, mintDecimals)) : undefined
+        };
     },
-
-    getMethod: (program) => (args) => program.methods.deposit(args),
-
-    getRequiredAccounts: (accounts: TokenInstructionAccounts) => ({
-        owner: accounts.owner,
-        ownerAssetAccount: accounts.ownerAssetAccount,
-        ownerSharesAccount: accounts.ownerSharesAccount,
-        lpVault: accounts.lpVault,
-        vault: accounts.vault,
-        assetMint: accounts.assetMint,
-        sharesMint: accounts.sharesMint,
-        assetTokenProgram: accounts.assetTokenProgram,
-        sharesTokenProgram: accounts.sharesTokenProgram,
-        eventAuthority: accounts.eventAuthority,
-        program: accounts.program,
-    })
+    getMethod: (program) => (args) => program.methods.deposit(args)
 };
 
 export async function createDepositInstruction(

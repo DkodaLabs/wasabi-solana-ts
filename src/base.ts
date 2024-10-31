@@ -6,92 +6,36 @@ import {
 } from "@solana/web3.js";
 import { WasabiSolana } from "./../idl/wasabi_solana";
 
-export type MethodResult<T> = {
-    accounts: (accounts: T) => {
-        instruction(): Promise<TransactionInstruction>;
-        rpc(): Promise<TransactionSignature>;
-    };
-    accountsStrict?: (accounts: T) => {
-        instruction(): Promise<TransactionInstruction>,
-        rpc(): Promise<TransactionSignature>,
-    };
-}
-
-export interface BaseMethodConfig<TArgs = void, TAccounts = any, TProcessedArgs = any, TProcessedAccounts = any> {
-    processArgs?: (
-        args: TArgs,
-        program: Program<WasabiSolana>,
-        accounts: TAccounts
-    ) => Promise<TProcessedArgs>;
-    processAccounts: (
+export interface BaseMethodConfig<TArgs = void, TAccounts = any, TProcessedAccounts = Record<string, PublicKey>> {
+    process: (
         program: Program<WasabiSolana>,
         accounts: TAccounts,
         args?: TArgs
-    ) => Promise<TProcessedAccounts>;
-    getMethod: (
-        program: Program<WasabiSolana>
-    ) => (args?: TProcessedArgs) => {
-        accounts: (accounts: any) => {
-            instruction(): Promise<TransactionInstruction>;
-            rpc(): Promise<TransactionSignature>;
-        };
-        accountsStrict?: (accounts: TProcessedAccounts) => {
-            instruction(): Promise<TransactionInstruction>;
-            rpc(): Promise<TransactionSignature>;
-        };
-    };
-
-    getRequiredAccounts?: (processedAccounts: TProcessedAccounts) => Record<string, PublicKey>;
+    ) => Promise<{
+        accounts: TProcessedAccounts,
+        args?: any;
+    }>;
+    getMethod: (program: Program<WasabiSolana>) => (args: any) => any;
 }
 
-export async function handleMethodCall<TArgs = void, TAccounts = any, TProcessedArgs = any, TProcessedAccounts = any>(
+export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAccounts = any>(
     program: Program<WasabiSolana>,
     accounts: TAccounts,
-    config: BaseMethodConfig<TArgs, TAccounts, TProcessedArgs, TProcessedAccounts>,
+    config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>,
     mode: 'instruction' | 'transaction',
     args?: TArgs,
     strict: boolean = true
 ): Promise<TransactionInstruction | TransactionSignature> {
-    const processedAccounts = await config.processAccounts(program, accounts, args);
-    const processedArgs = args && config.processArgs 
-        ? await config.processArgs(args, program, accounts) 
-        : undefined;
+    const processed = await config.process(program, accounts, args);
+    const methodBuilder = config.getMethod(program)(processed.args);
     
-    const method = config.getMethod(program);
-    const methodCall = method(processedArgs as TProcessedArgs);
-    
-    if (strict && methodCall.accountsStrict) {
+    if (strict) {
         return mode === 'instruction' 
-            ? methodCall.accountsStrict(processedAccounts).instruction()
-            : methodCall.accountsStrict(processedAccounts).rpc();
+            ? methodBuilder.accountsStrict(processed.accounts).instruction()
+            : methodBuilder.accountsStrict(processed.accounts).rpc();
     }
 
-    const requiredAccounts = config.getRequiredAccounts 
-        ? config.getRequiredAccounts(processedAccounts)
-        : processedAccounts;
-
     return mode === 'instruction'
-        ? methodCall.accounts(requiredAccounts).instruction()
-        : methodCall.accounts(requiredAccounts).rpc();
-}
-
-
-export async function createInstruction<TArgs = void, TAccounts = any, TProcessedArgs = any, TProcessedAccounts = any>(
-    program: Program<WasabiSolana>,
-    accounts: TAccounts,
-    config: BaseMethodConfig<TArgs, TAccounts, TProcessedArgs, TProcessedAccounts>,
-    args?: TArgs,
-    strict: boolean = true
-): Promise<TransactionInstruction> {
-    return handleMethodCall(program, accounts, config, 'instruction', args, strict) as Promise<TransactionInstruction>;
-}
-
-export async function executeTransaction<TArgs = void, TAccounts = any, TProcessedArgs = any, TProcessedAccounts = any>(
-    program: Program<WasabiSolana>,
-    accounts: TAccounts,
-    config: BaseMethodConfig<TArgs, TAccounts, TProcessedArgs, TProcessedAccounts>,
-    args?: TArgs,
-    strict: boolean = true
-): Promise<TransactionSignature> {
-    return handleMethodCall(program, accounts, config, 'transaction', args, strict) as Promise<TransactionSignature>;
+        ? methodBuilder.accounts(processed.accounts).instruction()
+        : methodBuilder.accounts(processed.accounts).rpc();
 }

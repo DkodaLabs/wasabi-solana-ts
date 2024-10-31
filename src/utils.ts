@@ -11,6 +11,8 @@ export const SEED_PREFIX = {
     SUPER_ADMIN: "super_admin",
     ADMIN: "admin",
     LP_VAULT: "lp_vault",
+    DEBT_CONTROLLER: "debt_controller",
+    GLOBAL_SETTINGS: "global_settings",
     EVENT_AUTHORITY: "__event_authority",
 } as const;
 
@@ -53,7 +55,7 @@ export function uiAmountToAmount(uiAmount: number, decimals: number): BN {
     return new BN(Math.floor(uiAmount * 10 ** decimals));
 }
 
-export function amountToUiAmount(amount: BN , decimals: number): number {
+export function amountToUiAmount(amount: BN, decimals: number): number {
     return amount.toNumber() / 10 ** decimals;
 }
 
@@ -141,6 +143,20 @@ export const PDA = {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.EVENT_AUTHORITY)],
             WASABI_PROGRAM_ID,
-        )
+        );
+    },
+
+    getDebtController(): PublicKey {
+        return findProgramAddress(
+            [utils.bytes.utf8.encode(SEED_PREFIX.DEBT_CONTROLLER)],
+            WASABI_PROGRAM_ID,
+        );
+    },
+
+    getGlobalSettings(): PublicKey {
+        return findProgramAddress(
+            [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
+            WASABI_PROGRAM_ID,
+        );
     }
 }
