@@ -65,7 +65,7 @@ export async function getTokenProgramAndDecimals(
 ): Promise<[PublicKey, number] | null> {
     const mintInfo = await connection.getAccountInfo(mint);
 
-    if (mintInfo.owner !== TOKEN_PROGRAM_ID || mintInfo.owner !== TOKEN_2022_PROGRAM_ID) {
+    if (mintInfo.owner !== TOKEN_PROGRAM_ID && mintInfo.owner !== TOKEN_2022_PROGRAM_ID) {
         return null;
     } else {
         let mintDecimals = MintLayout.decode(mintInfo.data).decimals;
