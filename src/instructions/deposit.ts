@@ -44,6 +44,8 @@ export const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, BN, Token
         sharesMint: accounts.sharesMint,
         assetTokenProgram: accounts.assetTokenProgram,
         sharesTokenProgram: accounts.sharesTokenProgram,
+        eventAuthority: accounts.eventAuthority,
+        program: accounts.program,
     })
 };
 

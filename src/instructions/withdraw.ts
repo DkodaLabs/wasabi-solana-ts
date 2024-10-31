@@ -1,93 +1,82 @@
 import { Program, BN } from "@coral-xyz/anchor";
+import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
+import { BaseMethodConfig, handleMethodCall } from "../base";
 import {
-    TransactionInstruction,
-    PublicKey,
-    TransactionSignature
-} from "@solana/web3.js";
-import { getTokenProgramAndDecimals } from "../utils";
+    MintAccounts,
+    AmountArgs,
+    TokenInstructionAccounts,
+    getTokenInstructionAccounts
+} from "./tokenAccounts";
+import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
-import { uiAmountToAmount } from "../utils";
-import { getTokenInstructionAccounts } from "./tokenAccounts";
 
-export type WithdrawArgs = {
-    amount: number, // u64
-}
+export const withdrawConfig: BaseMethodConfig<AmountArgs, MintAccounts, BN, TokenInstructionAccounts> = {
+    processArgs: async (args, program, accounts) => {
+        const [, mintDecimals] = await getTokenProgramAndDecimals(
+            program.provider.connection,
+            accounts.assetMint
+        );
+        return new BN(uiAmountToAmount(args.amount, mintDecimals));
+    },
 
-export type WithdrawAccounts = {
-    assetMint: PublicKey,
-}
+    processAccounts: async (program, accounts) => {
+        const [assetTokenProgram] = await getTokenProgramAndDecimals(
+            program.provider.connection,
+            accounts.assetMint
+        );
+
+        return getTokenInstructionAccounts(
+            program,
+            accounts.assetMint,
+            assetTokenProgram
+        );
+    },
+
+    getMethod: (program) => (args) => program.methods.deposit(args),
+
+    getRequiredAccounts: (accounts: TokenInstructionAccounts) => ({
+        owner: accounts.owner,
+        ownerAssetAccount: accounts.ownerAssetAccount,
+        ownerSharesAccount: accounts.ownerSharesAccount,
+        lpVault: accounts.lpVault,
+        vault: accounts.vault,
+        assetMint: accounts.assetMint,
+        sharesMint: accounts.sharesMint,
+        assetTokenProgram: accounts.assetTokenProgram,
+        sharesTokenProgram: accounts.sharesTokenProgram,
+        eventAuthority: accounts.eventAuthority,
+        program: accounts.program,
+    })
+};
 
 export async function createWithdrawInstruction(
     program: Program<WasabiSolana>,
-    args: WithdrawArgs,
-    accounts: WithdrawAccounts,
-    strict: boolean = true,
+    args: AmountArgs,
+    accounts: MintAccounts,
+    strict: boolean = true
 ): Promise<TransactionInstruction> {
-    const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(program.provider.connection, accounts.assetMint);
-
-    const amount = uiAmountToAmount(args.amount, mintDecimals);
-    const depositAccounts = await getTokenInstructionAccounts(
+    return handleMethodCall(
         program,
-        accounts.assetMint,
-        assetTokenProgram
-    );
-
-    const methodCall = program.methods.withdraw(new BN(amount));
-
-    if (strict) {
-        return methodCall.accountsStrict(depositAccounts).instruction();
-    } else {
-        const {
-            owner,
-            lpVault,
-            assetMint,
-            assetTokenProgram
-        } = depositAccounts;
-
-        return methodCall.accounts({
-            owner,
-            lpVault,
-            assetMint,
-            assetTokenProgram,
-        }).instruction();
-    }
+        accounts,
+        withdrawConfig,
+        'instruction',
+        args,
+        strict
+    ) as Promise<TransactionInstruction>;
 }
 
 export async function withdraw(
     program: Program<WasabiSolana>,
-    args: WithdrawArgs,
-    accounts: WithdrawAccounts,
+    args: AmountArgs,
+    accounts: MintAccounts,
     strict: boolean = true
 ): Promise<TransactionSignature> {
-    const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
-        program.provider.connection,
-        accounts.assetMint
-    );
-
-    const amount = uiAmountToAmount(args.amount, mintDecimals);
-    const withdrawAccounts = await getTokenInstructionAccounts(
+    return handleMethodCall(
         program,
-        accounts.assetMint,
-        assetTokenProgram
-    );
-
-    const methodCall = program.methods.deposit(amount);
-
-    if (strict) {
-        return methodCall.accountsStrict(withdrawAccounts).rpc();
-    } else {
-        const {
-            owner,
-            lpVault,
-            assetMint,
-            assetTokenProgram
-        } = withdrawAccounts;
-
-        return methodCall.accounts({
-            owner,
-            lpVault,
-            assetMint,
-            assetTokenProgram,
-        }).rpc();
-    }
+        accounts,
+        withdrawConfig,
+        'transaction',
+        args,
+        strict
+    ) as Promise<TransactionSignature>;
 }
