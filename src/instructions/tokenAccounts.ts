@@ -7,33 +7,45 @@ import {
 } from "@solana/spl-token";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
-export interface AmountArgs {
+type TokenArgs = {
     amount: number;
 }
 
-export interface MintAccounts {
+type TokenAccounts = {
     assetMint: PublicKey;
 }
 
-export interface TokenInstructionAccounts {
-    owner: PublicKey;
+export type TokenInstructionAccounts = {
+    owner: PublicKey,
+    lpVault: PublicKey,
+    assetMint: PublicKey,
+    assetTokenProgram: PublicKey,
+}
+
+export type TokenInstructionAccountsStrict = {
     ownerAssetAccount: PublicKey;
     ownerSharesAccount: PublicKey;
-    lpVault: PublicKey;
     vault: PublicKey;
-    assetMint: PublicKey;
     sharesMint: PublicKey;
-    assetTokenProgram: PublicKey;
     sharesTokenProgram: PublicKey;
     eventAuthority: PublicKey;
     program: PublicKey;
-}
+} & TokenInstructionAccounts;
+
+export type DepositArgs = TokenArgs;
+export type WithdrawArgs = TokenArgs;
+export type RedeemArgs = TokenArgs;
+export type MintArgs = TokenArgs;
+export type DepositAccounts = TokenAccounts;
+export type WithdrawAccounts = TokenAccounts;
+export type RedeemAccounts = TokenAccounts;
+export type MintAccounts = TokenAccounts;
 
 export async function getTokenInstructionAccounts(
     program: Program<WasabiSolana>,
     assetMint: PublicKey,
     assetTokenProgram: PublicKey
-): Promise<TokenInstructionAccounts> {
+): Promise<TokenInstructionAccountsStrict> {
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(
         assetMint,

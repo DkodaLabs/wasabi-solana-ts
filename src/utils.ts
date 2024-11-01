@@ -38,25 +38,25 @@ export async function getPermission(
     return permission;
 }
 
-export async function getTokenProgram(
-    program: Program<WasabiSolana>,
-    mint: PublicKey
-): Promise<PublicKey | null> {
-    const mintInfo = await program.provider.connection.getAccountInfo(mint);
-
-    if (mintInfo.owner !== TOKEN_PROGRAM_ID || mintInfo.owner !== TOKEN_2022_PROGRAM_ID) {
-        return null;
-    } else {
-        return mintInfo.owner;
-    }
-}
-
 export function uiAmountToAmount(uiAmount: number, decimals: number): BN {
     return new BN(Math.floor(uiAmount * 10 ** decimals));
 }
 
 export function amountToUiAmount(amount: BN, decimals: number): number {
     return amount.toNumber() / 10 ** decimals;
+}
+
+export async function getTokenProgram(
+    connection: Connection,
+    mint: PublicKey
+): Promise<PublicKey | null> {
+    const mintInfo = await connection.getAccountInfo(mint);
+
+    if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+        return mintInfo.owner;
+    } else {
+        return null;
+    }
 }
 
 export async function getTokenProgramAndDecimals(

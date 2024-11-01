@@ -1,31 +1,64 @@
 import { Program, BN } from "@coral-xyz/anchor";
 import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
-import { BaseMethodConfig, handleMethodCall } from "../base";
 import {
-    MintAccounts,
-    AmountArgs,
+    BaseMethodConfig,
+    handleMethodCall,
+    ConfigArgs,
+    constructMethodCallArgs,
+} from "../base";
+import {
+    DepositAccounts,
+    DepositArgs,
     TokenInstructionAccounts,
+    TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
 } from "./tokenAccounts";
 import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
+import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 
-const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, TokenInstructionAccounts> = {
-    process: async (program, accounts, args) => {
+const depositConfig: BaseMethodConfig<
+    DepositArgs,
+    DepositAccounts,
+    TokenInstructionAccounts | TokenInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
-            program.provider.connection,
-            accounts.assetMint
+            config.program.provider.connection,
+            config.accounts.assetMint
         );
 
-        const processedAccounts = await getTokenInstructionAccounts(
-            program,
-            accounts.assetMint,
-            assetTokenProgram
+        const allAccounts = await getTokenInstructionAccounts(
+            config.program,
+            config.accounts.assetMint,
+            assetTokenProgram,
         );
+
+        const setup: TransactionInstruction[] = [];
+
+        const ownerShares = config.program.provider.connection.getAccountInfo(allAccounts.ownerSharesAccount);
+        if (!ownerShares) {
+            setup.push(
+                createAssociatedTokenAccountInstruction(
+                    config.program.provider.publicKey,
+                    allAccounts.ownerSharesAccount,
+                    config.program.provider.publicKey,
+                    allAccounts.sharesMint,
+                    TOKEN_2022_PROGRAM_ID,
+                )
+            );
+        }
 
         return {
-            accounts: processedAccounts,
-            args: args ? new BN(uiAmountToAmount(args.amount, mintDecimals)) : undefined
+            accounts: config.strict ? allAccounts : {
+                owner: config.program.provider.publicKey,
+                lpVault: allAccounts.lpVault,
+                assetMint: config.accounts.assetMint,
+                assetTokenProgram,
+            },
+            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals))
+                : undefined,
+            setup
         };
     },
     getMethod: (program) => (args) => program.methods.deposit(args)
@@ -33,32 +66,40 @@ const depositConfig: BaseMethodConfig<AmountArgs, MintAccounts, TokenInstruction
 
 export async function createDepositInstruction(
     program: Program<WasabiSolana>,
-    args: AmountArgs,
-    accounts: MintAccounts,
-    strict: boolean = true
-): Promise<TransactionInstruction> {
+    args: DepositArgs,
+    accounts: DepositAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        program,
-        accounts,
-        depositConfig,
-        'instruction',
-        args,
-        strict
-    ) as Promise<TransactionInstruction>;
+        constructMethodCallArgs(
+            program,
+            accounts,
+            depositConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionInstruction[]>;
 }
 
 export async function deposit(
     program: Program<WasabiSolana>,
-    args: AmountArgs,
-    accounts: MintAccounts,
-    strict: boolean = true
+    args: DepositArgs,
+    accounts: DepositAccounts,
+    strict: boolean = true,
+    increaseCompute = false,
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        program,
-        accounts,
-        depositConfig,
-        'transaction',
-        args,
-        strict
+        constructMethodCallArgs(
+            program,
+            accounts,
+            depositConfig,
+            'transaction',
+            strict,
+            increaseCompute,
+            args,
+        )
     ) as Promise<TransactionSignature>;
 }

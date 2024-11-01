@@ -6,36 +6,75 @@ import {
 } from "@solana/web3.js";
 import { WasabiSolana } from "./../idl/wasabi_solana";
 
-export interface BaseMethodConfig<TArgs = void, TAccounts = any, TProcessedAccounts = Record<string, PublicKey>> {
-    process: (
-        program: Program<WasabiSolana>,
-        accounts: TAccounts,
-        args?: TArgs
-    ) => Promise<{
-        accounts: TProcessedAccounts,
-        args?: any;
-    }>;
+export type ProcessResult<T> = {
+    accounts: T,
+    args?: any,
+    setup?: TransactionInstruction[],
+}
+
+export type ConfigArgs<TArgs, TAccounts> = {
+    program: Program<WasabiSolana>;
+    accounts: TAccounts;
+    strict: boolean;
+    increaseCompute: boolean;
+    args?: TArgs;
+}
+
+export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
+    config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>;
+    mode: 'instruction' | 'transaction';
+} & ConfigArgs<TArgs, TAccounts>;
+
+export type BaseMethodConfig<
+    TArgs = void,
+    TAccounts = any,
+    TProcessedAccounts = Record<string, PublicKey>,
+> = {
+    process: (config: ConfigArgs<TArgs, TAccounts>) => Promise<ProcessResult<TProcessedAccounts>>;
     getMethod: (program: Program<WasabiSolana>) => (args: any) => any;
 }
 
 export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAccounts = any>(
+    args: MethodCallArgs<TArgs, TAccounts, TProgramAccounts>,
+): Promise<TransactionInstruction[] | TransactionSignature> {
+    const processed = await args.config.process({
+        program: args.program,
+        accounts: args.accounts,
+        strict: args.strict,
+        increaseCompute: args.increaseCompute,
+        args: args.args
+    });
+    const methodBuilder = args.config.getMethod(args.program)(processed.args);
+
+    const builder = args.strict
+        ? methodBuilder.accountsStrict(processed.accounts)
+        : methodBuilder.accounts(processed.accounts);
+
+    if (processed.setup) {
+        builder.preInstructions(processed.setup);
+    }
+
+    return args.mode === 'instruction'
+        ? builder.instruction().then((ix: TransactionInstruction) => [...(processed.setup || []), ix])
+        : builder.rpc();
+}
+
+export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramAccounts = any>(
     program: Program<WasabiSolana>,
     accounts: TAccounts,
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>,
     mode: 'instruction' | 'transaction',
-    args?: TArgs,
-    strict: boolean = true
-): Promise<TransactionInstruction | TransactionSignature> {
-    const processed = await config.process(program, accounts, args);
-    const methodBuilder = config.getMethod(program)(processed.args);
-    
-    if (strict) {
-        return mode === 'instruction' 
-            ? methodBuilder.accountsStrict(processed.accounts).instruction()
-            : methodBuilder.accountsStrict(processed.accounts).rpc();
-    }
-
-    return mode === 'instruction'
-        ? methodBuilder.accounts(processed.accounts).instruction()
-        : methodBuilder.accounts(processed.accounts).rpc();
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+    args?: TArgs
+): MethodCallArgs<TArgs, TAccounts, TProgramAccounts> {
+    return {
+        program,
+        accounts,
+        config,
+        mode,
+        strict,
+        increaseCompute,
+        args,
+    };
 }

@@ -1,31 +1,46 @@
 import { Program, BN } from "@coral-xyz/anchor";
 import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
-import { BaseMethodConfig, handleMethodCall } from "../base";
 import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs,
+} from "../base";
+import {
+    MintArgs,
     MintAccounts,
-    AmountArgs,
     TokenInstructionAccounts,
+    TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
 } from "./tokenAccounts";
 import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
-export const mintConfig: BaseMethodConfig<AmountArgs, MintAccounts, TokenInstructionAccounts> = {
-    process: async (program, accounts, args) => {
+export const mintConfig: BaseMethodConfig<
+    MintArgs,
+    MintAccounts,
+    TokenInstructionAccounts | TokenInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<MintArgs, MintAccounts>) => {
         const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
-            program.provider.connection,
-            accounts.assetMint
+            config.program.provider.connection,
+            config.accounts.assetMint
         );
 
-        const processedAccounts = await getTokenInstructionAccounts(
-            program,
-            accounts.assetMint,
+        const allAccounts = await getTokenInstructionAccounts(
+            config.program,
+            config.accounts.assetMint,
             assetTokenProgram
         );
 
         return {
-            accounts: processedAccounts,
-            args: args ? new BN(uiAmountToAmount(args.amount, mintDecimals)) : undefined
+            accounts: config.strict ? allAccounts : {
+                owner: config.program.provider.publicKey,
+                lpVault: allAccounts.lpVault,
+                assetMint: config.accounts.assetMint,
+                assetTokenProgram,
+            },
+            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals)) : undefined
         };
     },
     getMethod: (program) => (args) => program.methods.mint(args)
@@ -33,32 +48,40 @@ export const mintConfig: BaseMethodConfig<AmountArgs, MintAccounts, TokenInstruc
 
 export async function createMintInstruction(
     program: Program<WasabiSolana>,
-    args: AmountArgs,
+    args: MintArgs,
     accounts: MintAccounts,
-    strict: boolean = true
-): Promise<TransactionInstruction> {
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        program,
-        accounts,
-        mintConfig,
-        'instruction',
-        args,
-        strict
-    ) as Promise<TransactionInstruction>;
+        constructMethodCallArgs(
+            program,
+            accounts,
+            mintConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionInstruction[]>;
 }
 
 export async function mint(
     program: Program<WasabiSolana>,
-    args: AmountArgs,
+    args: MintArgs,
     accounts: MintAccounts,
-    strict: boolean = true
+    strict: boolean = true,
+    increaseCompute: boolean = false,
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        program,
-        accounts,
-        mintConfig,
-        'transaction',
-        args,
-        strict
+        constructMethodCallArgs(
+            program,
+            accounts,
+            mintConfig,
+            'transaction',
+            strict,
+            increaseCompute,
+            args,
+        )
     ) as Promise<TransactionSignature>;
 }

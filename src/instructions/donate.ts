@@ -1,142 +1,119 @@
-//import { Program, BN } from "@coral-xyz/anchor";
-//import {
-//    TransactionInstruction,
-//    PublicKey,
-//    TransactionSignature
-//} from "@solana/web3.js";
-//import { PDA, getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
-//import { WasabiSolana } from "../../idl/wasabi_solana";
-//import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-//import { BaseMethodConfig, AmountArgs, MintAccounts } from "../base";
-//
-//export const donateConfig: BaseMethodConfig<AmountArgs, MintAccounts> = {
-//    processArgs: (args) => new BN(args.amount),
-//    processAccounts: async (program, accounts) => {
-//        const tokenProgram = await getTokenProgram(program, accounts.mint);
-//        const lpVault = PDA.getLpVault(accounts.mint);
-//        const ownerAssetAccount = getAssociatedTokenAddressSync(
-//            accounts.mint,
-//            program.provider.publicKey,
-//        );
-//
-//        return {
-//            owner: program.provider.publicKey,
-//            ownerAssetAccount,
-//            lpVault,
-//            mint: accounts.mint,
-//            tokenProgram,
-//        };
-//    },
-//    getMethod: (program) => program.methods.donate
-//};
-//
-//
-//type DonateInstructionAccounts = {
-//    owner: PublicKey,
-//    ownerAssetAccount: PublicKey,
-//    lpVault: PublicKey,
-//    vault: PublicKey,
-//    currency: PublicKey,
-//    tokenProgram: PublicKey,
-//}
-//
-//export async function getDonateInstructionAccounts(
-//    program: Program<WasabiSolana>,
-//    currency: PublicKey,
-//    currencyTokenProgram: PublicKey,
-//): Promise<DonateInstructionAccounts> {
-//    const ownerAssetAccount = getAssociatedTokenAddressSync(
-//        currency,
-//        program.provider.publicKey,
-//        false,
-//        currencyTokenProgram,
-//    );
-//    const lpVault = PDA.getLpVault(currency);
-//    const vault = getAssociatedTokenAddressSync(
-//        currency,
-//        lpVault,
-//        true,
-//        currencyTokenProgram,
-//    );
-//
-//    return {
-//        owner: program.provider.publicKey,
-//        ownerAssetAccount,
-//        lpVault,
-//        vault,
-//        currency,
-//        tokenProgram: currencyTokenProgram,
-//    }
-//}
-//
-//export async function createDonateInstruction(
-//    program: Program<WasabiSolana>,
-//    args: DonateArgs,
-//    accounts: DonateAccounts,
-//    strict: boolean = true,
-//): Promise<TransactionInstruction> {
-//    const [tokenProgram, mintDecimals] = await getTokenProgramAndDecimals(program.provider.connection, accounts.currency);
-//
-//    const amount = uiAmountToAmount(args.amount, mintDecimals);
-//    const donateAccounts = await getDonateInstructionAccounts(
-//        program,
-//        accounts.currency,
-//        tokenProgram
-//    );
-//
-//    const methodCall = program.methods.donate(amount);
-//
-//    if (strict) {
-//        return methodCall.accountsStrict(donateAccounts).instruction();
-//    } else {
-//        const {
-//            owner,
-//            lpVault,
-//            currency,
-//            tokenProgram,
-//        } = donateAccounts;
-//
-//        return methodCall.accounts({
-//            owner,
-//            lpVault,
-//            currency,
-//            tokenProgram,
-//        }).instruction();
-//    }
-//}
-//
-//export async function donate(
-//    program: Program<WasabiSolana>,
-//    args: DonateArgs,
-//    accounts: DonateAccounts,
-//    strict: boolean = true,
-//): Promise<TransactionSignature> {
-//    const [tokenProgram, mintDecimals] = await getTokenProgramAndDecimals(program.provider.connection, accounts.currency);
-//
-//    const amount = uiAmountToAmount(args.amount, mintDecimals);
-//    const donateAccounts = await getDonateInstructionAccounts(
-//        program,
-//        accounts.currency,
-//        tokenProgram
-//    );
-//
-//    const methodCall = program.methods.donate(amount);
-//
-//    if (strict) {
-//        return methodCall.accountsStrict(donateAccounts).rpc();
-//    } else {
-//        const {
-//            owner,
-//            lpVault,
-//            currency,
-//            tokenProgram,
-//        } = donateAccounts;
-//
-//        return methodCall.accounts({
-//            owner,
-//            lpVault,
-//            currency,
-//            tokenProgram,
-//        }).rpc();
-//    }
-//}
+import { Program, BN } from "@coral-xyz/anchor";
+import {
+    TransactionInstruction,
+    PublicKey,
+    TransactionSignature,
+} from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
+} from "../base";
+import { PDA, uiAmountToAmount, getTokenProgramAndDecimals } from "../utils";
+import { WasabiSolana } from "../../idl/wasabi_solana";
+
+export type DonateArgs = {
+    amount: number // u64
+}
+
+export type DonateAccounts = {
+    currency: PublicKey,
+}
+
+type DonateInstructionAccounts = {
+    owner: PublicKey,
+    lpVault: PublicKey,
+    currency: PublicKey,
+    tokenProgram: PublicKey,
+}
+
+type DonateIntructionAccountsStrict = {
+    ownerAssetAccount: PublicKey,
+    vault: PublicKey,
+} & DonateInstructionAccounts;
+
+const donateConfig: BaseMethodConfig<
+    DonateArgs,
+    DonateAccounts,
+    DonateInstructionAccounts | DonateIntructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
+        const [tokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
+            config.program.provider.connection,
+            config.accounts.currency
+        );
+
+        const lpVault = PDA.getLpVault(config.accounts.currency);
+
+        const allAccounts = {
+            owner: config.program.provider.publicKey,
+            ownerAssetAccount: getAssociatedTokenAddressSync(
+                config.accounts.currency,
+                config.program.provider.publicKey,
+                false,
+                tokenProgram
+            ),
+            lpVault,
+            vault: getAssociatedTokenAddressSync(
+                config.accounts.currency,
+                lpVault,
+                true,
+                tokenProgram
+            ),
+            currency: config.accounts.currency,
+            tokenProgram,
+        };
+        return {
+            accounts: config.strict ? allAccounts : {
+                owner: allAccounts.owner,
+                lpVault,
+                currency: config.accounts.currency,
+                tokenProgram,
+            },
+            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals)) : undefined,
+        };
+    },
+    getMethod: (program) => (args) => program.methods.donate(args),
+}
+
+export async function createDonateInstruction(
+    program: Program<WasabiSolana>,
+    args: DonateArgs,
+    accounts: DonateAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            donateConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionInstruction[]>;
+}
+
+export async function donate(
+    program: Program<WasabiSolana>,
+    args: DonateArgs,
+    accounts: DonateAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionSignature> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            donateConfig,
+            'transaction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionSignature>;
+}
