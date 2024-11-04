@@ -1,5 +1,5 @@
 import { PublicKey, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { Program, utils, BN } from "@coral-xyz/anchor";
+import { Program, utils, BN, IdlAccounts } from "@coral-xyz/anchor";
 import { WasabiSolana } from "../idl/wasabi_solana";
 import {
     TOKEN_PROGRAM_ID,
@@ -8,6 +8,7 @@ import {
     MintLayout,
     getTokenMetadata,
     getAssociatedTokenAddressSync,
+    getMint,
 } from "@solana/spl-token";
 import { Metaplex } from '@metaplex-foundation/js';
 
@@ -19,6 +20,11 @@ export const SEED_PREFIX = {
     SUPER_ADMIN: "super_admin",
     ADMIN: "admin",
     LP_VAULT: "lp_vault",
+    POSITION: "position",
+    OPEN_POSTIION: "open_pos",
+    CLOSE_POSITION: "close_pos",
+    STOP_LOSS_ORDER: "stop_loss_order",
+    TAKE_PROFIT_ORDER: "take_profit_order",
     DEBT_CONTROLLER: "debt_controller",
     GLOBAL_SETTINGS: "global_settings",
     EVENT_AUTHORITY: "__event_authority",
@@ -147,6 +153,66 @@ export const PDA = {
         );
     },
 
+    getPosition(
+        owner: PublicKey,
+        pool: PublicKey,
+        lpVault: PublicKey,
+        nonce: number
+    ): PublicKey {
+        const nonceBuffer = Buffer.alloc(2);
+        nonceBuffer.writeUInt16LE(nonce);
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.POSITION),
+                owner.toBuffer(),
+                pool.toBuffer(),
+                lpVault.toBuffer(),
+                nonceBuffer,
+            ],
+            WASABI_PROGRAM_ID,
+        );
+    },
+
+    getOpenPositionRequest(owner: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSTIION),
+                owner.toBuffer(),
+            ],
+            WASABI_PROGRAM_ID
+        );
+    },
+
+    getClosePositionRequest(owner: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.CLOSE_POSITION),
+                owner.toBuffer(),
+            ],
+            WASABI_PROGRAM_ID,
+        );
+    },
+
+    getTakeProfitOrder(position: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.TAKE_PROFIT_ORDER),
+                position.toBuffer(),
+            ],
+            WASABI_PROGRAM_ID,
+        );
+    },
+
+    getStopLossOrder(position: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.STOP_LOSS_ORDER),
+                position.toBuffer(),
+            ],
+            WASABI_PROGRAM_ID
+        );
+    },
+
     getEventAuthority(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.EVENT_AUTHORITY)],
@@ -246,7 +312,6 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
 
     if (!lpVault || !userSharesInfo || !sharesMintInfo) return null;
 
-
     const sharesMint = MintLayout.decode(sharesMintInfo.data);
     const userShares = AccountLayout.decode(userSharesInfo.data);
 
@@ -270,4 +335,47 @@ export async function getNativeBalance(connection: Connection, userAddress: Publ
         console.error("Error fetch SOL balance:", error);
         return null;
     }
+}
+
+export async function getVaultInfoFromAsset(
+    program: Program<WasabiSolana>,
+    asset: PublicKey
+): Promise<IdlAccounts<WasabiSolana>['lpVault']> {
+    const lpVault = PDA.getLpVault(asset);
+    return program.account.lpVault.fetch(lpVault);
+}
+
+export async function getUserVaultBalances(
+    program: Program<WasabiSolana>,
+    wallet?: PublicKey
+): Promise<{ asset: PublicKey, shares: number }[]> {
+    const vaults = await program.account.lpVault.all();
+    const shareMints = vaults.map(vault => vault.account.sharesMint);
+
+    const walletToCheck = wallet || program.provider.publicKey;
+    const tokenAccounts = await program.provider.connection.getTokenAccountsByOwner(
+        walletToCheck,
+        { programId: TOKEN_2022_PROGRAM_ID }
+    );
+
+    const shareBalances = await Promise.all(
+        tokenAccounts.value.map(async ({ account }) => {
+            const tokenAccount = AccountLayout.decode(account.data);
+            const mint = new PublicKey(tokenAccount.mint);
+
+            if (shareMints.some(shareMint => shareMint.equals(mint))) {
+                const mintInfo = await getMint(program.provider.connection, mint);
+                const vault = vaults.find(v => v.account.sharesMint.equals(mint));
+
+                if (vault) {
+                    return {
+                        asset: vault.account.asset,
+                        shares: amountToUiAmount(tokenAccount.amount, mintInfo.decimals)
+                    };
+                }
+            }
+        })
+    );
+
+    return shareBalances.filter(Boolean);
 }

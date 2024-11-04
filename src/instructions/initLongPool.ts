@@ -1,32 +1,81 @@
 import { Program } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
+import {
+    TransactionSignature,
+    TransactionInstruction,
+} from "@solana/web3.js";
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs,
+} from "../base";
+import {
+    InitPoolAccounts,
+    InitPoolInstructionAccounts,
+    InitPoolInstructionAccountsStrict,
+    getInitPoolInstructionAccounts,
+} from "./initPool";
 import { WasabiSolana } from "../../idl/wasabi_solana";
-import { getPermission, getTokenProgram } from "../utils";
 
-export type InitLongPoolAccounts = {
-    currency: PublicKey,
-    collateral: PublicKey,
-    admin: PublicKey,
+
+const initLongPoolConfig: BaseMethodConfig<
+    void,
+    InitPoolAccounts,
+    InitPoolInstructionAccounts | InitPoolInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<void, InitPoolAccounts>) => {
+        const allAccounts = await getInitPoolInstructionAccounts(
+            config.program,
+            config.accounts,
+            'long'
+        );
+
+        return {
+            accounts: config.strict ? allAccounts : {
+                payer: allAccounts.payer,
+                permission: allAccounts.permission,
+                collateral: allAccounts.collateral,
+                currency: allAccounts.currency,
+                collateralTokenProgram: allAccounts.collateralTokenProgram,
+                currencyTokenProgram: allAccounts.currencyTokenProgram,
+            }
+        };
+    },
+    getMethod: (program) => () => program.methods.initLongPool(),
 }
 
 export async function createInitLongPoolInstruction(
     program: Program<WasabiSolana>,
-    accounts: InitLongPoolAccounts,
-): Promise<TransactionInstruction> {
-    const [permission, collateralTokenProgram, currencyTokenProgram] =
-        await Promise.all([
-            getPermission(program, accounts.admin),
-            getTokenProgram(program, accounts.collateral),
-            getTokenProgram(program, accounts.currency),
-        ]);
+    accounts: InitPoolAccounts,
+    strict: boolean = true,
+    increaseCompute = false,
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            initLongPoolConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+        )
+    ) as Promise<TransactionInstruction[]>;
+}
 
-    return program.methods.initLongPool()
-        .accounts({
-            payer: program.provider.publicKey,
-            permission,
-            collateral: accounts.collateral,
-            currency: accounts.currency,
-            collateralTokenProgram,
-            currencyTokenProgram,
-        }).instruction();
+export async function initLongPool(
+    program: Program<WasabiSolana>,
+    accounts: InitPoolAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionSignature> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            initLongPoolConfig,
+            'transaction',
+            strict,
+            increaseCompute,
+        )
+    ) as Promise<TransactionSignature>;
 }
