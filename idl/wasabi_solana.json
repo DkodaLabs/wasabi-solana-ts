@@ -1934,7 +1934,7 @@
         {
           "name": "authority",
           "docs": [
-            "The key that has permission to init the long_pool"
+            "The key that has permission to init the pool"
           ],
           "signer": true,
           "relations": [
@@ -1951,7 +1951,7 @@
           "name": "currency"
         },
         {
-          "name": "long_pool",
+          "name": "pool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1987,7 +1987,7 @@
             "seeds": [
               {
                 "kind": "account",
-                "path": "long_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2044,7 +2044,7 @@
             "seeds": [
               {
                 "kind": "account",
-                "path": "long_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2381,7 +2381,7 @@
         {
           "name": "authority",
           "docs": [
-            "The key that has permission to init the short_pool"
+            "The key that has permission to init the pool"
           ],
           "signer": true,
           "relations": [
@@ -2398,7 +2398,7 @@
           "name": "currency"
         },
         {
-          "name": "short_pool",
+          "name": "pool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2435,7 +2435,7 @@
             "seeds": [
               {
                 "kind": "account",
-                "path": "short_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2492,7 +2492,7 @@
             "seeds": [
               {
                 "kind": "account",
-                "path": "short_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",

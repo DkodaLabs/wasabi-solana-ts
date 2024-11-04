@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/wasabi_solana.json`.
  */
 export type WasabiSolana = {
-  "address": "FL1XKFr8ZMDdEJxHDR16SJaiGyLZTk9BHFUDenGr5HEp",
+  "address": "Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96",
   "metadata": {
     "name": "wasabiSolana",
     "version": "0.1.0",
@@ -124,12 +124,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "adminBorrowArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -543,10 +539,10 @@ export type WasabiSolana = {
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "closePositionRequest",
@@ -794,12 +790,20 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "closePositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "executionFee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -974,10 +978,10 @@ export type WasabiSolana = {
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "closePositionRequest",
@@ -1122,7 +1126,7 @@ export type WasabiSolana = {
               },
               {
                 "kind": "account",
-                "path": "collateralMint"
+                "path": "collateral"
               }
             ],
             "program": {
@@ -1165,7 +1169,7 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "collateralMint"
+          "name": "collateral"
         },
         {
           "name": "collateralTokenProgram"
@@ -1291,12 +1295,20 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "closePositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "executionFee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -1623,12 +1635,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "depositArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1732,12 +1740,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "donateArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1820,12 +1824,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initDebtControllerArgs"
-            }
-          }
+          "name": "maxApy",
+          "type": "u64"
+        },
+        {
+          "name": "maxLeverage",
+          "type": "u64"
         }
       ]
     },
@@ -1936,7 +1940,7 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "docs": [
-            "The key that has permission to init the long_pool"
+            "The key that has permission to init the pool"
           ],
           "signer": true,
           "relations": [
@@ -1953,7 +1957,7 @@ export type WasabiSolana = {
           "name": "currency"
         },
         {
-          "name": "longPool",
+          "name": "pool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1989,7 +1993,7 @@ export type WasabiSolana = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "longPool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2046,7 +2050,7 @@ export type WasabiSolana = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "longPool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2383,7 +2387,7 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "docs": [
-            "The key that has permission to init the short_pool"
+            "The key that has permission to init the pool"
           ],
           "signer": true,
           "relations": [
@@ -2400,7 +2404,7 @@ export type WasabiSolana = {
           "name": "currency"
         },
         {
-          "name": "shortPool",
+          "name": "pool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2437,7 +2441,7 @@ export type WasabiSolana = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "shortPool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2494,7 +2498,7 @@ export type WasabiSolana = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "shortPool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -2624,12 +2628,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initStopLossOrderArgs"
-            }
-          }
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
         }
       ]
     },
@@ -2698,12 +2702,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "initTakeProfitOrderArgs"
-            }
-          }
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
         }
       ]
     },
@@ -2878,10 +2882,10 @@ export type WasabiSolana = {
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "closePositionRequest",
@@ -3113,12 +3117,20 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "closePositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "executionFee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -3325,12 +3337,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "mintArgs"
-            }
-          }
+          "name": "sharesAmount",
+          "type": "u64"
         }
       ]
     },
@@ -3533,10 +3541,10 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "collateral"
+          "name": "currency"
         },
         {
-          "name": "currency"
+          "name": "collateral"
         },
         {
           "name": "openPositionRequest",
@@ -3595,7 +3603,7 @@ export type WasabiSolana = {
               },
               {
                 "kind": "arg",
-                "path": "header.nonce"
+                "path": "nonce"
               }
             ]
           }
@@ -3682,20 +3690,28 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "header",
-          "type": {
-            "defined": {
-              "name": "openLongPositionHeader"
-            }
-          }
+          "name": "nonce",
+          "type": "u16"
         },
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "openLongPositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -3721,6 +3737,10 @@ export type WasabiSolana = {
           "signer": true
         },
         {
+          "name": "position",
+          "writable": true
+        },
+        {
           "name": "shortPool",
           "docs": [
             "The ShortPool that owns the Position"
@@ -3732,133 +3752,27 @@ export type WasabiSolana = {
             "The collateral account that is the destination of the swap"
           ],
           "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "shortPool"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "collateral"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "relations": [
+            "shortPool"
+          ]
         },
         {
           "name": "currencyVault",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "shortPool"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "collateral",
+          "writable": true,
           "relations": [
             "shortPool"
           ]
         },
         {
-          "name": "currency",
-          "relations": [
-            "shortPool"
-          ]
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
         },
         {
           "name": "lpVault",
           "docs": [
-            "The LP Vault that the user will borrow from",
-            "In a"
+            "The LP Vault that the user will borrow from"
           ],
           "relations": [
             "position"
@@ -3870,59 +3784,9 @@ export type WasabiSolana = {
             "The LP Vault's token account."
           ],
           "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "lpVault"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "collateral"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "relations": [
+            "lpVault"
+          ]
         },
         {
           "name": "openPositionRequest",
@@ -3948,10 +3812,6 @@ export type WasabiSolana = {
               }
             ]
           }
-        },
-        {
-          "name": "position",
-          "writable": true
         },
         {
           "name": "debtController",
@@ -4167,10 +4027,10 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "collateral"
+          "name": "currency"
         },
         {
-          "name": "currency"
+          "name": "collateral"
         },
         {
           "name": "openPositionRequest",
@@ -4229,7 +4089,7 @@ export type WasabiSolana = {
               },
               {
                 "kind": "arg",
-                "path": "header.nonce"
+                "path": "nonce"
               }
             ]
           }
@@ -4276,10 +4136,10 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "collateralTokenProgram"
+          "name": "currencyTokenProgram"
         },
         {
-          "name": "currencyTokenProgram"
+          "name": "collateralTokenProgram"
         },
         {
           "name": "systemProgram",
@@ -4292,20 +4152,28 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "header",
-          "type": {
-            "defined": {
-              "name": "openShortPositionHeader"
-            }
-          }
+          "name": "nonce",
+          "type": "u16"
         },
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "openShortPositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -4512,12 +4380,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "redeemArgs"
-            }
-          }
+          "name": "sharesAmount",
+          "type": "u64"
         }
       ]
     },
@@ -4547,10 +4411,6 @@ export type WasabiSolana = {
         },
         {
           "name": "source",
-          "docs": [
-            "Source of the tokens being repaid",
-            "Does this belong to `Signer`? If so, can infer."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -4607,6 +4467,10 @@ export type WasabiSolana = {
           }
         },
         {
+          "name": "lpVault",
+          "writable": true
+        },
+        {
           "name": "vault",
           "writable": true,
           "relations": [
@@ -4614,21 +4478,13 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "lpVault",
-          "writable": true
-        },
-        {
           "name": "tokenProgram"
         }
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "repayArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -4707,12 +4563,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "setMaxApyArgs"
-            }
-          }
+          "name": "maxApy",
+          "type": "u64"
         }
       ]
     },
@@ -4791,12 +4643,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "setMaxLeverageArgs"
-            }
-          }
+          "name": "maxLeverage",
+          "type": "u64"
         }
       ]
     },
@@ -4971,10 +4819,10 @@ export type WasabiSolana = {
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "closePositionRequest",
@@ -5239,12 +5087,20 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "closePositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "executionFee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -5419,10 +5275,10 @@ export type WasabiSolana = {
               ]
             },
             {
-              "name": "collateral"
+              "name": "currency"
             },
             {
-              "name": "currency"
+              "name": "collateral"
             },
             {
               "name": "closePositionRequest",
@@ -5689,12 +5545,20 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "closePositionArgs"
-            }
-          }
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "executionFee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -5736,12 +5600,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "updateVaultMaxBorrowArgs"
-            }
-          }
+          "name": "maxBorrow",
+          "type": "u64"
         }
       ]
     },
@@ -5948,12 +5808,8 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "withdrawArgs"
-            }
-          }
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -6258,7 +6114,7 @@ export type WasabiSolana = {
     {
       "code": 6009,
       "name": "maxSwapExceeded",
-      "msg": "Maximum tokens swapped exceened"
+      "msg": "Maximum tokens swapped exceeded"
     },
     {
       "code": 6010,
@@ -6312,18 +6168,6 @@ export type WasabiSolana = {
     }
   ],
   "types": [
-    {
-      "name": "adminBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "authorityStatus",
       "repr": {
@@ -6387,42 +6231,6 @@ export type WasabiSolana = {
               "The bump seed for this PDA"
             ],
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "closePositionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "minTargetAmount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this close position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "interest",
-            "docs": [
-              "The amount of interest the user must pay"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "executionFee",
-            "docs": [
-              "The amount of the execution fee to be paid"
-            ],
-            "type": "u64"
           }
         ]
       }
@@ -6515,30 +6323,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "depositArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "donateArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "globalSettings",
       "type": {
         "kind": "struct",
@@ -6553,22 +6337,6 @@ export type WasabiSolana = {
           {
             "name": "protocolFeeWallet",
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "initDebtControllerArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxApy",
-            "type": "u64"
-          },
-          {
-            "name": "maxLeverage",
-            "type": "u64"
           }
         ]
       }
@@ -6650,38 +6418,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "initStopLossOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "makerAmount",
-            "type": "u64"
-          },
-          {
-            "name": "takerAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "initTakeProfitOrderArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "makerAmount",
-            "type": "u64"
-          },
-          {
-            "name": "takerAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "lpVault",
       "type": {
         "kind": "struct",
@@ -6739,18 +6475,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "mintArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "sharesAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "nativeYieldClaimed",
       "type": {
         "kind": "struct",
@@ -6795,65 +6519,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "openLongPositionArgs",
-      "repr": {
-        "kind": "c"
-      },
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "minTargetAmount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "downPayment",
-            "docs": [
-              "The initial down payment amount required to open the position (is in `currency` for long, `",
-              "collateralCurrency` for short positions)"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "principal",
-            "docs": [
-              "The total principal amount to be borrowed for the position."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "fee",
-            "docs": [
-              "The fee to be paid for the position"
-            ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "openLongPositionHeader",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "nonce",
-            "type": "u16"
-          }
-        ]
-      }
-    },
-    {
       "name": "openPositionRequest",
       "docs": [
         "An account that is used to cache data between the open position setup and cleanup instructions."
@@ -6884,61 +6549,6 @@ export type WasabiSolana = {
           {
             "name": "position",
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "openShortPositionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "minTargetAmount",
-            "docs": [
-              "The minimum amount out required when swapping"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "downPayment",
-            "docs": [
-              "The initial down payment amount required to open the position (is in `currency` for long, `collateralCurrency` for short positions)"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "principal",
-            "docs": [
-              "The total principal amount to be borrowed for the position."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "expiration",
-            "docs": [
-              "The timestamp when this position request expires."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "fee",
-            "docs": [
-              "The fee to be paid for the position"
-            ],
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "openShortPositionHeader",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "nonce",
-            "type": "u16"
           }
         ]
       }
@@ -7223,54 +6833,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "redeemArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "sharesAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "repayArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "setMaxApyArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxApy",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "setMaxLeverageArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxLeverage",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "stopLossOrder",
       "type": {
         "kind": "struct",
@@ -7345,18 +6907,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "updateVaultMaxBorrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxBorrow",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "withdraw",
       "type": {
         "kind": "struct",
@@ -7383,18 +6933,6 @@ export type WasabiSolana = {
           },
           {
             "name": "shares",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "withdrawArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
             "type": "u64"
           }
         ]
