@@ -1,5 +1,17 @@
 import { Program } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
+import {
+    TransactionSignature,
+    TransactionInstruction,
+    PublicKey,
+    SystemProgram,
+} from "@solana/web3.js";
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs,
+} from "../base";
+import { PDA } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
 export type InitOrUpdatePermissionArgs = {
@@ -12,6 +24,7 @@ export type InitOrUpdatePermissionArgs = {
 }
 
 export type InitOrUpdatePermissionAccounts = {
+    payer: PublicKey,
     newAuthority: PublicKey,
 }
 
@@ -20,20 +33,87 @@ export enum AuthorityStatus {
     Active = 1,
 }
 
-export function createInitOrUpdatePermissionInstruction(
+type InitOrUpdatePermissionInstructionAccounts = {
+    payer: PublicKey,
+    newAuthority: PublicKey,
+}
+
+type initOrUpdatePermissionInstructionAccountsStrict = {
+    authority: PublicKey,
+    superAdminPermission: PublicKey,
+    permission: PublicKey,
+    systemProgram: PublicKey,
+} & InitOrUpdatePermissionInstructionAccounts;
+
+const initOrUpdatePermissionConfig: BaseMethodConfig<
+    InitOrUpdatePermissionArgs,
+    InitOrUpdatePermissionAccounts,
+    InitOrUpdatePermissionInstructionAccounts | initOrUpdatePermissionInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<InitOrUpdatePermissionArgs, InitOrUpdatePermissionAccounts>) => {
+        const allAccounts = {
+            payer: config.accounts.payer,
+            authority: config.program.provider.publicKey,
+            superAdminPermission: PDA.getSuperAdmin(),
+            newAuthority: config.accounts.newAuthority,
+            permission: PDA.getAdmin(config.accounts.newAuthority),
+            systemProgram: SystemProgram.programId,
+        };
+
+        return {
+            accounts: config.strict ? allAccounts : {
+                payer: allAccounts.payer,
+                newAuthority: allAccounts.newAuthority,
+            },
+            args: {
+                canCosignSwaps: config.args.canCosignSwaps,
+                canInitVaults: config.args.canInitVaults,
+                canLiquidate: config.args.canLiquidate,
+                canBorrowFromVaults: config.args.canBorrowFromVaults,
+                canInitPools: config.args.canInitPools,
+                status: { active: {} },
+            },
+        };
+    },
+    getMethod: (program) => (args) => program.methods.initOrUpdatePermission(args),
+};
+
+export async function createInitOrUpdatePermissionInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdatePermissionArgs,
     accounts: InitOrUpdatePermissionAccounts,
-): Promise<TransactionInstruction> {
-    return program.methods.initOrUpdatePermission({
-        canCosignSwaps: args.canCosignSwaps,
-        canInitVaults: args.canInitVaults,
-        canLiquidate: args.canLiquidate,
-        canBorrowFromVaults: args.canBorrowFromVaults,
-        canInitPools: args.canInitPools, // TODO: CHECK
-        status: { active: {} }, // TODO: CHECK
-    }).accounts({
-        payer: program.provider.publicKey,
-        newAuthority: accounts.newAuthority,
-    }).instruction();
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            initOrUpdatePermissionConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionInstruction[]>;
+}
+
+export async function initOrUpdatePermission(
+    program: Program<WasabiSolana>,
+    args: InitOrUpdatePermissionArgs,
+    accounts: InitOrUpdatePermissionAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionSignature> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            initOrUpdatePermissionConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionSignature>;
 }

@@ -1,75 +1,106 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
-import { PDA, getPermission, getTokenProgram } from "../utils";
-import { ClosePositionSetupArgs } from "./closePosition";
+import { Program } from "@coral-xyz/anchor";
+import { TransactionInstruction } from "@solana/web3.js";
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs,
+} from "../base";
+import {
+    ClosePositionSetupArgs,
+    ClosePositionSetupAccounts,
+    ClosePositionCleanupAccounts,
+    ClosePositionSetupInstructionAccounts,
+    ClosePositionSetupInstructionAccountsStrict,
+    ClosePositionCleanupInstructionAccounts,
+    ClosePositionCleanupInstructionAccountsStrict,
+    getClosePositionSetupInstructionAccounts,
+    getClosePositionCleanupInstructionAccounts,
+    transformArgs,
+} from "./closePosition";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
-export type LiquidatePositionSetupAccounts = {
-    owner: PublicKey,
-    authority: PublicKey,
-    position: PublicKey,
-    collateral: PublicKey,
-    pool: PublicKey,
-}
+const liquidatePositionSetupConfig: BaseMethodConfig<
+    ClosePositionSetupArgs,
+    ClosePositionSetupAccounts,
+    ClosePositionSetupInstructionAccounts | ClosePositionSetupInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        const allAccounts = await getClosePositionSetupInstructionAccounts(config.program, config.accounts);
 
-export type LiquidatePositionCleanupAccounts = {
-    owner: PublicKey,
-    authority: PublicKey,
-    position: PublicKey,
-    collateral: PublicKey,
-    currency: PublicKey,
-    feeWallet: PublicKey,
-    pool: PublicKey,
-}
+        return {
+            accounts: config.strict ? allAccounts : {
+                owner: allAccounts.owner,
+                position: allAccounts.position,
+                pool: allAccounts.pool,
+                collateral: allAccounts.collateral,
+                permission: allAccounts.permission,
+                tokenProgram: allAccounts.tokenProgram,
+            },
+            args: transformArgs(config.args),
+        };
+    },
+    getMethod: (program) => (args) => program.methods.liquidatePositionSetup(args)
+};
+
+const liquidatePositionCleanupConfig: BaseMethodConfig<
+    void,
+    ClosePositionCleanupAccounts,
+    ClosePositionCleanupInstructionAccounts | ClosePositionCleanupInstructionAccountsStrict
+> = {
+    process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
+        const allAccounts = await getClosePositionCleanupInstructionAccounts(config.program, config.accounts);
+        return {
+            accounts: config.strict ? allAccounts : {
+                owner: allAccounts.owner,
+                authority: allAccounts.authority,
+                collateral: allAccounts.collateral,
+                currency: allAccounts.currency,
+                position: allAccounts.position,
+                feeWallet: allAccounts.feeWallet,
+                collateralTokenProgram: allAccounts.collateralTokenProgram,
+                currencyTokenProgram: allAccounts.currencyTokenProgram,
+
+            },
+        };
+    },
+    getMethod: (program) => () => program.methods.liquidatePositionCleanup(),
+};
 
 export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
-    accounts: LiquidatePositionCleanupAccounts,
-): Promise<TransactionInstruction> {
-    const [permission, tokenProgram] = await Promise.all([
-        getPermission(program, accounts.authority),
-        getTokenProgram(program, accounts.collateral),
-    ]);
-
-    return program.methods.liquidatePositionSetup({
-        minTargetAmount: new BN(args.minTargetAmount),
-        expiration: new BN(args.expiration),
-        interest: new BN(args.interest),
-        executionFee: new BN(args.executionFee),
-    }).accounts({
-        closePositionSetup: {
-            pool: accounts.pool,
-            owner: accounts.owner,
-            position: accounts.position,
-            permission,
-            collateral: accounts.collateral,
-            tokenProgram,
-        }
-    }).instruction();
+    accounts: ClosePositionSetupAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            liquidatePositionSetupConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+            args,
+        )
+    ) as Promise<TransactionInstruction[]>;
 }
 
-export async function createLiquidatePosition(
+export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: LiquidatePositionCleanupAccounts,
-): Promise<TransactionInstruction> {
-    const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-        getTokenProgram(program, accounts.collateral),
-        getTokenProgram(program, accounts.currency),
-    ]);
-
-    return program.methods.liquidatePositionCleanup()
-        .accounts({
-            closePositionCleanup: {
-                owner: accounts.owner,
-                authority: program.provider.publicKey,
-                pool: accounts.pool,
-                collateral: accounts.collateral,
-                currency: accounts.currency,
-                position: accounts.position,
-                feeWallet: accounts.feeWallet,
-                collateralTokenProgram,
-                currencyTokenProgram,
-            }
-        }).instruction();
+    accounts: ClosePositionCleanupAccounts,
+    strict: boolean = true,
+    increaseCompute: boolean = false,
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall(
+        constructMethodCallArgs(
+            program,
+            accounts,
+            liquidatePositionCleanupConfig,
+            'instruction',
+            strict,
+            increaseCompute,
+        )
+    ) as Promise<TransactionInstruction[]>;
 }

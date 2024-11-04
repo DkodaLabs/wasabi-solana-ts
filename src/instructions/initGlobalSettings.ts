@@ -49,7 +49,7 @@ const initGlobalSettingsConfig: BaseMethodConfig<
     getMethod: (program) => (args) => program.methods.initGlobalSettings(args),
 };
 
-export async function createInitLpVaultInstruction(
+export async function createInitGlobalSettingsInstruction(
     program: Program<WasabiSolana>,
     args: InitGlobalSettingsArgs,
     accounts: void,

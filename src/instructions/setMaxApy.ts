@@ -49,7 +49,7 @@ const setMaxApyConfig: BaseMethodConfig<
     getMethod: (program) => (args) => program.methods.setMaxApy(args),
 };
 
-export async function createDepositInstruction(
+export async function createSetMaxApyInstruction(
     program: Program<WasabiSolana>,
     args: SetMaxApyArgs,
     accounts: SetMaxApyAccounts,
@@ -69,7 +69,7 @@ export async function createDepositInstruction(
     ) as Promise<TransactionInstruction[]>;
 }
 
-export async function deposit(
+export async function setMaxApy(
     program: Program<WasabiSolana>,
     args: SetMaxApyArgs,
     accounts: SetMaxApyAccounts,

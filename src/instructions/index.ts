@@ -1,4 +1,3 @@
-export * from "./adminBorrow";
 export * from "./claim";
 export * from "./closeLongPosition";
 export * from "./closeShortPosition";
@@ -10,6 +9,7 @@ export * from "./donate";
 export * from "./initDebtController"
 export * from "./initGlobalSettings";
 export * from "./initLongPool";
+export * from "./initPool";
 export * from "./initLpVault";
 export * from "./initOrUpdatePermission";
 export * from "./initShortPool";
