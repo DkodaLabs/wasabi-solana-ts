@@ -379,3 +379,48 @@ export async function getUserVaultBalances(
 
     return shareBalances.filter(Boolean);
 }
+
+export async function getMultipleTokenAccounts(
+  program: Program<WasabiSolana>, owner: PublicKey, mints: PublicKey[]
+): Promise<number[]> {
+    const mintInfos = await program.provider.connection.getMultipleAccountsInfo(mints);
+
+    const results = new Array<number>(mints.length).fill(0);
+    const validATAs: PublicKey[] = [];
+    const ataIndexMap = new Map<string, number>();
+
+    mints.forEach((mint, i) => {
+        const mintInfo = mintInfos[i];
+        if (!mintInfo) return;
+
+        const tokenProgram = mintInfo.owner;
+        if (
+          !tokenProgram.equals(TOKEN_PROGRAM_ID) &&
+          !tokenProgram.equals(TOKEN_2022_PROGRAM_ID)
+        )
+            return;
+
+        const ata = getAssociatedTokenAddressSync(mint, owner, false, tokenProgram);
+        validATAs.push(ata);
+        ataIndexMap.set(ata.toBase58(), i);
+    });
+
+    if (validATAs.length === 0) return results;
+
+    const tokenAccountInfos =
+      await program.provider.connection.getMultipleAccountsInfo(validATAs);
+
+    tokenAccountInfos.forEach((accountInfo, i) => {
+        if (!accountInfo) return;
+
+        const ataAddress = validATAs[i].toBase58();
+        const originalIndex = ataIndexMap.get(ataAddress);
+
+        if (originalIndex !== undefined) {
+            const accountData = AccountLayout.decode(accountInfo.data);
+            results[originalIndex] = Number(accountData.amount);
+        }
+    });
+
+    return results;
+}
