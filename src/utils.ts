@@ -295,7 +295,7 @@ export async function getMetaplexMetadata(connection: Connection, mint: PublicKe
 }
 
 // Mint is the mint of the token in the vault
-export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<number | null> {
+export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<BN> {
     const lpVaultAddress = PDA.getLpVault(mint);
     const sharesMintAddress = PDA.getSharesMint(lpVaultAddress, mint);
     const userSharesAddress = getAssociatedTokenAddressSync(
@@ -315,16 +315,15 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
     const sharesMint = MintLayout.decode(sharesMintInfo.data);
     const userShares = AccountLayout.decode(userSharesInfo.data);
 
-    const mintDecimals = sharesMint.decimals;
     const totalAssets = new BN(lpVault.totalAssets);
     const totalShares = new BN(sharesMint.supply);
     const userSharesAmount = new BN(userShares.amount);
 
-    if (totalShares.isZero()) return null;
+    if (totalShares.isZero()) return new BN(0);
 
     const maxWithdrawRaw = userSharesAmount.mul(totalAssets).div(totalShares);
 
-    return Number(maxWithdrawRaw.toString()) / Math.pow(10, mintDecimals);
+    return maxWithdrawRaw;
 }
 
 export async function getNativeBalance(connection: Connection, userAddress: PublicKey): Promise<number | null> {
