@@ -13,7 +13,7 @@ import {
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
 } from "./tokenAccounts";
-import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
+import { getTokenProgram } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 
@@ -23,7 +23,7 @@ const depositConfig: BaseMethodConfig<
     TokenInstructionAccounts | TokenInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
-        const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
+        const assetTokenProgram = await getTokenProgram(
             config.program.provider.connection,
             config.accounts.assetMint
         );
@@ -56,7 +56,7 @@ const depositConfig: BaseMethodConfig<
                 assetMint: config.accounts.assetMint,
                 assetTokenProgram,
             },
-            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals))
+            args: config.args ? new BN(config.args.amount)
                 : undefined,
             setup
         };

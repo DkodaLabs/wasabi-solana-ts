@@ -1,129 +1,199 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { WasabiSolana } from "../../idl/wasabi_solana";
 import {
-    SwapSide,
-    Cluster,
     Raydium,
-    ApiV3PoolInfoStandardItem,
     AmmV4Keys,
     AmmRpcData,
     makeAMMSwapInstruction,
     SwapInstructionParams,
 } from "@raydium-io/raydium-sdk-v2";
+import { BN } from "@coral-xyz/anchor";
+import { 
+    TransactionInstruction, 
+    PublicKey,
+    Connection,
+} from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
-export type PositionAction = "open" | "close";
-export type RaydiumSwapArgs = {
-    amount: number, // u64
-    slippage: number,
-    cluster: Cluster, //"devnet | mainnet" - shouldnt have this - different microservice for mainnet & testnet
-    side: SwapSide, // "in | out" - exact in / exact out
-    positionAction: PositionAction,
+export type SwapMode = 'ExactIn' | 'ExactOut';
+
+type MarketInfo = {
+    id: string;
+    inputMint: string;
+    outputMint: string;
+    notEnoughLiquidity: boolean;
+    inAmount: string;
+    outAmount: string;
+    lpFee: {
+        amount: string;
+        mint: string;
+        pct: number;
+    };
+    priceImpactPct: number;
 }
 
-export type RaydiumSwapAccounts = {
-    wallet: PublicKey,
-    amm: PublicKey,
-    quote: PublicKey,
-    base: PublicKey,
-    tradePool: PublicKey,
+type QuoteResponse = {
+    inputMint: string;
+    outputMint: string;
+    inAmount: string;
+    outAmount: string;
+    amount: string;
+    priceImpactPct: number;
+    marketInfo: MarketInfo;
+    swapMode: SwapMode;
+    slippageBps: number;
+    poolKeys?: AmmV4Keys;
+    poolRpcData?: AmmRpcData;
 }
 
-//const RAYDIUM_V4_MAINNET = new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
-//const RAYDIUM_V4_DEVNET = new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8");
+type RaydiumInstructionResponse = {
+    computeBudgetInstructions?: TransactionInstruction[];
+    setupInstructions: TransactionInstruction[];
+    swapInstruction: TransactionInstruction;
+    cleanupInstructions: TransactionInstruction[];
+    addressLookupTableAddresses?: string[];
+}
 
-// TODO: Check and refactor - this is fine for an initial implementation
-export async function createRaydiumSwapInstruction(
-    program: Program<WasabiSolana>,
-    args: RaydiumSwapArgs,
-    accounts: RaydiumSwapAccounts,
-): Promise<TransactionInstruction> {
-    const [raydium, tradePoolInfo, [baseMintInfo, quoteMintInfo]] = await Promise.all([
-        Raydium.load({
-            owner: program.provider.publicKey,
-            connection: program.provider.connection,
-            cluster: args.cluster,
-            disableFeatureCheck: true,
-            disableLoadToken: false,
-            blockhashCommitment: "confirmed",
-        }),
-        program.account.basePool.fetch(accounts.tradePool),
-        program.provider.connection.getMultipleAccountsInfo([accounts.base, accounts.quote]),
-    ]);
+type CreateSwapInstructionArgs = {
+    quoteResponse: QuoteResponse;
+    userPublicKey: PublicKey;
+}
 
-    let poolInfo: ApiV3PoolInfoStandardItem | undefined;
-    let poolKeys: AmmV4Keys | undefined;
-    let rpcData: AmmRpcData;
-
-    const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId: accounts.amm.toBase58() });
-    poolInfo = data.poolInfo;
-    poolKeys = data.poolKeys;
-    rpcData = data.poolRpcData;
-
-    const [baseReserve, quoteReserve, status] = [rpcData.baseReserve, rpcData.quoteReserve, rpcData.status];
-
-    if (poolInfo.mintA.address !== accounts.quote.toBase58()
-        && poolInfo.mintB.address !== accounts.quote.toBase58()
-    ) {
-        throw new Error("Quote mint does not match pool");
-    }
-
-    const mintIn = ((tradePoolInfo.isLongPool && args.positionAction === "open")
-        || (!tradePoolInfo.isLongPool && args.positionAction === "close")
-    ) ? accounts.quote : accounts.base;
-    const mintOut = ((!tradePoolInfo.isLongPool && args.positionAction === "open")
-        || (tradePoolInfo.isLongPool && args.positionAction === "close")
-    ) ? accounts.base : accounts.quote;
-
-    const out = raydium.liquidity.computeAmountOut({
-        poolInfo: {
-            ...poolInfo,
-            baseReserve,
-            quoteReserve,
-            status: status.toNumber(),
-            version: 4,
-        },
-        amountIn: new BN(args.amount),
-        mintIn,
-        mintOut,
-        slippage: args.slippage,
+export async function getRaydiumQuote(
+    inputMint: PublicKey,
+    outputMint: PublicKey,
+    amount: number,
+    slippageBps: number,
+    poolId: string,
+    swapMode: SwapMode = 'ExactIn',
+    connection: Connection
+): Promise<QuoteResponse> {
+    const raydium = await Raydium.load({
+        owner: inputMint, // Temporary placeholder, not used for quote
+        connection,
+        disableFeatureCheck: true,
+        disableLoadToken: false,
+        blockhashCommitment: "confirmed",
     });
 
-    // NOTE: The swap is always performed using the `currencyVault` and `collateralVault`
-    // NOTE: But the user is delegated to be able to swap on behalf of the vaults
-    const quoteAta = getAssociatedTokenAddressSync(
-        accounts.quote,
-        accounts.tradePool,
-        true,
-        quoteMintInfo.owner
-    );
-    const baseAta = getAssociatedTokenAddressSync(
-        accounts.base,
-        accounts.tradePool,
-        true,
-        baseMintInfo.owner
+    const poolData = await raydium.liquidity.getPoolInfoFromRpc({
+        poolId
+    });
+
+    const { poolInfo, poolKeys, poolRpcData } = poolData;
+
+    const computeResult = raydium.liquidity.computeAmountOut({
+        poolInfo: {
+            ...poolInfo,
+            baseReserve: poolRpcData.baseReserve,
+            quoteReserve: poolRpcData.quoteReserve,
+            status: poolRpcData.status.toNumber(),
+            version: 4,
+        },
+        amountIn: new BN(amount),
+        mintIn: inputMint,
+        mintOut: outputMint,
+        slippage: slippageBps / 10000,
+    });
+
+    const priceImpactPct = calculatePriceImpact(
+        amount,
+        computeResult.amountOut.toString(),
+        poolRpcData.baseReserve.toString(),
+        poolRpcData.quoteReserve.toString()
     );
 
-    const tokenAccountIn = ((tradePoolInfo.isLongPool && args.positionAction === "open")
-        || (!tradePoolInfo.isLongPool && args.positionAction === "close")
-    ) ? quoteAta : baseAta;
-    const tokenAccountOut = ((!tradePoolInfo.isLongPool && args.positionAction === "open")
-        || (tradePoolInfo.isLongPool && args.positionAction === "close")
-    ) ? baseAta : quoteAta;
+    return {
+        inputMint: inputMint.toString(),
+        outputMint: outputMint.toString(),
+        inAmount: amount.toString(),
+        outAmount: computeResult.amountOut.toString(),
+        amount: amount.toString(),
+        priceImpactPct,
+        marketInfo: {
+            id: poolId,
+            inputMint: inputMint.toString(),
+            outputMint: outputMint.toString(),
+            notEnoughLiquidity: computeResult.amountOut.isZero(),
+            inAmount: amount.toString(),
+            outAmount: computeResult.amountOut.toString(),
+            lpFee: {
+                amount: computeResult.fee?.toString() || "0",
+                mint: inputMint.toString(),
+                pct: 0.3,
+            },
+            priceImpactPct,
+        },
+        swapMode,
+        slippageBps,
+        poolKeys,
+        poolRpcData,
+    };
+}
+
+export async function createRaydiumSwapInstructions({
+    quoteResponse,
+    userPublicKey,
+}: CreateSwapInstructionArgs): Promise<RaydiumInstructionResponse> {
+    if (!quoteResponse.poolKeys || !quoteResponse.poolRpcData) {
+        throw new Error("Quote response missing required pool information");
+    }
+
+    const inputMint = new PublicKey(quoteResponse.inputMint);
+    const outputMint = new PublicKey(quoteResponse.outputMint);
+
+    const tokenAccountIn = getAssociatedTokenAddressSync(
+        inputMint,
+        userPublicKey,
+        true
+    );
+
+    const tokenAccountOut = getAssociatedTokenAddressSync(
+        outputMint,
+        userPublicKey,
+        true
+    );
 
     const instructionParams: SwapInstructionParams = {
         version: 4,
-        poolKeys,
+        poolKeys: quoteResponse.poolKeys,
         userKeys: {
             tokenAccountIn,
             tokenAccountOut,
-            owner: program.provider.publicKey,
+            owner: userPublicKey,
         },
-        amountIn: new BN(args.amount),
-        amountOut: out.amountOut,
-        fixedSide: args.side,
+        amountIn: new BN(quoteResponse.inAmount),
+        amountOut: new BN(quoteResponse.outAmount),
+        fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out',
     };
 
-    return makeAMMSwapInstruction(instructionParams);
+    const swapInstruction = makeAMMSwapInstruction(instructionParams);
+
+    return {
+        setupInstructions: [],
+        swapInstruction,
+        cleanupInstructions: [],
+    };
+}
+
+function calculatePriceImpact(
+    amountIn: string | number,
+    amountOut: string | number,
+    reserveIn: string | number,
+    reserveOut: string | number
+): number {
+    const in_bn = new BN(amountIn.toString());
+    const out_bn = new BN(amountOut.toString());
+    const reserveIn_bn = new BN(reserveIn.toString());
+    const reserveOut_bn = new BN(reserveOut.toString());
+
+    const priceBefore = reserveOut_bn.mul(new BN(1000000)).div(reserveIn_bn);
+    const priceAfter = reserveOut_bn.sub(out_bn)
+        .mul(new BN(1000000))
+        .div(reserveIn_bn.add(in_bn));
+
+    const priceImpact = priceBefore.sub(priceAfter)
+        .mul(new BN(100))
+        .mul(new BN(1000000))
+        .div(priceBefore);
+
+    return parseFloat(priceImpact.toString()) / 1000000;
 }

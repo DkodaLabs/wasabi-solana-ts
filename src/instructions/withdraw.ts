@@ -13,7 +13,7 @@ import {
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
 } from "./tokenAccounts";
-import { getTokenProgramAndDecimals, uiAmountToAmount } from "../utils";
+import { getTokenProgram } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
 export const withdrawConfig: BaseMethodConfig<
@@ -22,7 +22,7 @@ export const withdrawConfig: BaseMethodConfig<
     TokenInstructionAccounts | TokenInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<WithdrawArgs, WithdrawAccounts>) => {
-        const [assetTokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
+        const assetTokenProgram = await getTokenProgram(
             config.program.provider.connection,
             config.accounts.assetMint
         );
@@ -40,7 +40,7 @@ export const withdrawConfig: BaseMethodConfig<
                 assetMint: config.accounts.assetMint,
                 assetTokenProgram,
             },
-            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals))
+            args: config.args ? new BN(config.args.amount)
                 : undefined
         };
     },

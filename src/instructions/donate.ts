@@ -11,11 +11,11 @@ import {
     handleMethodCall,
     constructMethodCallArgs
 } from "../base";
-import { PDA, uiAmountToAmount, getTokenProgramAndDecimals } from "../utils";
+import { PDA, getTokenProgram } from "../utils";
 import { WasabiSolana } from "../../idl/wasabi_solana";
 
 export type DonateArgs = {
-    amount: number // u64
+    amount: bigint // u64
 }
 
 export type DonateAccounts = {
@@ -40,7 +40,7 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const [tokenProgram, mintDecimals] = await getTokenProgramAndDecimals(
+        const tokenProgram = await getTokenProgram(
             config.program.provider.connection,
             config.accounts.currency
         );
@@ -72,7 +72,7 @@ const donateConfig: BaseMethodConfig<
                 currency: config.accounts.currency,
                 tokenProgram,
             },
-            args: config.args ? new BN(uiAmountToAmount(config.args.amount, mintDecimals)) : undefined,
+            args: config.args ? new BN(config.args.amount) : undefined,
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args),

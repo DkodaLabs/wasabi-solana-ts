@@ -18,7 +18,7 @@ import { WasabiSolana } from "../../idl/wasabi_solana";
 import { PDA, getTokenProgram } from "../utils";
 
 export type RepayArgs = {
-    amount: number, // u64
+    amount: bigint, // u64
 }
 
 export type RepayAccounts = {
