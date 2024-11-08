@@ -1,29 +1,20 @@
-import { Program } from "@coral-xyz/anchor";
-import {
-    TransactionSignature,
-    TransactionInstruction,
-    PublicKey
-} from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type CloseStopLossOrderAccounts = {
-    position: PublicKey,
-}
+    position: PublicKey;
+};
 
 type CloseStopLossOrderInstructionAccounts = {
-    position: PublicKey,
+    position: PublicKey;
 };
 
 type CloseStopLossOrderInstructionAccountsStrict = {
-    trader: PublicKey,
-    stopLossOrder: PublicKey,
+    trader: PublicKey;
+    stopLossOrder: PublicKey;
 } & CloseStopLossOrderInstructionAccounts;
 
 const closeStopLossOrderConfig: BaseMethodConfig<
@@ -32,26 +23,30 @@ const closeStopLossOrderConfig: BaseMethodConfig<
     CloseStopLossOrderInstructionAccounts | CloseStopLossOrderInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, CloseStopLossOrderAccounts>) => {
-        const trader = await config.program.account.position.fetch(config.accounts.position).then(pos => pos.trader);
+        const trader = await config.program.account.position
+            .fetch(config.accounts.position)
+            .then((pos) => pos.trader);
         const allAccounts = {
             trader,
             position: config.accounts.position,
-            stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
+            stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
         };
         return {
-            accounts: config.strict ? allAccounts : {
-                position: config.accounts.position,
-            }
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      position: config.accounts.position
+                  }
         };
     },
-    getMethod: (program) => () => program.methods.closeStopLossOrder(),
+    getMethod: (program) => () => program.methods.closeStopLossOrder()
 };
 
 export async function createCloseStopLossOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -60,7 +55,7 @@ export async function createCloseStopLossOrderInstruction(
             closeStopLossOrderConfig,
             'instruction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -69,7 +64,7 @@ export async function closeStopLossOrder(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -78,7 +73,7 @@ export async function closeStopLossOrder(
             closeStopLossOrderConfig,
             'transaction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionSignature>;
 }

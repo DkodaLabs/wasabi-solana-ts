@@ -1,38 +1,25 @@
-import { Program } from "@coral-xyz/anchor";
-import {
-    TransactionSignature,
-    TransactionInstruction,
-    PublicKey
-} from "@solana/web3.js";
-import {
-    getAssociatedTokenAddressSync
-} from "@solana/spl-token";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-
-} from "../base";
-import { WasabiSolana } from "../../idl/wasabi_solana";
-import { PDA, getTokenProgram } from "../utils";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { WasabiSolana } from '../idl/wasabi_solana';
+import { PDA, getTokenProgram } from '../utils';
 
 export type RepayArgs = {
-    amount: bigint, // u64
-}
+    amount: bigint; // u64
+};
 
 export type RepayAccounts = {
-    mint: PublicKey,
-}
+    mint: PublicKey;
+};
 
 type RepayInstructionAccounts = {
-    mint: PublicKey,
-    lpVault: PublicKey,
-    tokenProgram: PublicKey,
-}
+    mint: PublicKey;
+    lpVault: PublicKey;
+    tokenProgram: PublicKey;
+};
 
-type RepayInstructionAccountsStrict = {
-} & RepayInstructionAccounts;
+type RepayInstructionAccountsStrict = {} & RepayInstructionAccounts;
 
 const repayConfig: BaseMethodConfig<
     RepayArgs,
@@ -43,7 +30,7 @@ const repayConfig: BaseMethodConfig<
         const lpVault = PDA.getLpVault(config.accounts.mint);
         const [lpVaultInfo, tokenProgram] = await Promise.all([
             config.program.account.lpVault.fetch(lpVault),
-            getTokenProgram(config.program.provider.connection, config.accounts.mint),
+            getTokenProgram(config.program.provider.connection, config.accounts.mint)
         ]);
 
         const allAccounts = {
@@ -53,30 +40,27 @@ const repayConfig: BaseMethodConfig<
                 config.accounts.mint,
                 config.program.provider.publicKey,
                 false,
-                tokenProgram,
-            ),
-            lpVault,
-            vault: getAssociatedTokenAddressSync(
-                config.accounts.mint,
-                lpVault,
-                true,
                 tokenProgram
             ),
-            tokenProgram,
+            lpVault,
+            vault: getAssociatedTokenAddressSync(config.accounts.mint, lpVault, true, tokenProgram),
+            tokenProgram
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                payer: allAccounts.payer,
-                mint: allAccounts.mint,
-                source: allAccounts.source,
-                lpVault,
-                tokenProgram,
-            },
-            args: lpVaultInfo.totalBorrowed.addn(config.args.amount),
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      payer: allAccounts.payer,
+                      mint: allAccounts.mint,
+                      source: allAccounts.source,
+                      lpVault,
+                      tokenProgram
+                  },
+            args: lpVaultInfo.totalBorrowed.addn(config.args.amount)
         };
     },
-    getMethod: (program) => (args) => program.methods.repay(args),
+    getMethod: (program) => (args) => program.methods.repay(args)
 };
 
 export async function createRepayInstruction(
@@ -84,7 +68,7 @@ export async function createRepayInstruction(
     args: RepayArgs,
     accounts: RepayAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -94,18 +78,17 @@ export async function createRepayInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
-
 
 export async function repay(
     program: Program<WasabiSolana>,
     args: RepayArgs,
     accounts: RepayAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -115,7 +98,7 @@ export async function repay(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

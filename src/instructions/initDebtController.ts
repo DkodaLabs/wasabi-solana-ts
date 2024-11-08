@@ -1,31 +1,26 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs
-} from "../base";
-import { getPermission, PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+import { Program, BN } from '@coral-xyz/anchor';
+import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { getPermission, PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitDebtControllerArgs = {
-    maxApy: number, // u64
-    maxLeverage: number, // u64
+    maxApy: number; // u64
+    maxLeverage: number; // u64
 };
 
 export type InitDebtControllerAccounts = {
-    authority: PublicKey,
+    authority: PublicKey;
 };
 
 type InitDebtControllerInstructionAccounts = {
-    superAdmin: PublicKey,
+    superAdmin: PublicKey;
 };
 
 type InitDebtControllerInstructionAccountsStrict = {
-    authority: PublicKey,
-    debtController: PublicKey,
-    systemProgram: PublicKey,
+    authority: PublicKey;
+    debtController: PublicKey;
+    systemProgram: PublicKey;
 } & InitDebtControllerInstructionAccounts;
 
 export const initDebtControllerConfig: BaseMethodConfig<
@@ -38,17 +33,23 @@ export const initDebtControllerConfig: BaseMethodConfig<
             authority: config.accounts.authority,
             superAdmin: await getPermission(config.program, config.accounts.authority),
             debtController: PDA.getDebtController(),
-            systemProgram: SystemProgram.programId,
+            systemProgram: SystemProgram.programId
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                superAdmin: allAccounts.superAdmin,
-            },
-            args: { maxApy: new BN(config.args.maxApy), maxLeverage: new BN(config.args.maxLeverage) },
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      superAdmin: allAccounts.superAdmin
+                  },
+            args: {
+                maxApy: new BN(config.args.maxApy),
+                maxLeverage: new BN(config.args.maxLeverage)
+            }
         };
     },
-    getMethod: (program) => (args) => program.methods.initDebtController(args.maxApy, args.maxLeverage)
+    getMethod: (program) => (args) =>
+        program.methods.initDebtController(args.maxApy, args.maxLeverage)
 };
 
 export async function createInitDebtControllerInstruction(
@@ -56,7 +57,7 @@ export async function createInitDebtControllerInstruction(
     args: InitDebtControllerArgs,
     accounts: InitDebtControllerAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -66,7 +67,7 @@ export async function createInitDebtControllerInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -76,7 +77,7 @@ export async function initDebtController(
     args: InitDebtControllerArgs,
     accounts: InitDebtControllerAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -86,9 +87,7 @@ export async function initDebtController(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
-
-

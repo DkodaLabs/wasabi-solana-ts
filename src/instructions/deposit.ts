@@ -1,21 +1,16 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    handleMethodCall,
-    ConfigArgs,
-    constructMethodCallArgs,
-} from "../base";
+import { Program, BN } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { BaseMethodConfig, handleMethodCall, ConfigArgs, constructMethodCallArgs } from '../base';
 import {
     DepositAccounts,
     DepositArgs,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
-} from "./tokenAccounts";
-import { getTokenProgram } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
-import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from "@solana/spl-token";
+} from './tokenAccounts';
+import { getTokenProgram } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
+import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 
 const depositConfig: BaseMethodConfig<
     DepositArgs,
@@ -31,12 +26,14 @@ const depositConfig: BaseMethodConfig<
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
             config.accounts.assetMint,
-            assetTokenProgram,
+            assetTokenProgram
         );
 
         const setup: TransactionInstruction[] = [];
 
-        const ownerShares = config.program.provider.connection.getAccountInfo(allAccounts.ownerSharesAccount);
+        const ownerShares = config.program.provider.connection.getAccountInfo(
+            allAccounts.ownerSharesAccount
+        );
         if (!ownerShares) {
             setup.push(
                 createAssociatedTokenAccountInstruction(
@@ -44,20 +41,21 @@ const depositConfig: BaseMethodConfig<
                     allAccounts.ownerSharesAccount,
                     config.program.provider.publicKey,
                     allAccounts.sharesMint,
-                    TOKEN_2022_PROGRAM_ID,
+                    TOKEN_2022_PROGRAM_ID
                 )
             );
         }
 
         return {
-            accounts: config.strict ? allAccounts : {
-                owner: config.program.provider.publicKey,
-                lpVault: allAccounts.lpVault,
-                assetMint: config.accounts.assetMint,
-                assetTokenProgram,
-            },
-            args: config.args ? new BN(config.args.amount)
-                : undefined,
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      owner: config.program.provider.publicKey,
+                      lpVault: allAccounts.lpVault,
+                      assetMint: config.accounts.assetMint,
+                      assetTokenProgram
+                  },
+            args: config.args ? new BN(config.args.amount) : undefined,
             setup
         };
     },
@@ -69,7 +67,7 @@ export async function createDepositInstruction(
     args: DepositArgs,
     accounts: DepositAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -79,7 +77,7 @@ export async function createDepositInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -89,7 +87,7 @@ export async function deposit(
     args: DepositArgs,
     accounts: DepositAccounts,
     strict: boolean = true,
-    increaseCompute = false,
+    increaseCompute = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -99,7 +97,7 @@ export async function deposit(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

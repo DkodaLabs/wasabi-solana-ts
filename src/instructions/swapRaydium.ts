@@ -3,17 +3,13 @@ import {
     AmmV4Keys,
     AmmRpcData,
     makeAMMSwapInstruction,
-    SwapInstructionParams,
-} from "@raydium-io/raydium-sdk-v2";
-import { BN } from "@coral-xyz/anchor";
-import { 
-    TransactionInstruction, 
-    PublicKey,
-    Connection,
-} from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+    SwapInstructionParams
+} from '@raydium-io/raydium-sdk-v2';
+import { BN } from '@coral-xyz/anchor';
+import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { SwapMode } from './swap';
 
-export type SwapMode = 'ExactIn' | 'ExactOut';
 
 type MarketInfo = {
     id: string;
@@ -28,7 +24,7 @@ type MarketInfo = {
         pct: number;
     };
     priceImpactPct: number;
-}
+};
 
 type QuoteResponse = {
     inputMint: string;
@@ -42,7 +38,7 @@ type QuoteResponse = {
     slippageBps: number;
     poolKeys?: AmmV4Keys;
     poolRpcData?: AmmRpcData;
-}
+};
 
 type RaydiumInstructionResponse = {
     computeBudgetInstructions?: TransactionInstruction[];
@@ -50,12 +46,12 @@ type RaydiumInstructionResponse = {
     swapInstruction: TransactionInstruction;
     cleanupInstructions: TransactionInstruction[];
     addressLookupTableAddresses?: string[];
-}
+};
 
 type CreateSwapInstructionArgs = {
     quoteResponse: QuoteResponse;
     userPublicKey: PublicKey;
-}
+};
 
 export async function getRaydiumQuote(
     inputMint: PublicKey,
@@ -71,7 +67,7 @@ export async function getRaydiumQuote(
         connection,
         disableFeatureCheck: true,
         disableLoadToken: false,
-        blockhashCommitment: "confirmed",
+        blockhashCommitment: 'confirmed'
     });
 
     const poolData = await raydium.liquidity.getPoolInfoFromRpc({
@@ -86,12 +82,12 @@ export async function getRaydiumQuote(
             baseReserve: poolRpcData.baseReserve,
             quoteReserve: poolRpcData.quoteReserve,
             status: poolRpcData.status.toNumber(),
-            version: 4,
+            version: 4
         },
         amountIn: new BN(amount),
         mintIn: inputMint,
         mintOut: outputMint,
-        slippage: slippageBps / 10000,
+        slippage: slippageBps / 10000
     });
 
     const priceImpactPct = calculatePriceImpact(
@@ -116,41 +112,33 @@ export async function getRaydiumQuote(
             inAmount: amount.toString(),
             outAmount: computeResult.amountOut.toString(),
             lpFee: {
-                amount: computeResult.fee?.toString() || "0",
+                amount: computeResult.fee?.toString() || '0',
                 mint: inputMint.toString(),
-                pct: 0.3,
+                pct: 0.3
             },
-            priceImpactPct,
+            priceImpactPct
         },
         swapMode,
         slippageBps,
         poolKeys,
-        poolRpcData,
+        poolRpcData
     };
 }
 
 export async function createRaydiumSwapInstructions({
     quoteResponse,
-    userPublicKey,
+    userPublicKey
 }: CreateSwapInstructionArgs): Promise<RaydiumInstructionResponse> {
     if (!quoteResponse.poolKeys || !quoteResponse.poolRpcData) {
-        throw new Error("Quote response missing required pool information");
+        throw new Error('Quote response missing required pool information');
     }
 
     const inputMint = new PublicKey(quoteResponse.inputMint);
     const outputMint = new PublicKey(quoteResponse.outputMint);
 
-    const tokenAccountIn = getAssociatedTokenAddressSync(
-        inputMint,
-        userPublicKey,
-        true
-    );
+    const tokenAccountIn = getAssociatedTokenAddressSync(inputMint, userPublicKey, true);
 
-    const tokenAccountOut = getAssociatedTokenAddressSync(
-        outputMint,
-        userPublicKey,
-        true
-    );
+    const tokenAccountOut = getAssociatedTokenAddressSync(outputMint, userPublicKey, true);
 
     const instructionParams: SwapInstructionParams = {
         version: 4,
@@ -158,11 +146,11 @@ export async function createRaydiumSwapInstructions({
         userKeys: {
             tokenAccountIn,
             tokenAccountOut,
-            owner: userPublicKey,
+            owner: userPublicKey
         },
         amountIn: new BN(quoteResponse.inAmount),
         amountOut: new BN(quoteResponse.outAmount),
-        fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out',
+        fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out'
     };
 
     const swapInstruction = makeAMMSwapInstruction(instructionParams);
@@ -170,7 +158,7 @@ export async function createRaydiumSwapInstructions({
     return {
         setupInstructions: [],
         swapInstruction,
-        cleanupInstructions: [],
+        cleanupInstructions: []
     };
 }
 
@@ -186,11 +174,10 @@ function calculatePriceImpact(
     const reserveOut_bn = new BN(reserveOut.toString());
 
     const priceBefore = reserveOut_bn.mul(new BN(1000000)).div(reserveIn_bn);
-    const priceAfter = reserveOut_bn.sub(out_bn)
-        .mul(new BN(1000000))
-        .div(reserveIn_bn.add(in_bn));
+    const priceAfter = reserveOut_bn.sub(out_bn).mul(new BN(1000000)).div(reserveIn_bn.add(in_bn));
 
-    const priceImpact = priceBefore.sub(priceAfter)
+    const priceImpact = priceBefore
+        .sub(priceAfter)
         .mul(new BN(100))
         .mul(new BN(1000000))
         .div(priceBefore);

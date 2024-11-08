@@ -1,9 +1,6 @@
-import {
-    TransactionInstruction,
-    PublicKey,
-} from "@solana/web3.js";
-
-export type SwapMode = 'ExactIn' | 'ExactOut';
+import { TransactionInstruction, PublicKey } from '@solana/web3.js';
+import { SwapMode } from './swap';
+import fetch from 'cross-fetch';
 
 type MarketInfo = {
     id: string;
@@ -24,7 +21,7 @@ type MarketInfo = {
         pct: number;
     };
     priceImpactPc: number;
-}
+};
 
 type Route = {
     inAmount: string;
@@ -47,7 +44,7 @@ type Route = {
         isSigner: boolean;
         isWritable: boolean;
     }[];
-}
+};
 
 type TokenInfo = {
     address: string;
@@ -57,7 +54,7 @@ type TokenInfo = {
     symbol: string;
     logoURI?: string;
     tags?: string[];
-}
+};
 
 type QuoteResponse = {
     inputMint: string;
@@ -72,7 +69,7 @@ type QuoteResponse = {
     priceImpactPct: number;
     inputTokenInfo: TokenInfo;
     outputTokenInfo: TokenInfo;
-}
+};
 
 type JupiterInstructionResponse = {
     tokenLedgerInstruction?: TransactionInstruction;
@@ -81,7 +78,7 @@ type JupiterInstructionResponse = {
     swapInstruction: TransactionInstruction;
     cleanupInstruction?: TransactionInstruction;
     addressLookupTableAddresses?: string[];
-}
+};
 
 type CreateSwapInstructionArgs = {
     quoteResponse: QuoteResponse;
@@ -89,7 +86,7 @@ type CreateSwapInstructionArgs = {
     wrapUnwrapSOL?: boolean;
     computeUnitPriceMicroLamports?: number;
     computeUnitsLimit?: number;
-}
+};
 
 export async function getJupiterQuote(
     inputMint: PublicKey,
@@ -104,7 +101,7 @@ export async function getJupiterQuote(
     }
 ): Promise<QuoteResponse> {
     const url = new URL('https://quote-api.jup.ag/v6/quote');
-    
+
     const args: Record<string, string> = {
         inputMint: inputMint.toString(),
         outputMint: outputMint.toString(),
@@ -131,7 +128,7 @@ export async function getJupiterQuote(
     url.search = new URLSearchParams(args).toString();
 
     const response = await fetch(url.toString());
-    
+
     if (!response.ok) {
         throw new Error(`Jupiter API error: ${response.status} - ${response.statusText}`);
     }

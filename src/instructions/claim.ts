@@ -1,18 +1,9 @@
-import { Program } from "@coral-xyz/anchor";
-import {
-    TransactionInstruction,
-    TransactionSignature,
-    PublicKey
-} from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { getTokenProgram, PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { getTokenProgram, PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ClaimPositionAccounts = {
     currency: PublicKey;
@@ -20,24 +11,24 @@ export type ClaimPositionAccounts = {
     position: PublicKey;
     pool: PublicKey;
     feeWallet: PublicKey;
-}
+};
 
 type ClaimPositionInstructionAccounts = {
-    position: PublicKey,
-    pool: PublicKey,
-    collateral: PublicKey,
-    currency: PublicKey,
-    feeWallet: PublicKey,
-    collateralTokenProgram: PublicKey,
-    currencyTokenProgram: PublicKey,
-}
+    position: PublicKey;
+    pool: PublicKey;
+    collateral: PublicKey;
+    currency: PublicKey;
+    feeWallet: PublicKey;
+    collateralTokenProgram: PublicKey;
+    currencyTokenProgram: PublicKey;
+};
 
 type ClaimPositionInstructionAccountsStrict = {
-    trader: PublicKey,
-    traderCurrencyAccount: PublicKey,
-    traderCollateralAccount: PublicKey,
-    collateralVault: PublicKey,
-    lpVault: PublicKey,
+    trader: PublicKey;
+    traderCurrencyAccount: PublicKey;
+    traderCollateralAccount: PublicKey;
+    collateralVault: PublicKey;
+    lpVault: PublicKey;
     vault: PublicKey;
     debtController: PublicKey;
     globalSettings: PublicKey;
@@ -51,7 +42,7 @@ export const claimPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClaimPositionAccounts>) => {
         const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
             getTokenProgram(config.program.provider.connection, config.accounts.collateral),
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
+            getTokenProgram(config.program.provider.connection, config.accounts.currency)
         ]);
         const traderCurrencyAccount = getAssociatedTokenAddressSync(
             config.accounts.currency,
@@ -63,10 +54,10 @@ export const claimPositionConfig: BaseMethodConfig<
             config.accounts.collateral,
             config.program.provider.publicKey,
             false,
-            collateralTokenProgram,
+            collateralTokenProgram
         );
         const poolInfo = await config.program.account.basePool.fetch(config.accounts.pool);
-        const lpVault = (poolInfo.isLongPool)
+        const lpVault = poolInfo.isLongPool
             ? PDA.getLpVault(config.accounts.currency)
             : PDA.getLpVault(config.accounts.currency);
         const vault = getAssociatedTokenAddressSync(
@@ -97,19 +88,21 @@ export const claimPositionConfig: BaseMethodConfig<
             debtController: PDA.getDebtController(),
             globalSettings: PDA.getGlobalSettings(),
             collateralTokenProgram,
-            currencyTokenProgram,
+            currencyTokenProgram
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                position: allAccounts.position,
-                pool: allAccounts.pool,
-                collateral: allAccounts.collateral,
-                currency: allAccounts.currency,
-                feeWallet: allAccounts.feeWallet,
-                collateralTokenProgram: allAccounts.collateralTokenProgram,
-                currencyTokenProgram: allAccounts.currencyTokenProgram,
-            }
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      position: allAccounts.position,
+                      pool: allAccounts.pool,
+                      collateral: allAccounts.collateral,
+                      currency: allAccounts.currency,
+                      feeWallet: allAccounts.feeWallet,
+                      collateralTokenProgram: allAccounts.collateralTokenProgram,
+                      currencyTokenProgram: allAccounts.currencyTokenProgram
+                  }
         };
     },
     getMethod: (program) => () => program.methods.claimPosition()
@@ -119,7 +112,7 @@ export async function createClaimPositionInstruction(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -128,7 +121,7 @@ export async function createClaimPositionInstruction(
             claimPositionConfig,
             'instruction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -137,7 +130,7 @@ export async function claimPosition(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -146,7 +139,7 @@ export async function claimPosition(
             claimPositionConfig,
             'transaction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionSignature>;
 }

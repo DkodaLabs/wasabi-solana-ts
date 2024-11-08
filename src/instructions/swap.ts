@@ -1,29 +1,19 @@
-import {
-    TransactionInstruction,
-    PublicKey,
-    Connection
-} from "@solana/web3.js";
-import {
-    createJupiterSwapInstructions,
-    getJupiterQuote,
-    type SwapMode
-} from './swapJupiter';
-import { 
-    createRaydiumSwapInstructions, 
-    getRaydiumQuote 
-} from './swapRaydium';
+import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
+import { createJupiterSwapInstructions, getJupiterQuote } from './swapJupiter';
+import { createRaydiumSwapInstructions, getRaydiumQuote } from './swapRaydium';
 
-type SwapProvider = 'jupiter' | 'raydium';
+export type SwapMode = 'ExactIn' | 'ExactOut';
+export type SwapProvider = 'jupiter' | 'raydium';
 
-type SwapInstructionGroup = {
+export type SwapInstructionGroup = {
     computeBudgetInstructions?: TransactionInstruction[];
     setupInstructions: TransactionInstruction[];
     swapInstruction: TransactionInstruction;
     cleanupInstructions: TransactionInstruction[];
     addressLookupTableAddresses?: string[];
-}
+};
 
-type CreateSwapInstructionArgs = {
+export type CreateSwapInstructionArgs = {
     connection: Connection;
     inputMint: PublicKey;
     outputMint: PublicKey;
@@ -38,9 +28,9 @@ type CreateSwapInstructionArgs = {
             onlyDirectRoutes?: boolean;
             asLegacyTransaction?: boolean;
             maxAccounts?: number;
-        }
-    }
-}
+        };
+    };
+};
 
 export async function createSwapInstructionGroup({
     connection,
@@ -54,9 +44,22 @@ export async function createSwapInstructionGroup({
     options = {}
 }: CreateSwapInstructionArgs): Promise<SwapInstructionGroup> {
     try {
-        return await createProviderSwapInstructions(
-            preferredProvider,
-            {
+        return await createProviderSwapInstructions(preferredProvider, {
+            connection,
+            inputMint,
+            outputMint,
+            amount,
+            slippageBps,
+            userPublicKey,
+            swapMode,
+            options
+        });
+    } catch (error) {
+        console.error(`${preferredProvider} swap failed:`, error);
+
+        const fallbackProvider = preferredProvider === 'jupiter' ? 'raydium' : 'jupiter';
+        try {
+            return await createProviderSwapInstructions(fallbackProvider, {
                 connection,
                 inputMint,
                 outputMint,
@@ -65,26 +68,7 @@ export async function createSwapInstructionGroup({
                 userPublicKey,
                 swapMode,
                 options
-            }
-        );
-    } catch (error) {
-        console.error(`${preferredProvider} swap failed:`, error);
-
-        const fallbackProvider = preferredProvider === 'jupiter' ? 'raydium' : 'jupiter';
-        try {
-            return await createProviderSwapInstructions(
-                fallbackProvider,
-                {
-                    connection,
-                    inputMint,
-                    outputMint,
-                    amount,
-                    slippageBps,
-                    userPublicKey,
-                    swapMode,
-                    options
-                }
-            );
+            });
         } catch (fallbackError) {
             console.error(`${fallbackProvider} fallback failed:`, fallbackError);
             throw new Error('All swap providers failed');
@@ -108,8 +92,8 @@ async function createProviderSwapInstructions(
                 onlyDirectRoutes?: boolean;
                 asLegacyTransaction?: boolean;
                 maxAccounts?: number;
-            }
-        }
+            };
+        };
     }
 ): Promise<SwapInstructionGroup> {
     if (provider === 'jupiter') {
@@ -140,8 +124,8 @@ async function constructJupiterSwapInstructions({
             onlyDirectRoutes?: boolean;
             asLegacyTransaction?: boolean;
             maxAccounts?: number;
-        }
-    }
+        };
+    };
 }): Promise<SwapInstructionGroup> {
     const quoteResponse = await getJupiterQuote(
         inputMint,
@@ -162,11 +146,15 @@ async function constructJupiterSwapInstructions({
         computeBudgetInstructions: jupiterInstructions.computeBudgetInstructions,
         setupInstructions: [
             ...(jupiterInstructions.setupInstructions || []),
-            ...(jupiterInstructions.tokenLedgerInstruction ? [jupiterInstructions.tokenLedgerInstruction] : []),
+            ...(jupiterInstructions.tokenLedgerInstruction
+                ? [jupiterInstructions.tokenLedgerInstruction]
+                : [])
         ],
         swapInstruction: jupiterInstructions.swapInstruction,
         cleanupInstructions: [
-            ...(jupiterInstructions.cleanupInstruction ? [jupiterInstructions.cleanupInstruction] : [])
+            ...(jupiterInstructions.cleanupInstruction
+                ? [jupiterInstructions.cleanupInstruction]
+                : [])
         ],
         addressLookupTableAddresses: jupiterInstructions.addressLookupTableAddresses
     };
@@ -191,10 +179,10 @@ async function constructRaydiumSwapInstructions({
     swapMode: SwapMode;
     options?: {
         raydiumPoolId?: string;
-    }
+    };
 }): Promise<SwapInstructionGroup> {
     if (!options?.raydiumPoolId) {
-        throw new Error("Raydium pool ID is required");
+        throw new Error('Raydium pool ID is required');
     }
 
     const quoteResponse = await getRaydiumQuote(

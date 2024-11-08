@@ -1,36 +1,31 @@
-import { Program, BN } from "@coral-xyz/anchor";
+import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionSignature,
     TransactionInstruction,
     PublicKey,
-    SystemProgram,
-} from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+    SystemProgram
+} from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitTakeProfitArgs = {
-    makerAmount: number, // u64
-    takerAmount: number, // u64
-}
+    makerAmount: number; // u64
+    takerAmount: number; // u64
+};
 
 export type InitTakeProfitAccounts = {
-    position: PublicKey,
-}
+    position: PublicKey;
+};
 
 type InitTakeProfitInstructionAccounts = {
-    trader: PublicKey,
-    position: PublicKey,
-}
+    trader: PublicKey;
+    position: PublicKey;
+};
 
 type InitTakeProfitInstructionAccountsStrict = {
-    takeProfitOrder: PublicKey,
-    systemProgram: PublicKey,
+    takeProfitOrder: PublicKey;
+    systemProgram: PublicKey;
 } & InitTakeProfitInstructionAccounts;
 
 const initTakeProfitConfig: BaseMethodConfig<
@@ -39,26 +34,31 @@ const initTakeProfitConfig: BaseMethodConfig<
     InitTakeProfitInstructionAccounts | InitTakeProfitInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<InitTakeProfitArgs, InitTakeProfitAccounts>) => {
-        const trader = await config.program.account.position.fetch(config.accounts.position).then(pos => pos.trader);
+        const trader = await config.program.account.position
+            .fetch(config.accounts.position)
+            .then((pos) => pos.trader);
         const allAccounts = {
             trader,
             position: config.accounts.position,
             stopLossOrder: PDA.getTakeProfitOrder(config.accounts.position),
-            systemProgram: SystemProgram.programId,
+            systemProgram: SystemProgram.programId
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                trader,
-                position: allAccounts.position,
-            },
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      trader,
+                      position: allAccounts.position
+                  },
             args: {
                 makerAmount: new BN(config.args.makerAmount),
-                takerAmount: new BN(config.args.takerAmount),
+                takerAmount: new BN(config.args.takerAmount)
             }
         };
     },
-    getMethod: (program) => (args) => program.methods.initTakeProfitOrder(args.makerAmount, args.takerAmount),
+    getMethod: (program) => (args) =>
+        program.methods.initTakeProfitOrder(args.makerAmount, args.takerAmount)
 };
 
 export function createInitTakeProfitInstruction(
@@ -66,7 +66,7 @@ export function createInitTakeProfitInstruction(
     args: InitTakeProfitArgs,
     accounts: InitTakeProfitAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -76,7 +76,7 @@ export function createInitTakeProfitInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -86,7 +86,7 @@ export function initTakeProfit(
     args: InitTakeProfitArgs,
     accounts: InitTakeProfitAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -96,7 +96,7 @@ export function initTakeProfit(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

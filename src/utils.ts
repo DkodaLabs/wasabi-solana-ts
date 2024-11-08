@@ -1,6 +1,6 @@
-import { PublicKey, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { Program, utils, BN, IdlAccounts } from "@coral-xyz/anchor";
-import { WasabiSolana } from "../idl/wasabi_solana";
+import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
+import { WasabiSolana } from './idl/wasabi_solana';
 import {
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
@@ -8,26 +8,26 @@ import {
     MintLayout,
     getTokenMetadata,
     getAssociatedTokenAddressSync,
-    getMint,
-} from "@solana/spl-token";
+    getMint
+} from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
-export const WASABI_PROGRAM_ID = new PublicKey("Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96");
+export const WASABI_PROGRAM_ID = new PublicKey('Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96');
 
 export const SEED_PREFIX = {
-    LONG_POOL: "long_pool",
-    SHORT_POOL: "short_pool",
-    SUPER_ADMIN: "super_admin",
-    ADMIN: "admin",
-    LP_VAULT: "lp_vault",
-    POSITION: "position",
-    OPEN_POSTIION: "open_pos",
-    CLOSE_POSITION: "close_pos",
-    STOP_LOSS_ORDER: "stop_loss_order",
-    TAKE_PROFIT_ORDER: "take_profit_order",
-    DEBT_CONTROLLER: "debt_controller",
-    GLOBAL_SETTINGS: "global_settings",
-    EVENT_AUTHORITY: "__event_authority",
+    LONG_POOL: 'long_pool',
+    SHORT_POOL: 'short_pool',
+    SUPER_ADMIN: 'super_admin',
+    ADMIN: 'admin',
+    LP_VAULT: 'lp_vault',
+    POSITION: 'position',
+    OPEN_POSTIION: 'open_pos',
+    CLOSE_POSITION: 'close_pos',
+    STOP_LOSS_ORDER: 'stop_loss_order',
+    TAKE_PROFIT_ORDER: 'take_profit_order',
+    DEBT_CONTROLLER: 'debt_controller',
+    GLOBAL_SETTINGS: 'global_settings',
+    EVENT_AUTHORITY: '__event_authority'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -37,11 +37,11 @@ function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKe
 
 export async function getPermission(
     program: Program<WasabiSolana>,
-    admin: PublicKey,
+    admin: PublicKey
 ): Promise<PublicKey> {
     let permission: PublicKey;
     const superAdmin = PDA.getSuperAdmin();
-    const permissionInfo = await program.account.permission.fetch(superAdmin)
+    const permissionInfo = await program.account.permission.fetch(superAdmin);
 
     if (permissionInfo.authority === admin) {
         permission = superAdmin;
@@ -75,7 +75,7 @@ export async function getTokenProgram(
 
 export async function getTokenProgramAndDecimals(
     connection: Connection,
-    mint: PublicKey,
+    mint: PublicKey
 ): Promise<[PublicKey, number] | null> {
     const mintInfo = await connection.getAccountInfo(mint);
 
@@ -88,77 +88,54 @@ export async function getTokenProgramAndDecimals(
 }
 
 export const PDA = {
-    getLongPool(
-        quoteMint: PublicKey,
-        baseMint: PublicKey,
-    ): PublicKey {
+    getLongPool(quoteMint: PublicKey, baseMint: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.LONG_POOL),
                 quoteMint.toBuffer(),
-                baseMint.toBuffer(),
+                baseMint.toBuffer()
             ],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
-    getShortPool(
-        quoteMint: PublicKey,
-        baseMint: PublicKey,
-    ): PublicKey {
+    getShortPool(quoteMint: PublicKey, baseMint: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.SHORT_POOL),
                 quoteMint.toBuffer(),
-                baseMint.toBuffer(),
+                baseMint.toBuffer()
             ],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
     getSuperAdmin(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.SUPER_ADMIN)],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
     getAdmin(admin: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.ADMIN),
-                admin.toBuffer(),
-            ],
-            WASABI_PROGRAM_ID,
+            [utils.bytes.utf8.encode(SEED_PREFIX.ADMIN), admin.toBuffer()],
+            WASABI_PROGRAM_ID
         );
     },
 
     getLpVault(mint: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.LP_VAULT),
-                mint.toBuffer(),
-            ],
-            WASABI_PROGRAM_ID,
+            [utils.bytes.utf8.encode(SEED_PREFIX.LP_VAULT), mint.toBuffer()],
+            WASABI_PROGRAM_ID
         );
     },
 
     getSharesMint(lpVault: PublicKey, mint: PublicKey): PublicKey {
-        return findProgramAddress(
-            [
-                lpVault.toBuffer(),
-                mint.toBuffer(),
-            ],
-            WASABI_PROGRAM_ID,
-        );
+        return findProgramAddress([lpVault.toBuffer(), mint.toBuffer()], WASABI_PROGRAM_ID);
     },
 
-    getPosition(
-        owner: PublicKey,
-        pool: PublicKey,
-        lpVault: PublicKey,
-        nonce: number
-    ): PublicKey {
+    getPosition(owner: PublicKey, pool: PublicKey, lpVault: PublicKey, nonce: number): PublicKey {
         const nonceBuffer = Buffer.alloc(2);
         nonceBuffer.writeUInt16LE(nonce);
         return findProgramAddress(
@@ -167,48 +144,36 @@ export const PDA = {
                 owner.toBuffer(),
                 pool.toBuffer(),
                 lpVault.toBuffer(),
-                nonceBuffer,
+                nonceBuffer
             ],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
     getOpenPositionRequest(owner: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSTIION),
-                owner.toBuffer(),
-            ],
+            [utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSTIION), owner.toBuffer()],
             WASABI_PROGRAM_ID
         );
     },
 
     getClosePositionRequest(owner: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.CLOSE_POSITION),
-                owner.toBuffer(),
-            ],
-            WASABI_PROGRAM_ID,
+            [utils.bytes.utf8.encode(SEED_PREFIX.CLOSE_POSITION), owner.toBuffer()],
+            WASABI_PROGRAM_ID
         );
     },
 
     getTakeProfitOrder(position: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.TAKE_PROFIT_ORDER),
-                position.toBuffer(),
-            ],
-            WASABI_PROGRAM_ID,
+            [utils.bytes.utf8.encode(SEED_PREFIX.TAKE_PROFIT_ORDER), position.toBuffer()],
+            WASABI_PROGRAM_ID
         );
     },
 
     getStopLossOrder(position: PublicKey): PublicKey {
         return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.STOP_LOSS_ORDER),
-                position.toBuffer(),
-            ],
+            [utils.bytes.utf8.encode(SEED_PREFIX.STOP_LOSS_ORDER), position.toBuffer()],
             WASABI_PROGRAM_ID
         );
     },
@@ -216,33 +181,36 @@ export const PDA = {
     getEventAuthority(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.EVENT_AUTHORITY)],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
     getDebtController(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.DEBT_CONTROLLER)],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     },
 
     getGlobalSettings(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
-            WASABI_PROGRAM_ID,
+            WASABI_PROGRAM_ID
         );
     }
-}
+};
 
 type TokenData = {
     decimals: number;
     name?: string;
     symbol?: string;
     address: string;
-}
+};
 
-export async function getMintInfo(connection: Connection, mint: PublicKey): Promise<TokenData | null> {
+export async function getMintInfo(
+    connection: Connection,
+    mint: PublicKey
+): Promise<TokenData | null> {
     try {
         let metadata;
 
@@ -250,11 +218,7 @@ export async function getMintInfo(connection: Connection, mint: PublicKey): Prom
         if (!mintAccount) return null;
 
         if (mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-            metadata = await getTokenMetadata(
-                connection,
-                mint,
-                'confirmed'
-            );
+            metadata = await getTokenMetadata(connection, mint, 'confirmed');
 
             if (!metadata) {
                 metadata = await getMetaplexMetadata(connection, mint);
@@ -278,16 +242,19 @@ export async function getMintInfo(connection: Connection, mint: PublicKey): Prom
     }
 }
 
-export async function getMetaplexMetadata(connection: Connection, mint: PublicKey): Promise<{
-    name: string,
-    symbol: string,
+export async function getMetaplexMetadata(
+    connection: Connection,
+    mint: PublicKey
+): Promise<{
+    name: string;
+    symbol: string;
 } | null> {
     try {
         const metaplex = Metaplex.make(connection);
         const metadata = await metaplex.nfts().findByMint({ mintAddress: mint });
         return {
             name: metadata.name,
-            symbol: metadata.symbol,
+            symbol: metadata.symbol
         };
     } catch (error) {
         return null;
@@ -307,7 +274,7 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
     const [lpVault, userSharesInfo, sharesMintInfo] = await Promise.all([
         program.account.lpVault.fetch(lpVaultAddress),
         program.provider.connection.getAccountInfo(userSharesAddress),
-        program.provider.connection.getAccountInfo(sharesMintAddress),
+        program.provider.connection.getAccountInfo(sharesMintAddress)
     ]);
 
     if (!lpVault || !userSharesInfo || !sharesMintInfo) return null;
@@ -326,12 +293,15 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
     return maxWithdrawRaw;
 }
 
-export async function getNativeBalance(connection: Connection, userAddress: PublicKey): Promise<number | null> {
+export async function getNativeBalance(
+    connection: Connection,
+    userAddress: PublicKey
+): Promise<number | null> {
     try {
         const balance = await connection.getBalance(userAddress);
-        return balance / LAMPORTS_PER_SOL
+        return balance / LAMPORTS_PER_SOL;
     } catch (error) {
-        console.error("Error fetch SOL balance:", error);
+        console.error('Error fetch SOL balance:', error);
         return null;
     }
 }
@@ -347,24 +317,23 @@ export async function getVaultInfoFromAsset(
 export async function getUserVaultBalances(
     program: Program<WasabiSolana>,
     wallet?: PublicKey
-): Promise<{ asset: PublicKey, shares: number }[]> {
+): Promise<{ asset: PublicKey; shares: number }[]> {
     const vaults = await program.account.lpVault.all();
-    const shareMints = vaults.map(vault => vault.account.sharesMint);
+    const shareMints = vaults.map((vault) => vault.account.sharesMint);
 
     const walletToCheck = wallet || program.provider.publicKey;
-    const tokenAccounts = await program.provider.connection.getTokenAccountsByOwner(
-        walletToCheck,
-        { programId: TOKEN_2022_PROGRAM_ID }
-    );
+    const tokenAccounts = await program.provider.connection.getTokenAccountsByOwner(walletToCheck, {
+        programId: TOKEN_2022_PROGRAM_ID
+    });
 
     const shareBalances = await Promise.all(
         tokenAccounts.value.map(async ({ account }) => {
             const tokenAccount = AccountLayout.decode(account.data);
             const mint = new PublicKey(tokenAccount.mint);
 
-            if (shareMints.some(shareMint => shareMint.equals(mint))) {
+            if (shareMints.some((shareMint) => shareMint.equals(mint))) {
                 const mintInfo = await getMint(program.provider.connection, mint);
-                const vault = vaults.find(v => v.account.sharesMint.equals(mint));
+                const vault = vaults.find((v) => v.account.sharesMint.equals(mint));
 
                 if (vault) {
                     return {
@@ -380,7 +349,9 @@ export async function getUserVaultBalances(
 }
 
 export async function getMultipleTokenAccounts(
-  program: Program<WasabiSolana>, owner: PublicKey, mints: PublicKey[]
+    program: Program<WasabiSolana>,
+    owner: PublicKey,
+    mints: PublicKey[]
 ): Promise<number[]> {
     const mintInfos = await program.provider.connection.getMultipleAccountsInfo(mints);
 
@@ -393,10 +364,7 @@ export async function getMultipleTokenAccounts(
         if (!mintInfo) return;
 
         const tokenProgram = mintInfo.owner;
-        if (
-          !tokenProgram.equals(TOKEN_PROGRAM_ID) &&
-          !tokenProgram.equals(TOKEN_2022_PROGRAM_ID)
-        )
+        if (!tokenProgram.equals(TOKEN_PROGRAM_ID) && !tokenProgram.equals(TOKEN_2022_PROGRAM_ID))
             return;
 
         const ata = getAssociatedTokenAddressSync(mint, owner, false, tokenProgram);
@@ -406,8 +374,7 @@ export async function getMultipleTokenAccounts(
 
     if (validATAs.length === 0) return results;
 
-    const tokenAccountInfos =
-      await program.provider.connection.getMultipleAccountsInfo(validATAs);
+    const tokenAccountInfos = await program.provider.connection.getMultipleAccountsInfo(validATAs);
 
     tokenAccountInfos.forEach((accountInfo, i) => {
         if (!accountInfo) return;
