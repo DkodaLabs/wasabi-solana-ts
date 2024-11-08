@@ -1,6 +1,6 @@
 import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
-import { WasabiSolana } from './idl/wasabi_solana';
+import { WasabiSolana } from '../idl/wasabi_solana';
 import {
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,

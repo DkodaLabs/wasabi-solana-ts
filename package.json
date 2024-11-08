@@ -2,7 +2,6 @@
   "name": "wasabi-solana-ts",
   "version": "0.1.0",
   "description": "Typescript library for the Wasabi program",
-  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Andrew Fraser [andrew@dkoda.xyz]",

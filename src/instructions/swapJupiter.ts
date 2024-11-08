@@ -82,7 +82,7 @@ type JupiterInstructionResponse = {
 
 type CreateSwapInstructionArgs = {
     quoteResponse: QuoteResponse;
-    userPublicKey: PublicKey;
+    userPubkey: PublicKey;
     wrapUnwrapSOL?: boolean;
     computeUnitPriceMicroLamports?: number;
     computeUnitsLimit?: number;
@@ -138,14 +138,14 @@ export async function getJupiterQuote(
 
 export async function createJupiterSwapInstructions({
     quoteResponse,
-    userPublicKey,
+    userPubkey,
     wrapUnwrapSOL = true,
     computeUnitPriceMicroLamports,
     computeUnitsLimit
 }: CreateSwapInstructionArgs): Promise<JupiterInstructionResponse> {
     const body: Record<string, any> = {
         quoteResponse,
-        userPublicKey: userPublicKey.toString(),
+        userPubkey: userPubkey.toString(),
         wrapUnwrapSOL,
         computeUnitPriceMicroLamports,
         computeUnitsLimit
