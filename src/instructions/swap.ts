@@ -1,6 +1,6 @@
 import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
 import { createJupiterSwapInstructions, getJupiterQuote } from './swapJupiter';
-import { createRaydiumSwapInstructions, getRaydiumQuote } from './swapRaydium';
+import { createRaydiumRouteSwapInstructions, getRaydiumRouteQuote } from './swapRaydium';
 
 export type SwapMode = 'ExactIn' | 'ExactOut';
 export type SwapProvider = 'jupiter' | 'raydium';
@@ -8,7 +8,7 @@ export type SwapProvider = 'jupiter' | 'raydium';
 export type SwapInstructionGroup = {
     computeBudgetInstructions?: TransactionInstruction[];
     setupInstructions: TransactionInstruction[];
-    swapInstruction: TransactionInstruction;
+    swapInstruction: TransactionInstruction[];
     cleanupInstructions: TransactionInstruction[];
     addressLookupTableAddresses?: string[];
 };
@@ -23,7 +23,7 @@ export type CreateSwapInstructionArgs = {
     swapMode?: SwapMode;
     preferredProvider?: SwapProvider;
     options?: {
-        raydiumPoolId?: string;
+        raydiumPoolIds?: string[];
         jupiterOptions?: {
             onlyDirectRoutes?: boolean;
             asLegacyTransaction?: boolean;
@@ -150,7 +150,7 @@ async function constructJupiterSwapInstructions({
                 ? [jupiterInstructions.tokenLedgerInstruction]
                 : [])
         ],
-        swapInstruction: jupiterInstructions.swapInstruction,
+        swapInstruction: [jupiterInstructions.swapInstruction],
         cleanupInstructions: [
             ...(jupiterInstructions.cleanupInstruction
                 ? [jupiterInstructions.cleanupInstruction]
@@ -185,17 +185,17 @@ async function constructRaydiumSwapInstructions({
         throw new Error('Raydium pool ID is required');
     }
 
-    const quoteResponse = await getRaydiumQuote(
+    const quoteResponse = await getRaydiumRouteQuote(
         inputMint,
         outputMint,
         amount,
         slippageBps,
-        options.raydiumPoolId,
+        [options.raydiumPoolId],
         swapMode,
         connection
     );
 
-    const raydiumInstructions = await createRaydiumSwapInstructions({
+    const raydiumInstructions = await createRaydiumRouteSwapInstructions({
         quoteResponse,
         userPublicKey
     });
@@ -203,7 +203,7 @@ async function constructRaydiumSwapInstructions({
     return {
         computeBudgetInstructions: raydiumInstructions.computeBudgetInstructions,
         setupInstructions: raydiumInstructions.setupInstructions,
-        swapInstruction: raydiumInstructions.swapInstruction,
+        swapInstruction: raydiumInstructions.swapInstructions,
         cleanupInstructions: raydiumInstructions.cleanupInstructions,
         addressLookupTableAddresses: raydiumInstructions.addressLookupTableAddresses
     };

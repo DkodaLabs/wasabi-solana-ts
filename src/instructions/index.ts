@@ -22,6 +22,8 @@ export * from './redeem';
 export * from './repay';
 export * from './setMaxApy';
 export * from './swap';
+export * from './swapJupiter';
+export * from './swapRaydium';
 export * from './setMaxLeverage';
 export * from './updateLpVaultMaxBorrow';
 export * from './withdraw';
