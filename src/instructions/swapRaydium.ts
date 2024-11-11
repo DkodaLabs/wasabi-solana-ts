@@ -74,69 +74,134 @@ export async function getRaydiumRouteQuote(
     });
 
     let currentAmount = new BN(amount);
-    let currentInputMint = inputMint;
     const route: RouteHop[] = [];
     let totalPriceImpact = 0;
 
-    for (let i = 0; i < poolIds.length; i++) {
-        const poolId = poolIds[i];
-        const poolData = poolDataMap.get(poolId)!;
-        const { poolInfo, poolKeys, poolRpcData } = poolData;
+    if (swapMode === 'EXACT_OUT') {
+        let currentOutputMint = outputMint;
+        
+        for (let i = poolIds.length - 1; i >= 0; i--) {
+            const poolId = poolIds[i];
+            const poolData = poolDataMap.get(poolId)!;
+            const { poolInfo, poolKeys, poolRpcData } = poolData;
 
-        const currentOutputMint = i === poolIds.length - 1
-            ? outputMint
-            : determineOutputMint(
-                currentInputMint,
-                poolDataMap.get(poolIds[i + 1])!.poolKeys
+            const currentInputMint = i === 0 
+                ? inputMint 
+                : determineOutputMint(
+                    new PublicKey(poolDataMap.get(poolIds[i - 1])!.poolKeys.mintA.address),
+                    poolKeys
+                );
+
+            const computeResult = raydium.liquidity.computeAmountIn({
+                poolInfo: {
+                    ...poolInfo,
+                    baseReserve: poolRpcData.baseReserve,
+                    quoteReserve: poolRpcData.quoteReserve,
+                    status: poolRpcData.status.toNumber(),
+                    version: 4
+                },
+                amountOut: currentAmount,
+                mintIn: currentInputMint,
+                mintOut: currentOutputMint,
+                slippage: slippageBps / 10000
+            });
+
+            const priceImpact = calculatePriceImpact(
+                computeResult.amountIn.toString(),
+                currentAmount.toString(),
+                poolRpcData.baseReserve.toString(),
+                poolRpcData.quoteReserve.toString()
             );
 
-        const computeResult = raydium.liquidity.computeAmountOut({
-            poolInfo: {
-                ...poolInfo,
-                baseReserve: poolRpcData.baseReserve,
-                quoteReserve: poolRpcData.quoteReserve,
-                status: poolRpcData.status.toNumber(),
-                version: 4
-            },
-            amountIn: currentAmount,
-            mintIn: currentInputMint,
-            mintOut: currentOutputMint,
-            slippage: slippageBps / 10000
-        });
+            route.unshift({
+                poolId,
+                inputMint: currentInputMint.toString(),
+                outputMint: currentOutputMint.toString(),
+                quotedInAmount: computeResult.amountIn.toString(),
+                quotedOutAmount: currentAmount.toString(),
+                priceImpactPct: priceImpact,
+                poolKeys,
+                poolRpcData
+            });
 
-        const priceImpact = calculatePriceImpact(
-            currentAmount.toString(),
-            computeResult.amountOut.toString(),
-            poolRpcData.baseReserve.toString(),
-            poolRpcData.quoteReserve.toString()
-        );
+            currentAmount = computeResult.amountIn;
+            currentOutputMint = currentInputMint;
+            totalPriceImpact += priceImpact;
+        }
 
-        route.push({
-            poolId,
-            inputMint: currentInputMint.toString(),
-            outputMint: currentOutputMint.toString(),
-            quotedInAmount: currentAmount.toString(),
-            quotedOutAmount: computeResult.amountOut.toString(),
-            priceImpactPct: priceImpact,
-            poolKeys,
-            poolRpcData
-        });
+        return {
+            inputMint: inputMint.toString(),
+            outputMint: outputMint.toString(),
+            inAmount: route[0].quotedInAmount,
+            outAmount: amount.toString(),
+            priceImpactPct: totalPriceImpact,
+            route,
+            swapMode,
+            slippageBps
+        };
+    } else {
+        let currentInputMint = inputMint;
+        
+        for (let i = 0; i < poolIds.length; i++) {
+            const poolId = poolIds[i];
+            const poolData = poolDataMap.get(poolId)!;
+            const { poolInfo, poolKeys, poolRpcData } = poolData;
 
-        currentAmount = computeResult.amountOut;
-        currentInputMint = currentOutputMint;
-        totalPriceImpact += priceImpact;
+            const currentOutputMint = i === poolIds.length - 1
+                ? outputMint
+                : determineOutputMint(
+                    currentInputMint,
+                    poolDataMap.get(poolIds[i + 1])!.poolKeys
+                );
+
+            const computeResult = raydium.liquidity.computeAmountOut({
+                poolInfo: {
+                    ...poolInfo,
+                    baseReserve: poolRpcData.baseReserve,
+                    quoteReserve: poolRpcData.quoteReserve,
+                    status: poolRpcData.status.toNumber(),
+                    version: 4
+                },
+                amountIn: currentAmount,
+                mintIn: currentInputMint,
+                mintOut: currentOutputMint,
+                slippage: slippageBps / 10000
+            });
+
+            const priceImpact = calculatePriceImpact(
+                currentAmount.toString(),
+                computeResult.amountOut.toString(),
+                poolRpcData.baseReserve.toString(),
+                poolRpcData.quoteReserve.toString()
+            );
+
+            route.push({
+                poolId,
+                inputMint: currentInputMint.toString(),
+                outputMint: currentOutputMint.toString(),
+                quotedInAmount: currentAmount.toString(),
+                quotedOutAmount: computeResult.amountOut.toString(),
+                priceImpactPct: priceImpact,
+                poolKeys,
+                poolRpcData
+            });
+
+            currentAmount = computeResult.amountOut;
+            currentInputMint = currentOutputMint;
+            totalPriceImpact += priceImpact;
+        }
+
+        return {
+            inputMint: inputMint.toString(),
+            outputMint: outputMint.toString(),
+            inAmount: amount.toString(),
+            outAmount: route[route.length - 1].quotedOutAmount,
+            priceImpactPct: totalPriceImpact,
+            route,
+            swapMode,
+            slippageBps
+        };
     }
-
-    return {
-        inputMint: inputMint.toString(),
-        outputMint: outputMint.toString(),
-        inAmount: amount.toString(),
-        outAmount: route[route.length - 1].quotedOutAmount,
-        priceImpactPct: totalPriceImpact,
-        route,
-        swapMode,
-        slippageBps
-    };
 }
 
 function determineOutputMint(
