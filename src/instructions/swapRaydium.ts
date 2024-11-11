@@ -52,7 +52,7 @@ export async function getRaydiumRouteQuote(
     amount: number,
     slippageBps: number,
     poolIds: string[],
-    swapMode: SwapMode = 'ExactIn',
+    swapMode: SwapMode = 'EXACT_IN',
     connection: Connection
 ): Promise<RouteQuoteResponse> {
     const raydium = await Raydium.load({
@@ -181,7 +181,7 @@ export async function createRaydiumRouteSwapInstructions({
             },
             amountIn: new BN(hop.quotedInAmount),
             amountOut: new BN(hop.quotedOutAmount),
-            fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out'
+            fixedSide: quoteResponse.swapMode === 'EXACT_IN' ? 'in' : 'out'
         };
 
         const swapInstruction = makeAMMSwapInstruction(instructionParams);

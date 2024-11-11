@@ -2,7 +2,7 @@ import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
 import { createJupiterSwapInstructions, getJupiterQuote } from './swapJupiter';
 import { createRaydiumRouteSwapInstructions, getRaydiumRouteQuote } from './swapRaydium';
 
-export type SwapMode = 'ExactIn' | 'ExactOut';
+export type SwapMode = 'EXACT_IN' | 'EXACT_OUT';
 export type SwapProvider = 'jupiter' | 'raydium';
 
 export type SwapInstructionGroup = {
@@ -39,7 +39,7 @@ export async function createSwapInstructionGroup({
     amount,
     slippageBps,
     userPubkey,
-    swapMode = 'ExactIn',
+    swapMode = 'EXACT_IN',
     preferredProvider = 'jupiter',
     options = {}
 }: CreateSwapInstructionArgs): Promise<SwapInstructionGroup> {
