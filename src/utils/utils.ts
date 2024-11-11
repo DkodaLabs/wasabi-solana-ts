@@ -283,8 +283,8 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
     const userShares = AccountLayout.decode(userSharesInfo.data);
 
     const totalAssets = new BN(lpVault.totalAssets);
-    const totalShares = new BN(sharesMint.supply);
-    const userSharesAmount = new BN(userShares.amount);
+    const totalShares = new BN(sharesMint.supply.toString());
+    const userSharesAmount = new BN(userShares.amount.toString());
 
     if (totalShares.isZero()) return new BN(0);
 
@@ -317,7 +317,7 @@ export async function getVaultInfoFromAsset(
 export async function getUserVaultBalances(
     program: Program<WasabiSolana>,
     wallet?: PublicKey
-): Promise<{ asset: PublicKey; shares: number }[]> {
+): Promise<{ asset: PublicKey; shares: bigint }[]> {
     const vaults = await program.account.lpVault.all();
     const shareMints = vaults.map((vault) => vault.account.sharesMint);
 
@@ -332,13 +332,12 @@ export async function getUserVaultBalances(
             const mint = new PublicKey(tokenAccount.mint);
 
             if (shareMints.some((shareMint) => shareMint.equals(mint))) {
-                const mintInfo = await getMint(program.provider.connection, mint);
                 const vault = vaults.find((v) => v.account.sharesMint.equals(mint));
 
                 if (vault) {
                     return {
                         asset: vault.account.asset,
-                        shares: amountToUiAmount(tokenAccount.amount, mintInfo.decimals)
+                        shares: tokenAccount.amount
                     };
                 }
             }

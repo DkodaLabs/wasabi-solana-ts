@@ -65,7 +65,7 @@ const donateConfig: BaseMethodConfig<
                       currency: config.accounts.currency,
                       tokenProgram
                   },
-            args: config.args ? new BN(config.args.amount) : undefined
+            args: config.args ? new BN(config.args.amount.toString()) : undefined
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args)

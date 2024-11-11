@@ -1,4 +1,4 @@
-import { Program } from '@coral-xyz/anchor';
+import {BN, Program} from '@coral-xyz/anchor';
 import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
@@ -57,7 +57,7 @@ const repayConfig: BaseMethodConfig<
                       lpVault,
                       tokenProgram
                   },
-            args: lpVaultInfo.totalBorrowed.addn(config.args.amount)
+            args: lpVaultInfo.totalBorrowed.add(new BN(config.args.amount.toString()))
         };
     },
     getMethod: (program) => (args) => program.methods.repay(args)
