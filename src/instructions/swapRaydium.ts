@@ -151,10 +151,12 @@ function determineOutputMint(
 
 export async function createRaydiumRouteSwapInstructions({
     quoteResponse,
-    userPubkey
+    walletPubkey,
+    userPubkey,
 }: {
     quoteResponse: RouteQuoteResponse;
-    userPubkey: PublicKey;
+    walletPubkey: PublicKey;
+    userPubkey?: PublicKey;
 }): Promise<RaydiumInstructionResponse> {
     const swapInstructions: TransactionInstruction[] = [];
 
@@ -168,8 +170,8 @@ export async function createRaydiumRouteSwapInstructions({
         const inputMint = new PublicKey(hop.inputMint);
         const outputMint = new PublicKey(hop.outputMint);
 
-        const tokenAccountIn = getAssociatedTokenAddressSync(inputMint, userPubkey, true);
-        const tokenAccountOut = getAssociatedTokenAddressSync(outputMint, userPubkey, true);
+        const tokenAccountIn = getAssociatedTokenAddressSync(inputMint, walletPubkey, true);
+        const tokenAccountOut = getAssociatedTokenAddressSync(outputMint, walletPubkey, true);
 
         const instructionParams: SwapInstructionParams = {
             version: 4,
@@ -177,7 +179,7 @@ export async function createRaydiumRouteSwapInstructions({
             userKeys: {
                 tokenAccountIn,
                 tokenAccountOut,
-                owner: userPubkey
+                owner: userPubkey ? userPubkey : walletPubkey
             },
             amountIn: new BN(hop.quotedInAmount),
             amountOut: new BN(hop.quotedOutAmount),

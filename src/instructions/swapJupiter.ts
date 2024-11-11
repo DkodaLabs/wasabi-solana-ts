@@ -82,7 +82,8 @@ type JupiterInstructionResponse = {
 
 type CreateSwapInstructionArgs = {
     quoteResponse: QuoteResponse;
-    userPubkey: PublicKey;
+    ownerPubkey: PublicKey;
+    authorityPubkey?: PublicKey;
     wrapUnwrapSOL?: boolean;
     computeUnitPriceMicroLamports?: number;
     computeUnitsLimit?: number;
@@ -138,18 +139,24 @@ export async function getJupiterQuote(
 
 export async function createJupiterSwapInstructions({
     quoteResponse,
-    userPubkey,
+    ownerPubkey,
+    authorityPubkey,
     wrapUnwrapSOL = true,
     computeUnitPriceMicroLamports,
     computeUnitsLimit
 }: CreateSwapInstructionArgs): Promise<JupiterInstructionResponse> {
     const body: Record<string, any> = {
         quoteResponse,
-        userPubkey: userPubkey.toString(),
+        userPubkey: ownerPubkey.toString(),
         wrapUnwrapSOL,
         computeUnitPriceMicroLamports,
         computeUnitsLimit
     };
+
+    if (authorityPubkey) {
+        body.delegateWallet = authorityPubkey.toString();
+        body.useDelegate = true;
+    }
 
     const response = await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
         method: 'POST',

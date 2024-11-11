@@ -8,7 +8,7 @@ export type SwapProvider = 'jupiter' | 'raydium';
 export type SwapInstructionGroup = {
     computeBudgetInstructions?: TransactionInstruction[];
     setupInstructions: TransactionInstruction[];
-    swapInstruction: TransactionInstruction[];
+    swapInstructions: TransactionInstruction[];
     cleanupInstructions: TransactionInstruction[];
     addressLookupTableAddresses?: string[];
 };
@@ -19,7 +19,8 @@ export type CreateSwapInstructionArgs = {
     outputMint: PublicKey;
     amount: number;
     slippageBps: number;
-    userPubkey: PublicKey;
+    walletPubkey: PublicKey;
+    userPubkey?: PublicKey;
     swapMode?: SwapMode;
     preferredProvider?: SwapProvider;
     options?: {
@@ -38,6 +39,7 @@ export async function createSwapInstructionGroup({
     outputMint,
     amount,
     slippageBps,
+    walletPubkey,
     userPubkey,
     swapMode = 'EXACT_IN',
     preferredProvider = 'jupiter',
@@ -50,6 +52,7 @@ export async function createSwapInstructionGroup({
             outputMint,
             amount,
             slippageBps,
+            walletPubkey,
             userPubkey,
             swapMode,
             options
@@ -65,6 +68,7 @@ export async function createSwapInstructionGroup({
                 outputMint,
                 amount,
                 slippageBps,
+                walletPubkey,
                 userPubkey,
                 swapMode,
                 options
@@ -84,6 +88,7 @@ async function createProviderSwapInstructions(
         outputMint: PublicKey;
         amount: number;
         slippageBps: number;
+        walletPubkey: PublicKey;
         userPubkey: PublicKey;
         swapMode: SwapMode;
         options?: {
@@ -138,7 +143,7 @@ async function constructJupiterSwapInstructions({
 
     const jupiterInstructions = await createJupiterSwapInstructions({
         quoteResponse,
-        userPubkey,
+        ownerPubkey: userPubkey,
         wrapUnwrapSOL: true
     });
 
@@ -150,7 +155,7 @@ async function constructJupiterSwapInstructions({
                 ? [jupiterInstructions.tokenLedgerInstruction]
                 : [])
         ],
-        swapInstruction: [jupiterInstructions.swapInstruction],
+        swapInstructions: [jupiterInstructions.swapInstruction],
         cleanupInstructions: [
             ...(jupiterInstructions.cleanupInstruction
                 ? [jupiterInstructions.cleanupInstruction]
@@ -166,6 +171,7 @@ async function constructRaydiumSwapInstructions({
     outputMint,
     amount,
     slippageBps,
+    walletPubkey,
     userPubkey,
     swapMode,
     options
@@ -175,7 +181,8 @@ async function constructRaydiumSwapInstructions({
     outputMint: PublicKey;
     amount: number;
     slippageBps: number;
-    userPubkey: PublicKey;
+    walletPubkey: PublicKey,
+    userPubkey?: PublicKey;
     swapMode: SwapMode;
     options?: {
         raydiumPoolId?: string;
@@ -197,13 +204,14 @@ async function constructRaydiumSwapInstructions({
 
     const raydiumInstructions = await createRaydiumRouteSwapInstructions({
         quoteResponse,
+        walletPubkey,
         userPubkey
     });
 
     return {
         computeBudgetInstructions: raydiumInstructions.computeBudgetInstructions,
         setupInstructions: raydiumInstructions.setupInstructions,
-        swapInstruction: raydiumInstructions.swapInstructions,
+        swapInstructions: raydiumInstructions.swapInstructions,
         cleanupInstructions: raydiumInstructions.cleanupInstructions,
         addressLookupTableAddresses: raydiumInstructions.addressLookupTableAddresses
     };
