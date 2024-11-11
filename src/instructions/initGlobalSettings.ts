@@ -1,29 +1,24 @@
-import { Program } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 //TODO: CHECK
 export type InitGlobalSettingsArgs = {
-    superAdmin: PublicKey,
-    feeWallet: PublicKey,
-    statuses: number, // u16
-}
+    superAdmin: PublicKey;
+    feeWallet: PublicKey;
+    statuses: number; // u16
+};
 
 type InitGlobalSettingsInstructionAccounts = {
-    payer: PublicKey,
-}
+    payer: PublicKey;
+};
 
 type InitGlobalSettingsInstructionAccountsStrict = {
-    globalSettings: PublicKey,
-    superAdminPermission: PublicKey,
-    systemProgram: PublicKey,
+    globalSettings: PublicKey;
+    superAdminPermission: PublicKey;
+    systemProgram: PublicKey;
 } & InitGlobalSettingsInstructionAccounts;
 
 const initGlobalSettingsConfig: BaseMethodConfig<
@@ -36,17 +31,19 @@ const initGlobalSettingsConfig: BaseMethodConfig<
             payer: config.program.provider.publicKey,
             globalSettings: PDA.getGlobalSettings(),
             superAdminPermission: PDA.getSuperAdmin(),
-            systemProgram: SystemProgram.programId,
+            systemProgram: SystemProgram.programId
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                payer: allAccounts.payer,
-            },
-            args: config.args,
-        }
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      payer: allAccounts.payer
+                  },
+            args: config.args
+        };
     },
-    getMethod: (program) => (args) => program.methods.initGlobalSettings(args),
+    getMethod: (program) => (args) => program.methods.initGlobalSettings(args)
 };
 
 export async function createInitGlobalSettingsInstruction(
@@ -54,7 +51,7 @@ export async function createInitGlobalSettingsInstruction(
     args: InitGlobalSettingsArgs,
     accounts: void,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -64,7 +61,7 @@ export async function createInitGlobalSettingsInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -74,7 +71,7 @@ export async function initGlobalSettings(
     args: InitGlobalSettingsArgs,
     accounts: void,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -84,7 +81,7 @@ export async function initGlobalSettings(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }

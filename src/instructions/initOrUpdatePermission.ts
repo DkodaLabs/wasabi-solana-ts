@@ -1,48 +1,43 @@
-import { Program } from "@coral-xyz/anchor";
+import { Program } from '@coral-xyz/anchor';
 import {
     TransactionSignature,
     TransactionInstruction,
     PublicKey,
-    SystemProgram,
-} from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+    SystemProgram
+} from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitOrUpdatePermissionArgs = {
-    status: AuthorityStatus,
-    canInitVaults: boolean,
-    canLiquidate: boolean,
-    canCosignSwaps: boolean,
-    canBorrowFromVaults: boolean,
-    canInitPools: boolean,
-}
+    status: AuthorityStatus;
+    canInitVaults: boolean;
+    canLiquidate: boolean;
+    canCosignSwaps: boolean;
+    canBorrowFromVaults: boolean;
+    canInitPools: boolean;
+};
 
 export type InitOrUpdatePermissionAccounts = {
-    payer: PublicKey,
-    newAuthority: PublicKey,
-}
+    payer: PublicKey;
+    newAuthority: PublicKey;
+};
 
 export enum AuthorityStatus {
     Inactive = 0,
-    Active = 1,
+    Active = 1
 }
 
 type InitOrUpdatePermissionInstructionAccounts = {
-    payer: PublicKey,
-    newAuthority: PublicKey,
-}
+    payer: PublicKey;
+    newAuthority: PublicKey;
+};
 
 type initOrUpdatePermissionInstructionAccountsStrict = {
-    authority: PublicKey,
-    superAdminPermission: PublicKey,
-    permission: PublicKey,
-    systemProgram: PublicKey,
+    authority: PublicKey;
+    superAdminPermission: PublicKey;
+    permission: PublicKey;
+    systemProgram: PublicKey;
 } & InitOrUpdatePermissionInstructionAccounts;
 
 const initOrUpdatePermissionConfig: BaseMethodConfig<
@@ -50,32 +45,36 @@ const initOrUpdatePermissionConfig: BaseMethodConfig<
     InitOrUpdatePermissionAccounts,
     InitOrUpdatePermissionInstructionAccounts | initOrUpdatePermissionInstructionAccountsStrict
 > = {
-    process: async (config: ConfigArgs<InitOrUpdatePermissionArgs, InitOrUpdatePermissionAccounts>) => {
+    process: async (
+        config: ConfigArgs<InitOrUpdatePermissionArgs, InitOrUpdatePermissionAccounts>
+    ) => {
         const allAccounts = {
             payer: config.accounts.payer,
             authority: config.program.provider.publicKey,
             superAdminPermission: PDA.getSuperAdmin(),
             newAuthority: config.accounts.newAuthority,
             permission: PDA.getAdmin(config.accounts.newAuthority),
-            systemProgram: SystemProgram.programId,
+            systemProgram: SystemProgram.programId
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                payer: allAccounts.payer,
-                newAuthority: allAccounts.newAuthority,
-            },
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      payer: allAccounts.payer,
+                      newAuthority: allAccounts.newAuthority
+                  },
             args: {
                 canCosignSwaps: config.args.canCosignSwaps,
                 canInitVaults: config.args.canInitVaults,
                 canLiquidate: config.args.canLiquidate,
                 canBorrowFromVaults: config.args.canBorrowFromVaults,
                 canInitPools: config.args.canInitPools,
-                status: { active: {} },
-            },
+                status: { active: {} }
+            }
         };
     },
-    getMethod: (program) => (args) => program.methods.initOrUpdatePermission(args),
+    getMethod: (program) => (args) => program.methods.initOrUpdatePermission(args)
 };
 
 export async function createInitOrUpdatePermissionInstruction(
@@ -83,7 +82,7 @@ export async function createInitOrUpdatePermissionInstruction(
     args: InitOrUpdatePermissionArgs,
     accounts: InitOrUpdatePermissionAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -93,7 +92,7 @@ export async function createInitOrUpdatePermissionInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -103,7 +102,7 @@ export async function initOrUpdatePermission(
     args: InitOrUpdatePermissionArgs,
     accounts: InitOrUpdatePermissionAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -113,7 +112,7 @@ export async function initOrUpdatePermission(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

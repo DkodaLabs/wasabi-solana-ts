@@ -3,174 +3,195 @@ import {
     AmmV4Keys,
     AmmRpcData,
     makeAMMSwapInstruction,
-    SwapInstructionParams,
-} from "@raydium-io/raydium-sdk-v2";
-import { BN } from "@coral-xyz/anchor";
-import { 
-    TransactionInstruction, 
-    PublicKey,
-    Connection,
-} from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+    SwapInstructionParams
+} from '@raydium-io/raydium-sdk-v2';
+import { BN } from '@coral-xyz/anchor';
+import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { SwapMode } from './swap';
 
-export type SwapMode = 'ExactIn' | 'ExactOut';
-
-type MarketInfo = {
-    id: string;
+type RouteHop = {
+    poolId: string;
     inputMint: string;
     outputMint: string;
-    notEnoughLiquidity: boolean;
-    inAmount: string;
-    outAmount: string;
-    lpFee: {
-        amount: string;
-        mint: string;
-        pct: number;
-    };
+    quotedInAmount: string;
+    quotedOutAmount: string;
     priceImpactPct: number;
-}
-
-type QuoteResponse = {
-    inputMint: string;
-    outputMint: string;
-    inAmount: string;
-    outAmount: string;
-    amount: string;
-    priceImpactPct: number;
-    marketInfo: MarketInfo;
-    swapMode: SwapMode;
-    slippageBps: number;
     poolKeys?: AmmV4Keys;
     poolRpcData?: AmmRpcData;
-}
+};
 
-type RaydiumInstructionResponse = {
+export type RouteQuoteResponse = {
+    inputMint: string;
+    outputMint: string;
+    inAmount: string;
+    outAmount: string;
+    priceImpactPct: number;
+    route: RouteHop[];
+    swapMode: SwapMode;
+    slippageBps: number;
+};
+
+export type RaydiumInstructionResponse = {
     computeBudgetInstructions?: TransactionInstruction[];
     setupInstructions: TransactionInstruction[];
-    swapInstruction: TransactionInstruction;
+    swapInstructions: TransactionInstruction[];
     cleanupInstructions: TransactionInstruction[];
     addressLookupTableAddresses?: string[];
-}
+};
 
-type CreateSwapInstructionArgs = {
-    quoteResponse: QuoteResponse;
-    userPublicKey: PublicKey;
-}
+type PoolData = {
+    poolInfo: any;
+    poolKeys: AmmV4Keys;
+    poolRpcData: AmmRpcData;
+};
 
-export async function getRaydiumQuote(
+export async function getRaydiumRouteQuote(
     inputMint: PublicKey,
     outputMint: PublicKey,
     amount: number,
     slippageBps: number,
-    poolId: string,
+    poolIds: string[],
     swapMode: SwapMode = 'ExactIn',
     connection: Connection
-): Promise<QuoteResponse> {
+): Promise<RouteQuoteResponse> {
     const raydium = await Raydium.load({
-        owner: inputMint, // Temporary placeholder, not used for quote
+        owner: inputMint,
         connection,
         disableFeatureCheck: true,
         disableLoadToken: false,
-        blockhashCommitment: "confirmed",
+        blockhashCommitment: 'confirmed'
     });
 
-    const poolData = await raydium.liquidity.getPoolInfoFromRpc({
-        poolId
-    });
-
-    const { poolInfo, poolKeys, poolRpcData } = poolData;
-
-    const computeResult = raydium.liquidity.computeAmountOut({
-        poolInfo: {
-            ...poolInfo,
-            baseReserve: poolRpcData.baseReserve,
-            quoteReserve: poolRpcData.quoteReserve,
-            status: poolRpcData.status.toNumber(),
-            version: 4,
-        },
-        amountIn: new BN(amount),
-        mintIn: inputMint,
-        mintOut: outputMint,
-        slippage: slippageBps / 10000,
-    });
-
-    const priceImpactPct = calculatePriceImpact(
-        amount,
-        computeResult.amountOut.toString(),
-        poolRpcData.baseReserve.toString(),
-        poolRpcData.quoteReserve.toString()
+    const poolDataPromises = poolIds.map(poolId =>
+        raydium.liquidity.getPoolInfoFromRpc({ poolId })
     );
+    const poolsData = await Promise.all(poolDataPromises);
+
+    const poolDataMap = new Map<string, PoolData>();
+    poolIds.forEach((poolId, index) => {
+        poolDataMap.set(poolId, poolsData[index]);
+    });
+
+    let currentAmount = new BN(amount);
+    let currentInputMint = inputMint;
+    const route: RouteHop[] = [];
+    let totalPriceImpact = 0;
+
+    for (let i = 0; i < poolIds.length; i++) {
+        const poolId = poolIds[i];
+        const poolData = poolDataMap.get(poolId)!;
+        const { poolInfo, poolKeys, poolRpcData } = poolData;
+
+        const currentOutputMint = i === poolIds.length - 1
+            ? outputMint
+            : determineOutputMint(
+                currentInputMint,
+                poolDataMap.get(poolIds[i + 1])!.poolKeys
+            );
+
+        const computeResult = raydium.liquidity.computeAmountOut({
+            poolInfo: {
+                ...poolInfo,
+                baseReserve: poolRpcData.baseReserve,
+                quoteReserve: poolRpcData.quoteReserve,
+                status: poolRpcData.status.toNumber(),
+                version: 4
+            },
+            amountIn: currentAmount,
+            mintIn: currentInputMint,
+            mintOut: currentOutputMint,
+            slippage: slippageBps / 10000
+        });
+
+        const priceImpact = calculatePriceImpact(
+            currentAmount.toString(),
+            computeResult.amountOut.toString(),
+            poolRpcData.baseReserve.toString(),
+            poolRpcData.quoteReserve.toString()
+        );
+
+        route.push({
+            poolId,
+            inputMint: currentInputMint.toString(),
+            outputMint: currentOutputMint.toString(),
+            quotedInAmount: currentAmount.toString(),
+            quotedOutAmount: computeResult.amountOut.toString(),
+            priceImpactPct: priceImpact,
+            poolKeys,
+            poolRpcData
+        });
+
+        currentAmount = computeResult.amountOut;
+        currentInputMint = currentOutputMint;
+        totalPriceImpact += priceImpact;
+    }
 
     return {
         inputMint: inputMint.toString(),
         outputMint: outputMint.toString(),
         inAmount: amount.toString(),
-        outAmount: computeResult.amountOut.toString(),
-        amount: amount.toString(),
-        priceImpactPct,
-        marketInfo: {
-            id: poolId,
-            inputMint: inputMint.toString(),
-            outputMint: outputMint.toString(),
-            notEnoughLiquidity: computeResult.amountOut.isZero(),
-            inAmount: amount.toString(),
-            outAmount: computeResult.amountOut.toString(),
-            lpFee: {
-                amount: computeResult.fee?.toString() || "0",
-                mint: inputMint.toString(),
-                pct: 0.3,
-            },
-            priceImpactPct,
-        },
+        outAmount: route[route.length - 1].quotedOutAmount,
+        priceImpactPct: totalPriceImpact,
+        route,
         swapMode,
-        slippageBps,
-        poolKeys,
-        poolRpcData,
+        slippageBps
     };
 }
 
-export async function createRaydiumSwapInstructions({
+function determineOutputMint(
+    currentInputMint: PublicKey,
+    nextPoolKeys: AmmV4Keys
+): PublicKey {
+    const mintA = new PublicKey(nextPoolKeys.mintA.address);
+    return currentInputMint.equals(mintA)
+        ? new PublicKey(nextPoolKeys.mintB.address)
+        : mintA;
+}
+
+export async function createRaydiumRouteSwapInstructions({
     quoteResponse,
-    userPublicKey,
-}: CreateSwapInstructionArgs): Promise<RaydiumInstructionResponse> {
-    if (!quoteResponse.poolKeys || !quoteResponse.poolRpcData) {
-        throw new Error("Quote response missing required pool information");
+    userPubkey
+}: {
+    quoteResponse: RouteQuoteResponse;
+    userPubkey: PublicKey;
+}): Promise<RaydiumInstructionResponse> {
+    const swapInstructions: TransactionInstruction[] = [];
+
+    for (let i = 0; i < quoteResponse.route.length; i++) {
+        const hop = quoteResponse.route[i];
+
+        if (!hop.poolKeys || !hop.poolRpcData) {
+            throw new Error(`Hop ${i} missing required pool information`);
+        }
+
+        const inputMint = new PublicKey(hop.inputMint);
+        const outputMint = new PublicKey(hop.outputMint);
+
+        const tokenAccountIn = getAssociatedTokenAddressSync(inputMint, userPubkey, true);
+        const tokenAccountOut = getAssociatedTokenAddressSync(outputMint, userPubkey, true);
+
+        const instructionParams: SwapInstructionParams = {
+            version: 4,
+            poolKeys: hop.poolKeys,
+            userKeys: {
+                tokenAccountIn,
+                tokenAccountOut,
+                owner: userPubkey
+            },
+            amountIn: new BN(hop.quotedInAmount),
+            amountOut: new BN(hop.quotedOutAmount),
+            fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out'
+        };
+
+        const swapInstruction = makeAMMSwapInstruction(instructionParams);
+        swapInstructions.push(swapInstruction);
     }
-
-    const inputMint = new PublicKey(quoteResponse.inputMint);
-    const outputMint = new PublicKey(quoteResponse.outputMint);
-
-    const tokenAccountIn = getAssociatedTokenAddressSync(
-        inputMint,
-        userPublicKey,
-        true
-    );
-
-    const tokenAccountOut = getAssociatedTokenAddressSync(
-        outputMint,
-        userPublicKey,
-        true
-    );
-
-    const instructionParams: SwapInstructionParams = {
-        version: 4,
-        poolKeys: quoteResponse.poolKeys,
-        userKeys: {
-            tokenAccountIn,
-            tokenAccountOut,
-            owner: userPublicKey,
-        },
-        amountIn: new BN(quoteResponse.inAmount),
-        amountOut: new BN(quoteResponse.outAmount),
-        fixedSide: quoteResponse.swapMode === 'ExactIn' ? 'in' : 'out',
-    };
-
-    const swapInstruction = makeAMMSwapInstruction(instructionParams);
 
     return {
         setupInstructions: [],
-        swapInstruction,
-        cleanupInstructions: [],
+        swapInstructions,
+        cleanupInstructions: []
     };
 }
 
@@ -186,11 +207,10 @@ function calculatePriceImpact(
     const reserveOut_bn = new BN(reserveOut.toString());
 
     const priceBefore = reserveOut_bn.mul(new BN(1000000)).div(reserveIn_bn);
-    const priceAfter = reserveOut_bn.sub(out_bn)
-        .mul(new BN(1000000))
-        .div(reserveIn_bn.add(in_bn));
+    const priceAfter = reserveOut_bn.sub(out_bn).mul(new BN(1000000)).div(reserveIn_bn.add(in_bn));
 
-    const priceImpact = priceBefore.sub(priceAfter)
+    const priceImpact = priceBefore
+        .sub(priceAfter)
         .mul(new BN(100))
         .mul(new BN(1000000))
         .div(priceBefore);

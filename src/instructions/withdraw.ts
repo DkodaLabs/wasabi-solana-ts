@@ -1,20 +1,15 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    handleMethodCall,
-    ConfigArgs,
-    constructMethodCallArgs,
-} from "../base";
+import { Program, BN } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { BaseMethodConfig, handleMethodCall, ConfigArgs, constructMethodCallArgs } from '../base';
 import {
     WithdrawArgs,
     WithdrawAccounts,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
-} from "./tokenAccounts";
-import { getTokenProgram } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+} from './tokenAccounts';
+import { getTokenProgram } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const withdrawConfig: BaseMethodConfig<
     WithdrawArgs,
@@ -34,14 +29,15 @@ export const withdrawConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict ? allAccounts : {
-                owner: config.program.provider.publicKey,
-                lpVault: allAccounts.lpVault,
-                assetMint: config.accounts.assetMint,
-                assetTokenProgram,
-            },
-            args: config.args ? new BN(config.args.amount)
-                : undefined
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      owner: config.program.provider.publicKey,
+                      lpVault: allAccounts.lpVault,
+                      assetMint: config.accounts.assetMint,
+                      assetTokenProgram
+                  },
+            args: config.args ? new BN(config.args.amount) : undefined
         };
     },
     getMethod: (program) => (args) => program.methods.withdraw(args)
@@ -52,7 +48,7 @@ export async function createWithdrawInstruction(
     args: WithdrawArgs,
     accounts: WithdrawAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -62,7 +58,7 @@ export async function createWithdrawInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -72,7 +68,7 @@ export async function withdraw(
     args: WithdrawArgs,
     accounts: WithdrawAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -82,7 +78,7 @@ export async function withdraw(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

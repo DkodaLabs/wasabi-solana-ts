@@ -1,30 +1,21 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import {
-    TransactionInstruction,
-    TransactionSignature,
-    PublicKey
-} from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { PDA } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+import { Program, BN } from '@coral-xyz/anchor';
+import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { PDA } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type SetMaxLeverageArgs = {
-    maxLeverage: number, // u64
-}
+    maxLeverage: number; // u64
+};
 
 export type SetMaxLeverageAccounts = {
-    authority: PublicKey,
-}
+    authority: PublicKey;
+};
 
 type SetMaxLeverageInstructionAccounts = SetMaxLeverageAccounts;
 type SetMaxLeverageInstructionAccountsStrict = {
-    superAdminPermission: PublicKey,
-    debtController: PublicKey,
+    superAdminPermission: PublicKey;
+    debtController: PublicKey;
 } & SetMaxLeverageInstructionAccounts;
 
 const setMaxLeverageConfig: BaseMethodConfig<
@@ -36,17 +27,19 @@ const setMaxLeverageConfig: BaseMethodConfig<
         const allAccounts = {
             authority: config.accounts.authority,
             superAdminPermission: PDA.getSuperAdmin(),
-            debtController: PDA.getDebtController(),
+            debtController: PDA.getDebtController()
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                authority: config.accounts.authority,
-            },
-            args: config.args ? new BN(config.args.maxLeverage) : undefined,
-        }
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      authority: config.accounts.authority
+                  },
+            args: config.args ? new BN(config.args.maxLeverage) : undefined
+        };
     },
-    getMethod: (program) => (args) => program.methods.setMaxLeverage(args),
+    getMethod: (program) => (args) => program.methods.setMaxLeverage(args)
 };
 
 export async function createSetMaxLeverageInstruction(
@@ -54,7 +47,7 @@ export async function createSetMaxLeverageInstruction(
     args: SetMaxLeverageArgs,
     accounts: SetMaxLeverageAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -64,7 +57,7 @@ export async function createSetMaxLeverageInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -74,7 +67,7 @@ export async function setMaxLeverage(
     args: SetMaxLeverageArgs,
     accounts: SetMaxLeverageAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -84,7 +77,7 @@ export async function setMaxLeverage(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

@@ -1,20 +1,15 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { TransactionSignature, TransactionInstruction } from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
+import { Program, BN } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
     MintArgs,
     MintAccounts,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts
-} from "./tokenAccounts";
-import { getTokenProgram } from "../utils";
-import { WasabiSolana } from "../../idl/wasabi_solana";
+} from './tokenAccounts';
+import { getTokenProgram } from '../utils';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const mintConfig: BaseMethodConfig<
     MintArgs,
@@ -34,12 +29,14 @@ export const mintConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict ? allAccounts : {
-                owner: config.program.provider.publicKey,
-                lpVault: allAccounts.lpVault,
-                assetMint: config.accounts.assetMint,
-                assetTokenProgram,
-            },
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      owner: config.program.provider.publicKey,
+                      lpVault: allAccounts.lpVault,
+                      assetMint: config.accounts.assetMint,
+                      assetTokenProgram
+                  },
             args: config.args ? new BN(config.args.amount) : undefined
         };
     },
@@ -51,7 +48,7 @@ export async function createMintInstruction(
     args: MintArgs,
     accounts: MintAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -61,7 +58,7 @@ export async function createMintInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -71,7 +68,7 @@ export async function mint(
     args: MintArgs,
     accounts: MintAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -81,7 +78,7 @@ export async function mint(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionSignature>;
 }

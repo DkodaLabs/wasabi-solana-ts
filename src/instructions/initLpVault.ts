@@ -1,36 +1,31 @@
-import { Program } from "@coral-xyz/anchor";
-import { TransactionInstruction, PublicKey, SystemProgram } from "@solana/web3.js";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.js';
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
     getAssociatedTokenAddressSync
-} from "@solana/spl-token";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
-import { WasabiSolana } from "../../idl/wasabi_solana";
-import { PDA, getPermission, getTokenProgram } from "../utils";
+} from '@solana/spl-token';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { WasabiSolana } from '../idl/wasabi_solana';
+import { PDA, getPermission, getTokenProgram } from '../utils';
 
 export type InitLpVaultArgs = {
     name: string;
     symbol: string;
     uri: string;
-}
+};
 
 export type InitLpVaultAccounts = {
-    admin: PublicKey,
-    assetMint: PublicKey,
-}
+    admin: PublicKey;
+    assetMint: PublicKey;
+};
 
 type InitLpVaultInstructionAccounts = {
     payer: PublicKey;
     permission: PublicKey;
     assetMint: PublicKey;
     assetTokenProgram: PublicKey;
-}
+};
 
 type InitLpVaultInstructionAccountsStrict = {
     authority: PublicKey;
@@ -50,7 +45,8 @@ export const initLpVaultConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
         const lpVault = PDA.getLpVault(config.accounts.assetMint);
         const assetTokenProgram = await getTokenProgram(
-            config.program.provider.connection, config.accounts.assetMint
+            config.program.provider.connection,
+            config.accounts.assetMint
         );
         const allAccounts = {
             payer: config.program.provider.publicKey,
@@ -68,17 +64,19 @@ export const initLpVaultConfig: BaseMethodConfig<
             assetTokenProgram,
             sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId,
+            systemProgram: SystemProgram.programId
         };
 
         return {
-            accounts: config.strict ? allAccounts : {
-                payer: allAccounts.payer,
-                permission: allAccounts.permission,
-                assetMint: allAccounts.assetMint,
-                assetTokenProgram,
-            },
-            args: config.args,
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      payer: allAccounts.payer,
+                      permission: allAccounts.permission,
+                      assetMint: allAccounts.assetMint,
+                      assetTokenProgram
+                  },
+            args: config.args
         };
     },
     getMethod: (program) => (args) => program.methods.initLpVault(args)
@@ -89,7 +87,7 @@ export async function createInitLpVaultInstruction(
     args: InitLpVaultArgs,
     accounts: InitLpVaultAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -99,7 +97,7 @@ export async function createInitLpVaultInstruction(
             'instruction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -109,7 +107,7 @@ export async function initLpVault(
     args: InitLpVaultArgs,
     accounts: InitLpVaultAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -119,8 +117,7 @@ export async function initLpVault(
             'transaction',
             strict,
             increaseCompute,
-            args,
+            args
         )
     ) as Promise<TransactionInstruction[]>;
 }
-

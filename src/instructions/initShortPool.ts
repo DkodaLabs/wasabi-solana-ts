@@ -1,22 +1,13 @@
-import { Program } from "@coral-xyz/anchor";
-import {
-    TransactionSignature,
-    TransactionInstruction,
-} from "@solana/web3.js";
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-    constructMethodCallArgs,
-} from "../base";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
     InitPoolAccounts,
     InitPoolInstructionAccounts,
     InitPoolInstructionAccountsStrict,
-    getInitPoolInstructionAccounts,
-} from "./initPool";
-import { WasabiSolana } from "../../idl/wasabi_solana";
-
+    getInitPoolInstructionAccounts
+} from './initPool';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 const initShortPoolConfig: BaseMethodConfig<
     void,
@@ -31,24 +22,26 @@ const initShortPoolConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict ? allAccounts : {
-                payer: allAccounts.payer,
-                permission: allAccounts.permission,
-                collateral: allAccounts.collateral,
-                currency: allAccounts.currency,
-                collateralTokenProgram: allAccounts.collateralTokenProgram,
-                currencyTokenProgram: allAccounts.currencyTokenProgram,
-            }
+            accounts: config.strict
+                ? allAccounts
+                : {
+                      payer: allAccounts.payer,
+                      permission: allAccounts.permission,
+                      collateral: allAccounts.collateral,
+                      currency: allAccounts.currency,
+                      collateralTokenProgram: allAccounts.collateralTokenProgram,
+                      currencyTokenProgram: allAccounts.currencyTokenProgram
+                  }
         };
     },
-    getMethod: (program) => () => program.methods.initShortPool(),
-}
+    getMethod: (program) => () => program.methods.initShortPool()
+};
 
 export async function createInitShortPoolInstruction(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
     strict: boolean = true,
-    increaseCompute = false,
+    increaseCompute = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -57,7 +50,7 @@ export async function createInitShortPoolInstruction(
             initShortPoolConfig,
             'instruction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -66,7 +59,7 @@ export async function initShortPool(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
     strict: boolean = true,
-    increaseCompute: boolean = false,
+    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -75,7 +68,7 @@ export async function initShortPool(
             initShortPoolConfig,
             'transaction',
             strict,
-            increaseCompute,
+            increaseCompute
         )
     ) as Promise<TransactionSignature>;
 }

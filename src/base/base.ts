@@ -1,16 +1,12 @@
-import { Program } from "@coral-xyz/anchor";
-import {
-    TransactionInstruction,
-    TransactionSignature,
-    PublicKey,
-} from "@solana/web3.js";
-import { WasabiSolana } from "./../idl/wasabi_solana";
+import { Program } from '@coral-xyz/anchor';
+import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ProcessResult<T> = {
-    accounts: T,
-    args?: any,
-    setup?: TransactionInstruction[],
-}
+    accounts: T;
+    args?: any;
+    setup?: TransactionInstruction[];
+};
 
 export type ConfigArgs<TArgs, TAccounts> = {
     program: Program<WasabiSolana>;
@@ -18,7 +14,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
     strict: boolean;
     increaseCompute: boolean;
     args?: TArgs;
-}
+};
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>;
@@ -28,14 +24,14 @@ export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
 export type BaseMethodConfig<
     TArgs = void,
     TAccounts = any,
-    TProcessedAccounts = Record<string, PublicKey>,
+    TProcessedAccounts = Record<string, PublicKey>
 > = {
     process: (config: ConfigArgs<TArgs, TAccounts>) => Promise<ProcessResult<TProcessedAccounts>>;
     getMethod: (program: Program<WasabiSolana>) => (args: any) => any;
-}
+};
 
 export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAccounts = any>(
-    args: MethodCallArgs<TArgs, TAccounts, TProgramAccounts>,
+    args: MethodCallArgs<TArgs, TAccounts, TProgramAccounts>
 ): Promise<TransactionInstruction[] | TransactionSignature> {
     const processed = await args.config.process({
         program: args.program,
@@ -55,7 +51,9 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     }
 
     return args.mode === 'instruction'
-        ? builder.instruction().then((ix: TransactionInstruction) => [...(processed.setup || []), ix])
+        ? builder
+              .instruction()
+              .then((ix: TransactionInstruction) => [...(processed.setup || []), ix])
         : builder.rpc();
 }
 
@@ -75,6 +73,6 @@ export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramA
         mode,
         strict,
         increaseCompute,
-        args,
+        args
     };
 }
