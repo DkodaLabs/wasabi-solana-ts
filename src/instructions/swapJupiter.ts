@@ -109,8 +109,8 @@ export async function getJupiterQuote(
         slippageBps: slippageBps.toString()
     };
 
-    if (swapMode === 'ExactOut') {
-        args.swapMode = swapMode;
+    if (swapMode === 'EXACT_OUT') {
+        args.swapMode = 'ExactOut';
     }
 
     if (options) {
