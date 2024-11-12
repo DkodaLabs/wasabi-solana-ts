@@ -19,8 +19,8 @@ export type CreateSwapInstructionArgs = {
     outputMint: PublicKey;
     amount: number;
     slippageBps: number;
-    walletPubkey: PublicKey;
-    userPubkey?: PublicKey;
+    ownerPubkey: PublicKey;
+    authorityPubkey?: PublicKey;
     swapMode?: SwapMode;
     preferredProvider?: SwapProvider;
     options?: {
@@ -39,8 +39,8 @@ export async function createSwapInstructionGroup({
     outputMint,
     amount,
     slippageBps,
-    walletPubkey,
-    userPubkey,
+    ownerPubkey,
+    authorityPubkey,
     swapMode = 'EXACT_IN',
     preferredProvider = 'jupiter',
     options = {}
@@ -52,8 +52,8 @@ export async function createSwapInstructionGroup({
             outputMint,
             amount,
             slippageBps,
-            walletPubkey,
-            userPubkey,
+            ownerPubkey,
+            authorityPubkey,
             swapMode,
             options
         });
@@ -68,8 +68,8 @@ export async function createSwapInstructionGroup({
                 outputMint,
                 amount,
                 slippageBps,
-                walletPubkey,
-                userPubkey,
+                ownerPubkey,
+                authorityPubkey,
                 swapMode,
                 options
             });
@@ -88,8 +88,8 @@ async function createProviderSwapInstructions(
         outputMint: PublicKey;
         amount: number;
         slippageBps: number;
-        walletPubkey: PublicKey;
-        userPubkey: PublicKey;
+        ownerPubkey: PublicKey;
+        authorityPubkey: PublicKey;
         swapMode: SwapMode;
         options?: {
             raydiumPoolId?: string;
@@ -113,7 +113,8 @@ async function constructJupiterSwapInstructions({
     outputMint,
     amount,
     slippageBps,
-    userPubkey,
+    ownerPubkey,
+    authorityPubkey,
     swapMode,
     options
 }: {
@@ -122,7 +123,8 @@ async function constructJupiterSwapInstructions({
     outputMint: PublicKey;
     amount: number;
     slippageBps: number;
-    userPubkey: PublicKey;
+    ownerPubkey: PublicKey,
+    authorityPubkey: PublicKey;
     swapMode: SwapMode;
     options?: {
         jupiterOptions?: {
@@ -143,7 +145,7 @@ async function constructJupiterSwapInstructions({
 
     const jupiterInstructions = await createJupiterSwapInstructions({
         quoteResponse,
-        ownerPubkey: userPubkey,
+        ownerPubkey: ownerPubkey,
         wrapUnwrapSOL: true
     });
 
@@ -171,8 +173,8 @@ async function constructRaydiumSwapInstructions({
     outputMint,
     amount,
     slippageBps,
-    walletPubkey,
-    userPubkey,
+    ownerPubkey,
+    authorityPubkey,
     swapMode,
     options
 }: {
@@ -181,8 +183,8 @@ async function constructRaydiumSwapInstructions({
     outputMint: PublicKey;
     amount: number;
     slippageBps: number;
-    walletPubkey: PublicKey,
-    userPubkey?: PublicKey;
+    ownerPubkey: PublicKey,
+    authorityPubkey?: PublicKey;
     swapMode: SwapMode;
     options?: {
         raydiumPoolId?: string;
@@ -204,8 +206,8 @@ async function constructRaydiumSwapInstructions({
 
     const raydiumInstructions = await createRaydiumRouteSwapInstructions({
         quoteResponse,
-        walletPubkey,
-        userPubkey
+        ownerPubkey,
+        authorityPubkey
     });
 
     return {

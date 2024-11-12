@@ -1,5 +1,12 @@
 import { PublicKey } from '@solana/web3.js';
 
+// `owner` == `userPubkey` passed in via request
+export type OpenPositionParams = {
+    currency: PublicKey,
+    collateral: PublicKey,
+    feeWallet: PublicKey,
+} & OpenPositionSetupArgs;
+
 export type OpenPositionSetupArgs = {
     /// The nonce of the position
     nonce: number; // u16
@@ -19,7 +26,7 @@ export type OpenPositionSetupArgs = {
 
 export type OpenPositionSetupAccounts = {
     /// Needs to be passed in as we construct the instruction for the user
-    owner: PublicKey;
+    owner: PublicKey; // required
     /// Backend authority - this should be program.provider.publicKey since we always
     /// construct the instruction for the user
     //authority: PublicKey,
@@ -28,15 +35,15 @@ export type OpenPositionSetupAccounts = {
     currency: PublicKey;
     /// BASE
     collateral: PublicKey;
-    feeWallet: PublicKey;
+    feeWallet: PublicKey; // required
 }
 
 export type OpenPositionCleanupAccounts = {
-    owner: PublicKey;
-    currency: PublicKey;
-    collateral: PublicKey;
-    pool: PublicKey;
-    position: PublicKey;
+    owner: PublicKey; // required
+    currency: PublicKey; // required
+    collateral: PublicKey; // required
+    pool: PublicKey; // derived
+    position: PublicKey; // derived
 }
 
 export type OpenPositionCleanupInstructionAccounts = {

@@ -4,6 +4,11 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PDA, getPermission } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+export type ClosePositionParams = {
+    position: PublicKey,
+    feeWallet: PublicKey,
+} & ClosePositionSetupArgs;
+
 export type ClosePositionSetupArgs = {
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
@@ -16,20 +21,20 @@ export type ClosePositionSetupArgs = {
 };
 
 export type ClosePositionSetupAccounts = {
-    authority: PublicKey;
-    position: PublicKey;
-    pool: PublicKey;
-    collateral: PublicKey;
-    currency: PublicKey;
+    authority: PublicKey; // provided by ux
+    position: PublicKey; // required
+    pool: PublicKey; // derived via request + position
+    collateral: PublicKey; // derived
+    currency: PublicKey; // derived
 };
 
 export type ClosePositionSetupInstructionAccounts = {
-    owner: PublicKey;
-    position: PublicKey;
-    pool: PublicKey;
-    collateral: PublicKey;
-    permission: PublicKey;
-    tokenProgram: PublicKey;
+    owner: PublicKey; // derived
+    position: PublicKey; // required
+    pool: PublicKey; // required 
+    collateral: PublicKey; // derived
+    permission: PublicKey; // derived
+    tokenProgram: PublicKey; // derived
 };
 
 export type ClosePositionSetupInstructionAccountsStrict = {
@@ -42,12 +47,12 @@ export type ClosePositionSetupInstructionAccountsStrict = {
 } & ClosePositionSetupInstructionAccounts;
 
 export type ClosePositionCleanupAccounts = {
-    authority: PublicKey;
-    position: PublicKey;
-    pool: PublicKey;
-    collateral: PublicKey;
-    currency: PublicKey;
-    feeWallet: PublicKey;
+    authority: PublicKey; // derived
+    position: PublicKey; // requires passing
+    pool: PublicKey; // derived
+    collateral: PublicKey; // derived
+    currency: PublicKey; // derived
+    feeWallet: PublicKey; // requires passing
 };
 
 export type ClosePositionCleanupInstructionAccounts = {
