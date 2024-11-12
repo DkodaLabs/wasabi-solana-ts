@@ -8,100 +8,44 @@ import {
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PDA, getPermission, getTokenProgram } from '../utils';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    OpenPositionSetupArgs,
+    OpenPositionSetupAccounts,
+    OpenPositionCleanupAccounts,
+    OpenPositionCleanupInstructionAccounts,
+    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupInstructionBaseStrictAccounts,
+    OpenPositionCleanupInstructionBaseStrictAccounts,
+} from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 //TODO: This is probably going to need a lookup table due to the high number of accounts
 //being used
 
-export type OpenLongPositionSetupArgs = {
-    /// The nonce of the position
-    nonce: number; // u16
-    /// The minimum amount out required when swapping
-    minTargetAmount: number; // u64
-    /// The initial down payment amount required to open the position
-    // (is in `currency` for long positions, `collateralCurrency` for short
-    // positions
-    downPayment: number; // u64
-    /// The total principal amount to be borrowed for the position.
-    principal: number; // u64
-    /// The fee to be paid for the position
-    fee: number; // u64
-    /// The timestamp when this position request expires as a unixtimestamp
-    expiration: number; // i64
-};
-
-export type OpenLongPositionSetupAccounts = {
-    /// Needs to be passed in as we construct the instruction for the user
-    owner: PublicKey;
-    /// Backend authority - this should be program.provider.publicKey since we always
-    /// construct the instruction for the user
-    //authority: PublicKey,
-    /// The address of the currency to be paid for the position.
-    /// QUOTE
-    currency: PublicKey;
-    /// BASE
-    collateral: PublicKey;
-    feeWallet: PublicKey;
-};
-
 type OpenLongPositionSetupInstructionAccounts = {
-    owner: PublicKey;
-    lpVault: PublicKey;
-    longPool: PublicKey;
-    collateral: PublicKey;
-    currency: PublicKey;
-    authority: PublicKey;
-    permission: PublicKey;
-    feeWallet: PublicKey;
     tokenProgram: PublicKey;
-};
+} & OpenPositionSetupInstructionBaseAccounts;
+
 type OpenLongPositionSetupInstructionAccountsStrict = {
-    ownerCurrencyAccount: PublicKey;
-    vault: PublicKey;
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    position: PublicKey;
     debtController: PublicKey;
-    globalSettings: PublicKey;
-    systemProgram: PublicKey;
-    sysvarInfo: PublicKey;
-} & OpenLongPositionSetupInstructionAccounts;
+} & OpenLongPositionSetupInstructionAccounts & OpenPositionSetupInstructionBaseStrictAccounts;
 
-export type OpenLongPositionCleanupAccounts = {
-    owner: PublicKey;
-    currency: PublicKey;
-    collateral: PublicKey;
-    longPool: PublicKey;
-    position: PublicKey;
-};
-
-type OpenLongPositionCleanupInstructionAccounts = {
-    owner: PublicKey;
-    longPool: PublicKey;
-    position: PublicKey;
-    tokenProgram: PublicKey;
-};
-
-type OpenLongPositionCleanupInstructionAccountsStrict = {
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    openPositionRequest: PublicKey;
-} & OpenLongPositionCleanupInstructionAccounts;
+type OpenLongPositionCleanupInstructionAccountsStrict = OpenPositionCleanupInstructionBaseStrictAccounts & OpenPositionCleanupInstructionAccounts;
 
 const openLongPositionSetupConfig: BaseMethodConfig<
-    OpenLongPositionSetupArgs,
-    OpenLongPositionSetupAccounts,
+    OpenPositionSetupArgs,
+    OpenPositionSetupAccounts,
     OpenLongPositionSetupInstructionAccounts | OpenLongPositionSetupInstructionAccountsStrict
 > = {
     process: async (
-        config: ConfigArgs<OpenLongPositionSetupArgs, OpenLongPositionSetupAccounts>
+        config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
     ) => {
         const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
             getTokenProgram(config.program.provider.connection, config.accounts.collateral),
             getTokenProgram(config.program.provider.connection, config.accounts.currency)
         ]);
         const lpVault = PDA.getLpVault(config.accounts.currency);
-        const longPool = PDA.getLongPool(config.accounts.currency, config.accounts.collateral);
+        const pool = PDA.getLongPool(config.accounts.currency, config.accounts.collateral);
         const allAccounts = {
             owner: config.accounts.owner,
             ownerCurrencyAccount: getAssociatedTokenAddressSync(
@@ -123,7 +67,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 true,
                 currencyTokenProgram
             ),
-            longPool,
+            pool,
             collateralVault: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
                 lpVault,
@@ -139,7 +83,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             currency: config.accounts.currency,
             collateral: config.accounts.collateral,
             openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-            position: PDA.getPosition(config.accounts.owner, longPool, lpVault, config.args.nonce),
+            position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
             authority: config.program.provider.publicKey,
             permission: await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
@@ -163,16 +107,16 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: allAccounts.owner,
-                      lpVault: allAccounts.lpVault,
-                      longPool: allAccounts.longPool,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      authority: allAccounts.authority,
-                      permission: allAccounts.permission,
-                      feeWallet: allAccounts.feeWallet,
-                      tokenProgram: allAccounts.tokenProgram
-                  },
+                    owner: allAccounts.owner,
+                    lpVault: allAccounts.lpVault,
+                    pool: allAccounts.pool,
+                    collateral: allAccounts.collateral,
+                    currency: allAccounts.currency,
+                    authority: allAccounts.authority,
+                    permission: allAccounts.permission,
+                    feeWallet: allAccounts.feeWallet,
+                    tokenProgram: allAccounts.tokenProgram
+                },
             args
         };
     },
@@ -189,26 +133,26 @@ const openLongPositionSetupConfig: BaseMethodConfig<
 
 const openLongPositionCleanupConfig: BaseMethodConfig<
     void,
-    OpenLongPositionCleanupAccounts,
-    OpenLongPositionCleanupInstructionAccounts | OpenLongPositionCleanupInstructionAccountsStrict
+    OpenPositionCleanupAccounts,
+    OpenPositionCleanupInstructionAccounts | OpenLongPositionCleanupInstructionAccountsStrict
 > = {
-    process: async (config: ConfigArgs<void, OpenLongPositionCleanupAccounts>) => {
+    process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
         const [collateralTokenProgram, currencyTokenProgram] =
             await config.program.provider.connection
                 .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
                 .then((acc) => [acc[0].owner, acc[1].owner]);
         const allAccounts = {
             owner: config.accounts.owner,
-            longPool: config.accounts.longPool,
+            pool: config.accounts.pool,
             collateralVault: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
-                config.accounts.longPool,
+                config.accounts.pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
                 config.accounts.currency,
-                config.accounts.longPool,
+                config.accounts.pool,
                 true,
                 currencyTokenProgram
             ),
@@ -221,11 +165,11 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: allAccounts.owner,
-                      longPool: allAccounts.longPool,
-                      position: allAccounts.position,
-                      tokenProgram: allAccounts.tokenProgram
-                  }
+                    owner: allAccounts.owner,
+                    pool: allAccounts.pool,
+                    position: allAccounts.position,
+                    tokenProgram: allAccounts.tokenProgram
+                }
         };
     },
     getMethod: (program) => () => program.methods.openLongPositionCleanup()
@@ -233,8 +177,8 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
 
 export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
-    args: OpenLongPositionSetupArgs,
-    accounts: OpenLongPositionSetupAccounts,
+    args: OpenPositionSetupArgs,
+    accounts: OpenPositionSetupAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
@@ -253,7 +197,7 @@ export async function createOpenLongPositionSetupInstruction(
 
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenLongPositionCleanupAccounts,
+    accounts: OpenPositionCleanupAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {

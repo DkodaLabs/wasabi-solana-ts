@@ -4,4 +4,3 @@ export * from './instructions/index.js';
 export * from './idl/index.js';
 import * as idl from './idl/wasabi_solana.json';
 export { idl };
-

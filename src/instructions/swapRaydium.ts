@@ -79,7 +79,7 @@ export async function getRaydiumRouteQuote(
 
     if (swapMode === 'EXACT_OUT') {
         let currentOutputMint = outputMint;
-        
+
         for (let i = poolIds.length - 1; i >= 0; i--) {
             const poolId = poolIds[i];
             const poolData = poolDataMap.get(poolId)!;
@@ -141,7 +141,7 @@ export async function getRaydiumRouteQuote(
         };
     } else {
         let currentInputMint = inputMint;
-        
+
         for (let i = 0; i < poolIds.length; i++) {
             const poolId = poolIds[i];
             const poolData = poolDataMap.get(poolId)!;
@@ -262,7 +262,7 @@ export async function createRaydiumRouteSwapInstructions({
     };
 }
 
-function calculatePriceImpact(
+export function calculatePriceImpact(
     amountIn: string | number,
     amountOut: string | number,
     reserveIn: string | number,

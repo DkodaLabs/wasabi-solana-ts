@@ -3358,7 +3358,7 @@
           "signer": true
         },
         {
-          "name": "long_pool",
+          "name": "pool",
           "docs": [
             "The LongPool that owns the Position"
           ]
@@ -3369,13 +3369,13 @@
             "The collateral account that is the destination of the swap"
           ],
           "relations": [
-            "long_pool"
+            "pool"
           ]
         },
         {
           "name": "currency_vault",
           "relations": [
-            "long_pool"
+            "pool"
           ]
         },
         {
@@ -3512,7 +3512,7 @@
           ]
         },
         {
-          "name": "long_pool",
+          "name": "pool",
           "docs": [
             "The LongPool that owns the Position"
           ]
@@ -3524,14 +3524,14 @@
           ],
           "writable": true,
           "relations": [
-            "long_pool"
+            "pool"
           ]
         },
         {
           "name": "currency_vault",
           "writable": true,
           "relations": [
-            "long_pool"
+            "pool"
           ]
         },
         {
@@ -3589,7 +3589,7 @@
               },
               {
                 "kind": "account",
-                "path": "long_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",
@@ -3735,7 +3735,7 @@
           "writable": true
         },
         {
-          "name": "short_pool",
+          "name": "pool",
           "docs": [
             "The ShortPool that owns the Position"
           ]
@@ -3747,14 +3747,14 @@
           ],
           "writable": true,
           "relations": [
-            "short_pool"
+            "pool"
           ]
         },
         {
           "name": "currency_vault",
           "writable": true,
           "relations": [
-            "short_pool"
+            "pool"
           ]
         },
         {
@@ -3998,7 +3998,7 @@
           ]
         },
         {
-          "name": "short_pool",
+          "name": "pool",
           "docs": [
             "The ShortPool that owns the Position"
           ]
@@ -4010,14 +4010,14 @@
           ],
           "writable": true,
           "relations": [
-            "short_pool"
+            "pool"
           ]
         },
         {
           "name": "currency_vault",
           "writable": true,
           "relations": [
-            "short_pool"
+            "pool"
           ]
         },
         {
@@ -4075,7 +4075,7 @@
               },
               {
                 "kind": "account",
-                "path": "short_pool"
+                "path": "pool"
               },
               {
                 "kind": "account",

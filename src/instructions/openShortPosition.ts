@@ -7,97 +7,44 @@ import {
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    OpenPositionSetupArgs,
+    OpenPositionSetupAccounts,
+    OpenPositionCleanupAccounts,
+    OpenPositionCleanupInstructionAccounts,
+    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupInstructionBaseStrictAccounts,
+    OpenPositionCleanupInstructionBaseStrictAccounts,
+} from './openPosition';
 import { PDA, getPermission } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-export type OpenShortPositionSetupArgs = {
-    /// The nonce of the position
-    nonce: number; // u16
-    /// The minimum amount out required when swapping
-    minTargetAmount: number; // u64
-    /// The initial down payment amount required to open the position
-    // (is in `currency` for short positions, `collateralCurrency` for short
-    // positions
-    downPayment: number; // u64
-    /// The total principal amount to be borrowed for the position.
-    principal: number; // u64
-    /// The fee to be paid for the position
-    fee: number; // u64
-    /// The timestamp when this position request expires as a unixtimestamp
-    expiration: number; // i64
-};
-
-export type OpenShortPositionSetupAccounts = {
-    owner: PublicKey;
-    /// Backend authority - should always be `program.provider.publicKey` as the microservice constructs the instruction
-    //authority: PublicKey,
-    /// The address of the currency to be paid for the position.
-    currency: PublicKey;
-    collateral: PublicKey;
-    feeWallet: PublicKey;
-};
-
 type OpenShortPositionSetupInstructionAccounts = {
-    owner: PublicKey;
-    lpVault: PublicKey;
-    shortPool: PublicKey;
-    collateral: PublicKey;
-    currency: PublicKey;
-    authority: PublicKey;
-    permission: PublicKey;
-    feeWallet: PublicKey;
     collateralTokenProgram: PublicKey;
     currencyTokenProgram: PublicKey;
-};
+} & OpenPositionSetupInstructionBaseAccounts;
 
-type OpenShortPositionSetupInstructionAccountsStrict = {
-    ownerCurrencyAccount: PublicKey;
-    vault: PublicKey;
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    position: PublicKey;
-    globalSettings: PublicKey;
-    systemProgram: PublicKey;
-    sysvarInfo: PublicKey;
-} & OpenShortPositionSetupInstructionAccounts;
-
-export type OpenShortPositionCleanupAccounts = {
-    owner: PublicKey;
-    currency: PublicKey;
-    collateral: PublicKey;
-    shortPool: PublicKey;
-    position: PublicKey;
-};
-
-type OpenShortPositionCleanupInstructionAccounts = {
-    owner: PublicKey;
-    shortPool: PublicKey;
-    position: PublicKey;
-    tokenProgram: PublicKey;
-};
+type OpenShortPositionSetupInstructionAccountsStrict = OpenPositionSetupInstructionBaseStrictAccounts & OpenShortPositionSetupInstructionAccounts;
 
 type OpenShortPositionCleanupInstructionAccountsStrict = {
     vault: PublicKey;
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    openPositionRequest: PublicKey;
     debtController: PublicKey;
-} & OpenShortPositionCleanupInstructionAccounts;
+} & OpenPositionCleanupInstructionAccounts & OpenPositionCleanupInstructionBaseStrictAccounts;
 
 const openShortPositionSetupConfig: BaseMethodConfig<
-    OpenShortPositionSetupArgs,
-    OpenShortPositionSetupAccounts,
+    OpenPositionSetupArgs,
+    OpenPositionSetupAccounts,
     OpenShortPositionSetupInstructionAccounts | OpenShortPositionSetupInstructionAccountsStrict
 > = {
     process: async (
-        config: ConfigArgs<OpenShortPositionSetupArgs, OpenShortPositionSetupAccounts>
+        config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
     ) => {
         const [collateralTokenProgram, currencyTokenProgram] =
             await config.program.provider.connection
                 .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
                 .then((acc) => [acc[0].owner, acc[1].owner]);
         const lpVault = PDA.getLpVault(config.accounts.collateral);
-        const shortPool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
+        const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
         const allAccounts = {
             owner: config.accounts.owner,
@@ -120,23 +67,23 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 true,
                 collateralTokenProgram
             ),
-            shortPool,
+            pool,
             collateralVault: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
-                shortPool,
+                pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
                 config.accounts.currency,
-                shortPool,
+                pool,
                 true,
                 currencyTokenProgram
             ),
             currency: config.accounts.currency,
             collateral: config.accounts.collateral,
             openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-            position: PDA.getPosition(config.accounts.owner, shortPool, lpVault, config.args.nonce),
+            position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
             authority: config.program.provider.publicKey,
             permission: await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
@@ -160,17 +107,17 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: allAccounts.owner,
-                      lpVault,
-                      shortPool: allAccounts.shortPool,
-                      currency: allAccounts.currency,
-                      collateral: allAccounts.collateral,
-                      permission: allAccounts.permission,
-                      authority: allAccounts.authority,
-                      feeWallet: allAccounts.feeWallet,
-                      currencyTokenProgram,
-                      collateralTokenProgram
-                  },
+                    owner: allAccounts.owner,
+                    lpVault,
+                    pool: allAccounts.pool,
+                    currency: allAccounts.currency,
+                    collateral: allAccounts.collateral,
+                    permission: allAccounts.permission,
+                    authority: allAccounts.authority,
+                    feeWallet: allAccounts.feeWallet,
+                    currencyTokenProgram,
+                    collateralTokenProgram
+                },
             args
         };
     },
@@ -187,10 +134,10 @@ const openShortPositionSetupConfig: BaseMethodConfig<
 
 const openShortPositionCleanupConfig: BaseMethodConfig<
     void,
-    OpenShortPositionCleanupAccounts,
-    OpenShortPositionCleanupInstructionAccounts | OpenShortPositionCleanupInstructionAccountsStrict
+    OpenPositionCleanupAccounts,
+    OpenPositionCleanupInstructionAccounts | OpenShortPositionCleanupInstructionAccountsStrict
 > = {
-    process: async (config: ConfigArgs<void, OpenShortPositionCleanupAccounts>) => {
+    process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
         const [collateralTokenProgram, currencyTokenProgram] =
             await config.program.provider.connection
                 .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
@@ -199,16 +146,16 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
         const allAccounts = {
             owner: config.accounts.owner,
             position: config.accounts.position,
-            shortPool: config.accounts.shortPool,
+            pool: config.accounts.pool,
             collateralVault: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
-                config.accounts.shortPool,
+                config.accounts.pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
                 config.accounts.currency,
-                config.accounts.shortPool,
+                config.accounts.pool,
                 true,
                 currencyTokenProgram
             ),
@@ -230,14 +177,14 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: allAccounts.owner,
-                      shortPool: allAccounts.shortPool,
-                      lpVault,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      position: allAccounts.position,
-                      tokenProgram: allAccounts.tokenProgram
-                  }
+                    owner: allAccounts.owner,
+                    pool: allAccounts.pool,
+                    lpVault,
+                    collateral: allAccounts.collateral,
+                    currency: allAccounts.currency,
+                    position: allAccounts.position,
+                    tokenProgram: allAccounts.tokenProgram
+                }
         };
     },
     getMethod: (program) => () => program.methods.openShortPositionCleanup()
@@ -245,8 +192,8 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
 
 export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
-    args: OpenShortPositionSetupArgs,
-    accounts: OpenShortPositionSetupAccounts,
+    args: OpenPositionSetupArgs,
+    accounts: OpenPositionSetupAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
@@ -265,7 +212,7 @@ export async function createOpenShortPositionSetupInstruction(
 
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenShortPositionCleanupAccounts,
+    accounts: OpenPositionCleanupAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
