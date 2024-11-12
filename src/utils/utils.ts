@@ -1,4 +1,12 @@
-import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { SignerWalletAdapter } from '@solana/wallet-adapter-base';
+import {
+    PublicKey,
+    Connection,
+    SendOptions,
+    VersionedTransaction,
+    TransactionSignature,
+    LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
@@ -8,7 +16,6 @@ import {
     MintLayout,
     getTokenMetadata,
     getAssociatedTokenAddressSync,
-    getMint
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
@@ -388,4 +395,61 @@ export async function getMultipleTokenAccounts(
     });
 
     return results;
+}
+
+export async function handleSerializedTransaction(
+    wallet: Pick<SignerWalletAdapter, 'publicKey' | 'signTransaction'>,
+    serializedTransaction: string,
+    connection: Connection,
+    options: SendOptions = { maxRetries: 3 }
+): Promise<TransactionSignature> {
+    try {
+        if (!wallet.publicKey) {
+            throw new Error('Wallet not connected');
+        }
+
+        if (!wallet.signTransaction) {
+            throw new Error('Wallet does not support transaction signing');
+        }
+
+        const serializedBuffer = Buffer.from(serializedTransaction, 'base64');
+        const transaction = VersionedTransaction.deserialize(serializedBuffer);
+
+        const message = transaction.message;
+        const feePayerPubkey = message.staticAccountKeys[0];
+
+        if (!feePayerPubkey.equals(wallet.publicKey)) {
+            throw new Error('Fee payer public key mismatch');
+        }
+
+        const signedTransaction = await wallet.signTransaction(transaction);
+
+        if (transaction.signatures.length < message.header.numRequiredSignatures) {
+            throw new Error(
+                `Transaction requires ${message.header.numRequiredSignatures} signatures but only has ${transaction.signatures.length}`
+            );
+        }
+
+        if (!signedTransaction.signatures[0]) {
+            throw new Error('Fee payer signature is missing');
+        }
+
+        const signature = await connection.sendTransaction(signedTransaction, options);
+
+        const latestBlockhash = await connection.getLatestBlockhash();
+        const confirmation = await connection.confirmTransaction({
+            signature,
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+        });
+
+        if (confirmation.value.err) {
+            throw new Error(`Transaction confirmation failed: ${confirmation.value.err}`);
+        }
+
+        return signature;
+    } catch (error) {
+        console.error('Transaction failed:', error);
+        throw error;
+    }
 }

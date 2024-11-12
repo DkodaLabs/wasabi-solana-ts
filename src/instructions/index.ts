@@ -15,6 +15,7 @@ export * from './initOrUpdatePermission.js';
 export * from './initShortPool.js';
 export * from './initStopLossOrder.js';
 export * from './initTakeProfitOrder.js';
+export * from './liquidatePosition.js'
 export * from './mint.js';
 export * from './openPosition.js';
 export * from './openLongPosition.js';
