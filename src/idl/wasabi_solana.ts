@@ -1594,6 +1594,33 @@ export type WasabiSolana = {
           ]
         },
         {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "assetTokenProgram"
         },
         {
@@ -1733,6 +1760,33 @@ export type WasabiSolana = {
         },
         {
           "name": "currency"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "tokenProgram"
@@ -3296,6 +3350,33 @@ export type WasabiSolana = {
           ]
         },
         {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "assetTokenProgram"
         },
         {
@@ -4339,6 +4420,33 @@ export type WasabiSolana = {
           ]
         },
         {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "assetTokenProgram"
         },
         {
@@ -4485,6 +4593,85 @@ export type WasabiSolana = {
         {
           "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setLpState",
+      "discriminator": [
+        231,
+        69,
+        23,
+        137,
+        236,
+        71,
+        234,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "superAdmin"
+          ]
+        },
+        {
+          "name": "globalSettings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "superAdmin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "allowLp",
+          "type": "bool"
         }
       ]
     },
@@ -4645,6 +4832,138 @@ export type WasabiSolana = {
         {
           "name": "maxLeverage",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setSuperAdmin",
+      "discriminator": [
+        187,
+        223,
+        246,
+        195,
+        90,
+        71,
+        138,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
+          ]
+        },
+        {
+          "name": "superAdminPermission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "newSuperAdmin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "setTradingState",
+      "discriminator": [
+        108,
+        117,
+        127,
+        219,
+        149,
+        140,
+        254,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "superAdmin"
+          ]
+        },
+        {
+          "name": "globalSettings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "superAdmin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "allowTrading",
+          "type": "bool"
         }
       ]
     },
@@ -5767,6 +6086,33 @@ export type WasabiSolana = {
           ]
         },
         {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "assetTokenProgram"
         },
         {
@@ -6165,6 +6511,16 @@ export type WasabiSolana = {
       "code": 6019,
       "name": "maxRepayExceeded",
       "msg": "Max repay exceeded"
+    },
+    {
+      "code": 6020,
+      "name": "tradingDisabled",
+      "msg": "Trading disabled"
+    },
+    {
+      "code": 6021,
+      "name": "lPingDisabled",
+      "msg": "LPing disabled"
     }
   ],
   "types": [
@@ -6666,7 +7022,15 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "tradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6698,7 +7062,15 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "tradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6730,7 +7102,15 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "tradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6766,7 +7146,15 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "tradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6798,7 +7186,15 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "tradeSide"
+              }
+            }
+          },
+          {
+            "name": "positionId",
             "type": "pubkey"
           },
           {
@@ -6902,6 +7298,23 @@ export type WasabiSolana = {
               "The amount that will be bought to close the position (is in `position.currency`)"
             ],
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tradeSide",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "long"
+          },
+          {
+            "name": "short"
           }
         ]
       }
