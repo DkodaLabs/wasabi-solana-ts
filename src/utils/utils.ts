@@ -95,23 +95,23 @@ export async function getTokenProgramAndDecimals(
 }
 
 export const PDA = {
-    getLongPool(quoteMint: PublicKey, baseMint: PublicKey): PublicKey {
+    getLongPool(collateral: PublicKey, currency: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.LONG_POOL),
-                quoteMint.toBuffer(),
-                baseMint.toBuffer()
+                collateral.toBuffer(),
+                currency.toBuffer()
             ],
             WASABI_PROGRAM_ID
         );
     },
 
-    getShortPool(quoteMint: PublicKey, baseMint: PublicKey): PublicKey {
+    getShortPool(collateral: PublicKey, currency: PublicKey): PublicKey {
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.SHORT_POOL),
-                quoteMint.toBuffer(),
-                baseMint.toBuffer()
+                collateral.toBuffer(),
+                currency.toBuffer()
             ],
             WASABI_PROGRAM_ID
         );

@@ -85,8 +85,8 @@ export async function getRaydiumRouteQuote(
             const poolData = poolDataMap.get(poolId)!;
             const { poolInfo, poolKeys, poolRpcData } = poolData;
 
-            const currentInputMint = i === 0 
-                ? inputMint 
+            const currentInputMint = i === 0
+                ? inputMint
                 : determineOutputMint(
                     new PublicKey(poolDataMap.get(poolIds[i - 1])!.poolKeys.mintA.address),
                     poolKeys
@@ -153,6 +153,7 @@ export async function getRaydiumRouteQuote(
                     currentInputMint,
                     poolDataMap.get(poolIds[i + 1])!.poolKeys
                 );
+
 
             const computeResult = raydium.liquidity.computeAmountOut({
                 poolInfo: {

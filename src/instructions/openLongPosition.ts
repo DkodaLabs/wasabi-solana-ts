@@ -45,7 +45,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             getTokenProgram(config.program.provider.connection, config.accounts.currency)
         ]);
         const lpVault = PDA.getLpVault(config.accounts.currency);
-        const pool = PDA.getLongPool(config.accounts.currency, config.accounts.collateral);
+        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
         const allAccounts = {
             owner: config.accounts.owner,
             ownerCurrencyAccount: getAssociatedTokenAddressSync(
@@ -70,13 +70,13 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             pool,
             collateralVault: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
-                lpVault,
+                pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
                 config.accounts.currency,
-                lpVault,
+                pool,
                 true,
                 currencyTokenProgram
             ),
@@ -85,7 +85,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
             position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
             authority: config.program.provider.publicKey,
-            permission: await getPermission(config.program, config.program.provider.publicKey),
+            permission: PDA.getSuperAdmin(),//await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
             debtController: PDA.getDebtController(),
             globalSettings: PDA.getGlobalSettings(),
