@@ -54,17 +54,18 @@ const donateConfig: BaseMethodConfig<
                 tokenProgram
             ),
             currency: config.accounts.currency,
+            globalSettings: PDA.getGlobalSettings(),
             tokenProgram
         };
         return {
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: allAccounts.owner,
-                      lpVault,
-                      currency: config.accounts.currency,
-                      tokenProgram
-                  },
+                    owner: allAccounts.owner,
+                    lpVault,
+                    currency: config.accounts.currency,
+                    tokenProgram
+                },
             args: config.args ? new BN(config.args.amount.toString()) : undefined
         };
     },

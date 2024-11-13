@@ -1588,6 +1588,33 @@
           ]
         },
         {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "asset_token_program"
         },
         {
@@ -1727,6 +1754,33 @@
         },
         {
           "name": "currency"
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "token_program"
@@ -3290,6 +3344,33 @@
           ]
         },
         {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "asset_token_program"
         },
         {
@@ -4333,6 +4414,33 @@
           ]
         },
         {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "asset_token_program"
         },
         {
@@ -4479,6 +4587,85 @@
         {
           "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_lp_state",
+      "discriminator": [
+        231,
+        69,
+        23,
+        137,
+        236,
+        71,
+        234,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "super_admin"
+          ]
+        },
+        {
+          "name": "global_settings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "super_admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "allow_lp",
+          "type": "bool"
         }
       ]
     },
@@ -4639,6 +4826,138 @@
         {
           "name": "max_leverage",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_super_admin",
+      "discriminator": [
+        187,
+        223,
+        246,
+        195,
+        90,
+        71,
+        138,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "super_admin_permission"
+          ]
+        },
+        {
+          "name": "super_admin_permission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_super_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_trading_state",
+      "discriminator": [
+        108,
+        117,
+        127,
+        219,
+        149,
+        140,
+        254,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "super_admin"
+          ]
+        },
+        {
+          "name": "global_settings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "super_admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "allow_trading",
+          "type": "bool"
         }
       ]
     },
@@ -5761,6 +6080,33 @@
           ]
         },
         {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "asset_token_program"
         },
         {
@@ -6159,6 +6505,16 @@
       "code": 6019,
       "name": "MaxRepayExceeded",
       "msg": "Max repay exceeded"
+    },
+    {
+      "code": 6020,
+      "name": "TradingDisabled",
+      "msg": "Trading disabled"
+    },
+    {
+      "code": 6021,
+      "name": "LPingDisabled",
+      "msg": "LPing disabled"
     }
   ],
   "types": [
@@ -6660,7 +7016,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "TradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6692,7 +7056,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "TradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6724,7 +7096,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "TradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6760,7 +7140,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "TradeSide"
+              }
+            }
+          },
+          {
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -6792,7 +7180,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "TradeSide"
+              }
+            }
+          },
+          {
+            "name": "position_id",
             "type": "pubkey"
           },
           {
@@ -6896,6 +7292,23 @@
               "The amount that will be bought to close the position (is in `position.currency`)"
             ],
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TradeSide",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }

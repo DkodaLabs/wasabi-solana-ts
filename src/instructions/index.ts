@@ -29,3 +29,7 @@ export * from './swapRaydium.js';
 export * from './setMaxLeverage.js';
 export * from './updateLpVaultMaxBorrow.js';
 export * from './withdraw.js';
+export * from './setSuperAdmin.js';
+export * from './setTradeState.js';
+export * from './setLpState.js'
+

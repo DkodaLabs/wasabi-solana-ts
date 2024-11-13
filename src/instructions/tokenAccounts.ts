@@ -65,6 +65,7 @@ export async function getTokenInstructionAccounts(
         vault,
         assetMint,
         sharesMint,
+        globalSettings: PDA.getGlobalSettings(),
         assetTokenProgram,
         sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
         eventAuthority: PDA.getEventAuthority(),
