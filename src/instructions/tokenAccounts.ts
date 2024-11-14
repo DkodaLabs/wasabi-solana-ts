@@ -24,6 +24,7 @@ export type TokenInstructionAccountsStrict = {
     ownerSharesAccount: PublicKey;
     vault: PublicKey;
     sharesMint: PublicKey;
+    globalSettings: PublicKey;
     sharesTokenProgram: PublicKey;
     eventAuthority: PublicKey;
     program: PublicKey;

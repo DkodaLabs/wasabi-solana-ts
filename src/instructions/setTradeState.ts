@@ -50,7 +50,7 @@ const tradeStateConfig: BaseMethodConfig<
         };
 
     },
-    getMethod: (program) => (args) => program.methods.setTradeState(args),
+    getMethod: (program) => (args) => program.methods.setTradingState(args),
 };
 
 export async function createSetTradeStateInstruction(
