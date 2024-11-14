@@ -19,7 +19,7 @@ import {
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
-export const WASABI_PROGRAM_ID = new PublicKey('Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96');
+export const WASABI_PROGRAM_ID = new PublicKey('spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB');
 
 export const SEED_PREFIX = {
     LONG_POOL: 'long_pool',
