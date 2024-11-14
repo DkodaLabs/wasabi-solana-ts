@@ -31,7 +31,7 @@ const depositConfig: BaseMethodConfig<
 
         const setup: TransactionInstruction[] = [];
 
-        const ownerShares = config.program.provider.connection.getAccountInfo(
+        const ownerShares = await config.program.provider.connection.getAccountInfo(
             allAccounts.ownerSharesAccount
         );
         if (!ownerShares) {
@@ -50,11 +50,11 @@ const depositConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: config.program.provider.publicKey,
-                      lpVault: allAccounts.lpVault,
-                      assetMint: config.accounts.assetMint,
-                      assetTokenProgram
-                  },
+                    owner: config.program.provider.publicKey,
+                    lpVault: allAccounts.lpVault,
+                    assetMint: config.accounts.assetMint,
+                    assetTokenProgram
+                },
             args: config.args ? new BN(config.args.amount) : undefined,
             setup
         };

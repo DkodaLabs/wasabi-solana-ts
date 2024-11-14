@@ -19,9 +19,6 @@ import {
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-//TODO: This is probably going to need a lookup table due to the high number of accounts
-//being used
-
 type OpenLongPositionSetupInstructionAccounts = {
     tokenProgram: PublicKey;
 } & OpenPositionSetupInstructionBaseAccounts;
@@ -93,6 +90,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             systemProgram: SystemProgram.programId,
             sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
         };
+        console.log(allAccounts.collateralVault);
 
         const args = {
             nonce: config.args.nonce,

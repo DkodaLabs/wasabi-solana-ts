@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/wasabi_solana.json`.
  */
 export type WasabiSolana = {
-  "address": "Amxm1TKpMsue3x5KrnAzV9U8Sn7afDQQnmMV9znTfd96",
+  "address": "spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB",
   "metadata": {
     "name": "wasabiSolana",
     "version": "0.1.0",
@@ -7023,11 +7023,7 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "side",
-            "type": {
-              "defined": {
-                "name": "tradeSide"
-              }
-            }
+            "type": "string"
           },
           {
             "name": "id",
@@ -7063,11 +7059,7 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "side",
-            "type": {
-              "defined": {
-                "name": "tradeSide"
-              }
-            }
+            "type": "string"
           },
           {
             "name": "id",
@@ -7103,11 +7095,7 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "side",
-            "type": {
-              "defined": {
-                "name": "tradeSide"
-              }
-            }
+            "type": "string"
           },
           {
             "name": "id",
@@ -7147,11 +7135,7 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "side",
-            "type": {
-              "defined": {
-                "name": "tradeSide"
-              }
-            }
+            "type": "string"
           },
           {
             "name": "id",
@@ -7187,11 +7171,7 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "side",
-            "type": {
-              "defined": {
-                "name": "tradeSide"
-              }
-            }
+            "type": "string"
           },
           {
             "name": "positionId",
@@ -7298,23 +7278,6 @@ export type WasabiSolana = {
               "The amount that will be bought to close the position (is in `position.currency`)"
             ],
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tradeSide",
-      "repr": {
-        "kind": "c"
-      },
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "long"
-          },
-          {
-            "name": "short"
           }
         ]
       }
