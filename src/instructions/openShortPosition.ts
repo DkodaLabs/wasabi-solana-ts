@@ -43,7 +43,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             await config.program.provider.connection
                 .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
                 .then((acc) => [acc[0].owner, acc[1].owner]);
-        const lpVault = PDA.getLpVault(config.accounts.collateral);
+        const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
         const allAccounts = {
@@ -54,7 +54,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 false,
                 currencyTokenProgram
             ),
-            ownerCollateralAccount: getAssociatedTokenAddressSync(
+            ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
                 config.accounts.collateral,
                 config.accounts.owner,
                 false,
@@ -62,7 +62,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             ),
             lpVault,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
+                config.accounts.currency,
                 lpVault,
                 true,
                 collateralTokenProgram
@@ -142,7 +142,7 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
             await config.program.provider.connection
                 .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
                 .then((acc) => [acc[0].owner, acc[1].owner]);
-        const lpVault = PDA.getLpVault(config.accounts.collateral);
+        const lpVault = PDA.getLpVault(config.accounts.currency);
         const allAccounts = {
             owner: config.accounts.owner,
             position: config.accounts.position,

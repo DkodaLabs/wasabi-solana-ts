@@ -161,7 +161,7 @@ export async function getClosePositionCleanupInstructionAccounts(
             collateralTokenProgram
         ),
         currencyVault: getAssociatedTokenAddressSync(
-            accounts.collateral,
+            accounts.currency,
             accounts.pool,
             true,
             currencyTokenProgram
