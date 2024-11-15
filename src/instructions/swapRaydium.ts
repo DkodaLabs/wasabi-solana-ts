@@ -117,14 +117,14 @@ export async function getRaydiumRouteQuote(
                 poolId,
                 inputMint: currentInputMint.toString(),
                 outputMint: currentOutputMint.toString(),
-                quotedInAmount: computeResult.amountIn.toString(),
+                quotedInAmount: computeResult.maxAmountIn.toString(),
                 quotedOutAmount: currentAmount.toString(),
                 priceImpactPct: priceImpact,
                 poolKeys,
                 poolRpcData
             });
 
-            currentAmount = computeResult.amountIn;
+            currentAmount = computeResult.maxAmountIn;
             currentOutputMint = currentInputMint;
             totalPriceImpact += priceImpact;
         }
