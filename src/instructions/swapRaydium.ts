@@ -154,7 +154,6 @@ export async function getRaydiumRouteQuote(
                     poolDataMap.get(poolIds[i + 1])!.poolKeys
                 );
 
-
             const computeResult = raydium.liquidity.computeAmountOut({
                 poolInfo: {
                     ...poolInfo,

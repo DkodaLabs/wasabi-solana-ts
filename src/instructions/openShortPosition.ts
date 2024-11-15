@@ -161,10 +161,10 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
             ),
             lpVault,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
+                config.accounts.currency,
                 lpVault,
                 true,
-                collateralTokenProgram
+                currencyTokenProgram,
             ),
             collateral: config.accounts.collateral,
             currency: config.accounts.currency,
