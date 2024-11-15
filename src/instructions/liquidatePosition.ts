@@ -1,5 +1,5 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
     ClosePositionSetupArgs,
@@ -15,28 +15,51 @@ import {
 } from './closePosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+type LiquidatePositionSetupInstructionAccounts = {
+    closePositionSetup: ClosePositionSetupInstructionAccounts,
+};
+
+type LiquidatePositionSetupInstructionAccountsStrict = {
+    closePositionSetup: ClosePositionSetupInstructionAccountsStrict,
+};
+
+type LiquidatePositionCleanupInstructionAccounts = {
+    closePositionCleanup: ClosePositionCleanupInstructionAccounts,
+}
+
+type LiquidatePositionCleanupInstructionAccountsStrict = {
+    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict,
+}
+
 const liquidatePositionSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
-    ClosePositionSetupInstructionAccounts | ClosePositionSetupInstructionAccountsStrict
+    LiquidatePositionSetupInstructionAccounts | LiquidatePositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
         const allAccounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts
         );
+        console.log(allAccounts);
 
         return {
             accounts: config.strict
-                ? allAccounts
+                ? {
+                    closePositionSetup: {
+                        ...allAccounts
+                    }
+                }
                 : {
-                      owner: allAccounts.owner,
-                      position: allAccounts.position,
-                      pool: allAccounts.pool,
-                      collateral: allAccounts.collateral,
-                      permission: allAccounts.permission,
-                      tokenProgram: allAccounts.tokenProgram
-                  },
+                    closePositionSetup: {
+                        owner: allAccounts.owner,
+                        position: allAccounts.position,
+                        pool: allAccounts.pool,
+                        collateral: allAccounts.collateral,
+                        permission: allAccounts.permission,
+                        tokenProgram: allAccounts.tokenProgram
+                    }
+                },
             args: transformArgs(config.args)
         };
     },
@@ -52,7 +75,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
 const liquidatePositionCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    ClosePositionCleanupInstructionAccounts | ClosePositionCleanupInstructionAccountsStrict
+    LiquidatePositionCleanupInstructionAccounts | LiquidatePositionCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const allAccounts = await getClosePositionCleanupInstructionAccounts(
@@ -61,17 +84,23 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
         );
         return {
             accounts: config.strict
-                ? allAccounts
+                ? {
+                    closePositionCleanup: {
+                        ...allAccounts
+                    }
+                }
                 : {
-                      owner: allAccounts.owner,
-                      authority: allAccounts.authority,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      position: allAccounts.position,
-                      feeWallet: allAccounts.feeWallet,
-                      collateralTokenProgram: allAccounts.collateralTokenProgram,
-                      currencyTokenProgram: allAccounts.currencyTokenProgram
-                  }
+                    closePositionCleanup: {
+                        owner: allAccounts.owner,
+                        authority: allAccounts.authority,
+                        collateral: allAccounts.collateral,
+                        currency: allAccounts.currency,
+                        position: allAccounts.position,
+                        feeWallet: allAccounts.feeWallet,
+                        collateralTokenProgram: allAccounts.collateralTokenProgram,
+                        currencyTokenProgram: allAccounts.currencyTokenProgram
+                    }
+                }
         };
     },
     getMethod: (program) => () => program.methods.liquidatePositionCleanup()

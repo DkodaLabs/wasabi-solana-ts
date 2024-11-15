@@ -102,6 +102,7 @@ export async function getClosePositionSetupInstructionAccounts(
         program.provider.connection.getAccountInfo(accounts.collateral).then((acc) => acc.owner),
         program.provider.connection.getAccountInfo(accounts.currency).then((acc) => acc.owner)
     ]);
+    console.log(owner);
     return {
         owner,
         position: accounts.position,
@@ -138,6 +139,7 @@ export async function getClosePositionCleanupInstructionAccounts(
         program.provider.connection.getAccountInfo(accounts.currency).then((acc) => acc.owner)
     ]);
     const vault = await program.account.lpVault.fetch(lpVault).then((lpVault) => lpVault.vault);
+    console.log(owner);
 
     return {
         owner,
