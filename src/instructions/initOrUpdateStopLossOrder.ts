@@ -9,31 +9,31 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-export type InitStopLossArgs = {
+export type InitOrUpdateStopLossArgs = {
     makerAmount: number; // u64
     takerAmount: number; // u64
 };
 
-export type InitStopLossAccounts = {
+export type InitOrUpdateStopLossAccounts = {
     position: PublicKey;
 };
 
-type InitStopLossInstructionAccounts = {
+type InitOrUpdateStopLossInstructionAccounts = {
     trader: PublicKey;
     position: PublicKey;
 };
 
-type InitStopLossInstructionAccountsStrict = {
+type InitOrUpdateStopLossInstructionAccountsStrict = {
     stopLossOrder: PublicKey;
     systemProgram: PublicKey;
-} & InitStopLossInstructionAccounts;
+} & InitOrUpdateStopLossInstructionAccounts;
 
-const initStopLossConfig: BaseMethodConfig<
-    InitStopLossArgs,
-    InitStopLossAccounts,
-    InitStopLossInstructionAccounts | InitStopLossInstructionAccountsStrict
+const initOrUpdateStopLossConfig: BaseMethodConfig<
+    InitOrUpdateStopLossArgs,
+    InitOrUpdateStopLossAccounts,
+    InitOrUpdateStopLossInstructionAccounts | InitOrUpdateStopLossInstructionAccountsStrict
 > = {
-    process: async (config: ConfigArgs<InitStopLossArgs, InitStopLossAccounts>) => {
+    process: async (config: ConfigArgs<InitOrUpdateStopLossArgs, InitOrUpdateStopLossAccounts>) => {
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
@@ -58,13 +58,13 @@ const initStopLossConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.initStopLossOrder(args.makerAmount, args.takerAmount)
+        program.methods.initOrUpdateStopLossOrder(args.makerAmount, args.takerAmount)
 };
 
-export function createInitStopLossInstruction(
+export function createInitOrUpdateStopLossInstruction(
     program: Program<WasabiSolana>,
-    args: InitStopLossArgs,
-    accounts: InitStopLossAccounts,
+    args: InitOrUpdateStopLossArgs,
+    accounts: InitOrUpdateStopLossAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
@@ -72,7 +72,7 @@ export function createInitStopLossInstruction(
         constructMethodCallArgs(
             program,
             accounts,
-            initStopLossConfig,
+            initOrUpdateStopLossConfig,
             'instruction',
             strict,
             increaseCompute,
@@ -81,10 +81,10 @@ export function createInitStopLossInstruction(
     ) as Promise<TransactionInstruction[]>;
 }
 
-export function initStopLoss(
+export function initOrUpdateStopLoss(
     program: Program<WasabiSolana>,
-    args: InitStopLossArgs,
-    accounts: InitStopLossAccounts,
+    args: InitOrUpdateStopLossArgs,
+    accounts: InitOrUpdateStopLossAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
@@ -92,7 +92,7 @@ export function initStopLoss(
         constructMethodCallArgs(
             program,
             accounts,
-            initStopLossConfig,
+            initOrUpdateStopLossConfig,
             'transaction',
             strict,
             increaseCompute,

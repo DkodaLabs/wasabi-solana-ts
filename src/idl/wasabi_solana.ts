@@ -2421,6 +2421,152 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "initOrUpdateStopLossOrder",
+      "discriminator": [
+        168,
+        23,
+        101,
+        53,
+        199,
+        27,
+        117,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "trader",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position"
+        },
+        {
+          "name": "stopLossOrder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  112,
+                  95,
+                  108,
+                  111,
+                  115,
+                  115,
+                  95,
+                  111,
+                  114,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initOrUpdateTakeProfitOrder",
+      "discriminator": [
+        161,
+        122,
+        216,
+        144,
+        217,
+        226,
+        195,
+        236
+      ],
+      "accounts": [
+        {
+          "name": "trader",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position"
+        },
+        {
+          "name": "takeProfitOrder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  116,
+                  95,
+                  111,
+                  114,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "makerAmount",
+          "type": "u64"
+        },
+        {
+          "name": "takerAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initShortPool",
       "discriminator": [
         111,
@@ -2618,152 +2764,6 @@ export type WasabiSolana = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "initStopLossOrder",
-      "discriminator": [
-        59,
-        55,
-        121,
-        138,
-        162,
-        74,
-        227,
-        57
-      ],
-      "accounts": [
-        {
-          "name": "trader",
-          "writable": true,
-          "signer": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "position"
-        },
-        {
-          "name": "stopLossOrder",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  112,
-                  95,
-                  108,
-                  111,
-                  115,
-                  115,
-                  95,
-                  111,
-                  114,
-                  100,
-                  101,
-                  114
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "position"
-              }
-            ]
-          }
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "makerAmount",
-          "type": "u64"
-        },
-        {
-          "name": "takerAmount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "initTakeProfitOrder",
-      "discriminator": [
-        22,
-        61,
-        141,
-        234,
-        241,
-        86,
-        251,
-        53
-      ],
-      "accounts": [
-        {
-          "name": "trader",
-          "writable": true,
-          "signer": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "position"
-        },
-        {
-          "name": "takeProfitOrder",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  97,
-                  107,
-                  101,
-                  95,
-                  112,
-                  114,
-                  111,
-                  102,
-                  105,
-                  116,
-                  95,
-                  111,
-                  114,
-                  100,
-                  101,
-                  114
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "position"
-              }
-            ]
-          }
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "makerAmount",
-          "type": "u64"
-        },
-        {
-          "name": "takerAmount",
-          "type": "u64"
-        }
-      ]
     },
     {
       "name": "liquidatePositionCleanup",
@@ -6307,6 +6307,32 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "exitOrder",
+      "discriminator": [
+        28,
+        67,
+        208,
+        198,
+        99,
+        16,
+        72,
+        136
+      ]
+    },
+    {
+      "name": "exitOrderCancelled",
+      "discriminator": [
+        212,
+        82,
+        232,
+        143,
+        229,
+        48,
+        61,
+        76
+      ]
+    },
+    {
       "name": "nativeYieldClaimed",
       "discriminator": [
         199,
@@ -6674,6 +6700,46 @@ export type WasabiSolana = {
           {
             "name": "shares",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "exitOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "orderType",
+            "type": "u8"
+          },
+          {
+            "name": "positionId",
+            "type": "pubkey"
+          },
+          {
+            "name": "makerAmount",
+            "type": "u64"
+          },
+          {
+            "name": "takerAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "exitOrderCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "orderType",
+            "type": "u8"
+          },
+          {
+            "name": "positionId",
+            "type": "pubkey"
           }
         ]
       }

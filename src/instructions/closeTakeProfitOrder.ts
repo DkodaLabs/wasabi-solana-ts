@@ -14,7 +14,7 @@ type CloseTakeProfitOrderInstructionAccounts = {
 
 type CloseTakeProfitOrderInstructionAccountsStrict = {
     trader: PublicKey;
-    stopLossOrder: PublicKey;
+    takeProfitOrder: PublicKey;
 } & CloseTakeProfitOrderInstructionAccounts;
 
 const closeTakeProfitOrderConfig: BaseMethodConfig<
@@ -29,7 +29,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
         const allAccounts = {
             trader,
             position: config.accounts.position,
-            stopLossOrder: PDA.getTakeProfitOrder(config.accounts.position)
+            takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position)
         };
         return {
             accounts: config.strict

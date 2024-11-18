@@ -13,8 +13,8 @@ export * from './initPool.js';
 export * from './initLpVault.js';
 export * from './initOrUpdatePermission.js';
 export * from './initShortPool.js';
-export * from './initStopLossOrder.js';
-export * from './initTakeProfitOrder.js';
+export * from './initOrUpdateStopLossOrder.js';
+export * from './initOrUpdateTakeProfitOrder.js';
 export * from './liquidatePosition.js'
 export * from './mint.js';
 export * from './openPosition.js';

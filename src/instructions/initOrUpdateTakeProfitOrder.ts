@@ -9,38 +9,38 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-export type InitTakeProfitArgs = {
+export type InitOrUpdateTakeProfitArgs = {
     makerAmount: number; // u64
     takerAmount: number; // u64
 };
 
-export type InitTakeProfitAccounts = {
+export type InitOrUpdateTakeProfitAccounts = {
     position: PublicKey;
 };
 
-type InitTakeProfitInstructionAccounts = {
+type InitOrUpdateTakeProfitInstructionAccounts = {
     trader: PublicKey;
     position: PublicKey;
 };
 
-type InitTakeProfitInstructionAccountsStrict = {
+type InitOrUpdateTakeProfitInstructionAccountsStrict = {
     takeProfitOrder: PublicKey;
     systemProgram: PublicKey;
-} & InitTakeProfitInstructionAccounts;
+} & InitOrUpdateTakeProfitInstructionAccounts;
 
-const initTakeProfitConfig: BaseMethodConfig<
-    InitTakeProfitArgs,
-    InitTakeProfitAccounts,
-    InitTakeProfitInstructionAccounts | InitTakeProfitInstructionAccountsStrict
+const initOrUpdateTakeProfitConfig: BaseMethodConfig<
+    InitOrUpdateTakeProfitArgs,
+    InitOrUpdateTakeProfitAccounts,
+    InitOrUpdateTakeProfitInstructionAccounts | InitOrUpdateTakeProfitInstructionAccountsStrict
 > = {
-    process: async (config: ConfigArgs<InitTakeProfitArgs, InitTakeProfitAccounts>) => {
+    process: async (config: ConfigArgs<InitOrUpdateTakeProfitArgs, InitOrUpdateTakeProfitAccounts>) => {
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
         const allAccounts = {
             trader,
             position: config.accounts.position,
-            stopLossOrder: PDA.getTakeProfitOrder(config.accounts.position),
+            takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position),
             systemProgram: SystemProgram.programId
         };
 
@@ -58,13 +58,13 @@ const initTakeProfitConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.initTakeProfitOrder(args.makerAmount, args.takerAmount)
+        program.methods.initOrUpdateTakeProfitOrder(args.makerAmount, args.takerAmount)
 };
 
-export function createInitTakeProfitInstruction(
+export function createInitOrUpdateTakeProfitInstruction(
     program: Program<WasabiSolana>,
-    args: InitTakeProfitArgs,
-    accounts: InitTakeProfitAccounts,
+    args: InitOrUpdateTakeProfitArgs,
+    accounts: InitOrUpdateTakeProfitAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
@@ -72,7 +72,7 @@ export function createInitTakeProfitInstruction(
         constructMethodCallArgs(
             program,
             accounts,
-            initTakeProfitConfig,
+            initOrUpdateTakeProfitConfig,
             'instruction',
             strict,
             increaseCompute,
@@ -81,10 +81,10 @@ export function createInitTakeProfitInstruction(
     ) as Promise<TransactionInstruction[]>;
 }
 
-export function initTakeProfit(
+export function initOrUpdateTakeProfit(
     program: Program<WasabiSolana>,
-    args: InitTakeProfitArgs,
-    accounts: InitTakeProfitAccounts,
+    args: InitOrUpdateTakeProfitArgs,
+    accounts: InitOrUpdateTakeProfitAccounts,
     strict: boolean = true,
     increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
@@ -92,7 +92,7 @@ export function initTakeProfit(
         constructMethodCallArgs(
             program,
             accounts,
-            initTakeProfitConfig,
+            initOrUpdateTakeProfitConfig,
             'transaction',
             strict,
             increaseCompute,
