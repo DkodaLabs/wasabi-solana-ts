@@ -7,7 +7,7 @@ import {
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { PDA, getPermission, getTokenProgram } from '../utils';
+import { PDA, getPermission, handleMint } from '../utils';
 
 export type InitLpVaultArgs = {
     name: string;
@@ -43,11 +43,11 @@ export const initLpVaultConfig: BaseMethodConfig<
     InitLpVaultInstructionAccounts | InitLpVaultInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
-        const lpVault = PDA.getLpVault(config.accounts.assetMint);
-        const assetTokenProgram = await getTokenProgram(
+        const { mint, tokenProgram } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint
         );
+        const lpVault = PDA.getLpVault(mint);
         const allAccounts = {
             payer: config.program.provider.publicKey,
             authority: config.program.provider.publicKey,
@@ -55,13 +55,13 @@ export const initLpVaultConfig: BaseMethodConfig<
             lpVault,
             assetMint: config.accounts.assetMint,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.assetMint,
+                mint,
                 lpVault,
                 true,
-                assetTokenProgram
+                tokenProgram,
             ),
             sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
-            assetTokenProgram,
+            assetTokenProgram: tokenProgram,
             sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId
@@ -71,11 +71,11 @@ export const initLpVaultConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      payer: allAccounts.payer,
-                      permission: allAccounts.permission,
-                      assetMint: allAccounts.assetMint,
-                      assetTokenProgram
-                  },
+                    payer: allAccounts.payer,
+                    permission: allAccounts.permission,
+                    assetMint: allAccounts.assetMint,
+                    assetTokenProgram: tokenProgram,
+                },
             args: config.args
         };
     },

@@ -41,7 +41,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
     CloseLongPositionSetupInstructionAccounts | CloseLongPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const allAccounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes }= await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts
         );
@@ -49,24 +49,26 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         return {
             accounts: config.strict
                 ? {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionSetup: {
-                        ...allAccounts
+                        ...accounts
                     }
                 }
                 : {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionSetup: {
-                        owner: allAccounts.owner,
-                        pool: allAccounts.pool,
-                        collateral: allAccounts.collateral,
-                        position: allAccounts.position,
-                        permission: allAccounts.permission,
-                        authority: allAccounts.authority,
-                        tokenProgram: allAccounts.tokenProgram
+                        owner: accounts.owner,
+                        pool: accounts.pool,
+                        collateral: accounts.collateral,
+                        position: accounts.position,
+                        permission: accounts.permission,
+                        authority: accounts.authority,
+                        tokenProgram: accounts.tokenProgram
                     }
                 },
-            args: transformArgs(config.args)
+            args: transformArgs(config.args),
+            setup: ixes.setupIx,
+            cleanup: ixes.cleanupIx,
         };
     },
     getMethod: (program) => (args) =>
@@ -84,32 +86,34 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
     CloseLongPositionCleanupInstructionAccounts | CloseLongPositionCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
-        const allAccounts = await getClosePositionCleanupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts
         );
         return {
             accounts: config.strict
                 ? {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionCleanup: {
-                        ...allAccounts
+                        ...accounts
                     }
                 }
                 : {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionCleanup: {
-                        owner: allAccounts.owner,
-                        pool: allAccounts.pool,
-                        position: allAccounts.position,
-                        currency: allAccounts.currency,
-                        collateral: allAccounts.collateral,
-                        authority: allAccounts.authority,
-                        feeWallet: allAccounts.feeWallet,
-                        collateralTokenProgram: allAccounts.collateralTokenProgram,
-                        currencyTokenProgram: allAccounts.currencyTokenProgram
+                        owner: accounts.owner,
+                        pool: accounts.pool,
+                        position: accounts.position,
+                        currency: accounts.currency,
+                        collateral: accounts.collateral,
+                        authority: accounts.authority,
+                        feeWallet: accounts.feeWallet,
+                        collateralTokenProgram: accounts.collateralTokenProgram,
+                        currencyTokenProgram: accounts.currencyTokenProgram
                     }
-                }
+                },
+            setup: ixes.setupIx,
+            cleanup: ixes.cleanupIx,
         };
     },
     getMethod: (program) => () => program.methods.closeLongPositionCleanup()

@@ -1,7 +1,17 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
+import {
+    PublicKey,
+    SystemProgram,
+    TransactionInstruction,
+    SYSVAR_INSTRUCTIONS_PUBKEY
+} from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, getPermission, handleMintsAndTokenProgram } from '../utils';
+import {
+    PDA,
+    getPermission,
+    handleMintsAndTokenProgram,
+    handleMintsAndTokenProgramWithSetupAndCleanup,
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ClosePositionParams = {
@@ -79,6 +89,14 @@ export type ClosePositionCleanupInstructionAccountsStrict = {
     globalSettings: PublicKey;
 } & ClosePositionCleanupInstructionAccounts;
 
+type CpcuAndIx = {
+    accounts: ClosePositionCleanupInstructionAccountsStrict,
+    ixes: {
+        setupIx?: TransactionInstruction[],
+        cleanupIx?: TransactionInstruction[],
+    }
+};
+
 export function transformArgs(args: ClosePositionSetupArgs): {
     minTargetAmount: BN;
     interest: BN;
@@ -142,53 +160,73 @@ export async function getClosePositionSetupInstructionAccounts(
 export async function getClosePositionCleanupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts
-): Promise<ClosePositionCleanupInstructionAccountsStrict> {
-    const [[owner, lpVault], collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-        program.account.position.fetch(accounts.position).then((pos) => [pos.trader, pos.lpVault]),
-        program.provider.connection.getAccountInfo(accounts.collateral).then((acc) => acc.owner),
-        program.provider.connection.getAccountInfo(accounts.currency).then((acc) => acc.owner)
+): Promise<CpcuAndIx> {
+    const [owner, lpVault] = await program
+        .account
+        .position
+        .fetch(accounts.position).then((pos) => [pos.trader, pos.lpVault]);
+    const [vault, {
+        currencyMint,
+        collateralMint,
+        currencyTokenProgram,
+        collateralTokenProgram,
+        setupIx,
+        cleanupIx,
+    }] = await Promise.all([
+        program.account.lpVault.fetch(lpVault).then((lpVault) => lpVault.vault),
+        handleMintsAndTokenProgramWithSetupAndCleanup(
+            program.provider.connection,
+            owner,
+            accounts.currency,
+            accounts.collateral,
+            'unwrap',
+        ),
     ]);
-    const vault = await program.account.lpVault.fetch(lpVault).then((lpVault) => lpVault.vault);
-    console.log(owner);
 
     return {
-        owner,
-        ownerCollateralAccount: getAssociatedTokenAddressSync(
-            accounts.collateral,
+        accounts: {
             owner,
-            false,
+            ownerCollateralAccount: getAssociatedTokenAddressSync(
+                collateralMint,
+                owner,
+                false,
+                collateralTokenProgram
+            ),
+            ownerCurrencyAccount: getAssociatedTokenAddressSync(
+                currencyMint,
+                owner,
+                false,
+                currencyTokenProgram
+            ),
+            pool: accounts.pool,
+            collateralVault: getAssociatedTokenAddressSync(
+                accounts.collateral,
+                accounts.pool,
+                true,
+                collateralTokenProgram
+            ),
+            currencyVault: getAssociatedTokenAddressSync(
+                accounts.currency,
+                accounts.pool,
+                true,
+                currencyTokenProgram
+            ),
+            currency: currencyMint,
+            collateral: collateralMint,
+            closePositionRequest: PDA.getClosePositionRequest(owner),
+            position: accounts.position,
+            authority: accounts.authority,
+            lpVault,
+            vault,
+            feeWallet: accounts.feeWallet,
+            debtController: PDA.getDebtController(),
+            globalSettings: PDA.getGlobalSettings(),
+            currencyTokenProgram,
             collateralTokenProgram
-        ),
-        ownerCurrencyAccount: getAssociatedTokenAddressSync(
-            accounts.currency,
-            owner,
-            false,
-            currencyTokenProgram
-        ),
-        pool: accounts.pool,
-        collateralVault: getAssociatedTokenAddressSync(
-            accounts.collateral,
-            accounts.pool,
-            true,
-            collateralTokenProgram
-        ),
-        currencyVault: getAssociatedTokenAddressSync(
-            accounts.currency,
-            accounts.pool,
-            true,
-            currencyTokenProgram
-        ),
-        currency: accounts.currency,
-        collateral: accounts.collateral,
-        closePositionRequest: PDA.getClosePositionRequest(owner),
-        position: accounts.position,
-        authority: accounts.authority,
-        lpVault,
-        vault,
-        feeWallet: accounts.feeWallet,
-        debtController: PDA.getDebtController(),
-        globalSettings: PDA.getGlobalSettings(),
-        currencyTokenProgram,
-        collateralTokenProgram
+        },
+        ixes: {
+            setupIx,
+            cleanupIx,
+        }
     };
 }

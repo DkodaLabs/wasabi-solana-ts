@@ -7,13 +7,7 @@ import {
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
-import {
-    PDA,
-    getTokenProgram,
-    isSOL,
-    createWrapSolInstruction,
-    getNativeProgramId,
-} from '../utils';
+import { PDA, handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -42,38 +36,32 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const setup: TransactionInstruction[] = [];
-        const cleanup: TransactionInstruction[] = [];
-        let tokenProgram: PublicKey;
-        if (isSOL(config.accounts.currency)) {
-            const { setupIx, cleanupIx } = await createWrapSolInstruction(
-                config.program.provider.connection,
-                config.program.provider.publicKey,
-                new BN(config.args.amount)
-            );
-            setup.push(...setupIx);
-            cleanup.push(...cleanupIx);
-            tokenProgram = getNativeProgramId(config.accounts.currency);
-        } else {
-            tokenProgram = await getTokenProgram(
-                config.program.provider.connection,
-                config.accounts.currency
-            );
-        }
+        const {
+            mint,
+            tokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMint(
+            config.program.provider.connection,
+            config.accounts.currency,
+            config.program.provider.publicKey,
+            'wrap',
+            config.args.amount
+        );
 
-        const lpVault = PDA.getLpVault(config.accounts.currency);
+        const lpVault = PDA.getLpVault(mint);
 
         const allAccounts = {
             owner: config.program.provider.publicKey,
             ownerAssetAccount: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                mint,
                 config.program.provider.publicKey,
                 false,
                 tokenProgram
             ),
             lpVault,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                mint,
                 lpVault,
                 true,
                 tokenProgram
@@ -88,12 +76,12 @@ const donateConfig: BaseMethodConfig<
                 : {
                     owner: allAccounts.owner,
                     lpVault,
-                    currency: config.accounts.currency,
+                    currency: mint,
                     tokenProgram
                 },
-            args: config.args ? new BN(config.args.amount.toString()) : undefined,
-            setup,
-            cleanup,
+            args: config.args ? new BN(config.args.amount) : undefined,
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args)

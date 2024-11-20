@@ -3,11 +3,11 @@ import {
     TransactionSignature,
     TransactionInstruction
 } from '@solana/web3.js';
-import { 
-    BaseMethodConfig, 
-    ConfigArgs, 
-    handleMethodCall, 
-    constructMethodCallArgs 
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
 } from '../base';
 import {
     RedeemArgs,
@@ -15,8 +15,8 @@ import {
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts,
-    handleWithdrawRedeemUnwrapSol,
 } from './tokenAccounts';
+import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const redeemConfig: BaseMethodConfig<
@@ -26,21 +26,21 @@ export const redeemConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<RedeemArgs, RedeemAccounts>) => {
         const {
-            assetMint,
-            assetTokenProgram,
+            mint,
+            tokenProgram,
             setupIx,
             cleanupIx,
-        } = await handleWithdrawRedeemUnwrapSol(
+        } = await handleMint(
             config.program.provider.connection,
-            config.program.provider.publicKey,
             config.accounts.assetMint,
-            config.args.amount
+            config.program.provider.publicKey,
+            'unwrap',
         );
 
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
-            assetMint,
-            assetTokenProgram
+            mint,
+            tokenProgram
         );
 
         return {
@@ -49,8 +49,8 @@ export const redeemConfig: BaseMethodConfig<
                 : {
                     owner: config.program.provider.publicKey,
                     lpVault: allAccounts.lpVault,
-                    assetMint: config.accounts.assetMint,
-                    assetTokenProgram
+                    assetMint: mint,
+                    assetTokenProgram: tokenProgram
                 },
             args: config.args ? new BN(config.args.amount) : undefined,
             setup: setupIx,

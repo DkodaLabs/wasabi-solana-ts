@@ -21,9 +21,8 @@ import {
     getTokenMetadata,
     getAssociatedTokenAddressSync,
     createSyncNativeInstruction,
-    createAssociatedTokenAccountInstruction,
     createCloseAccountInstruction,
-    createTransferInstruction,
+    createAssociatedTokenAccountIdempotentInstruction,
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
@@ -483,7 +482,7 @@ export function getPreferredNativeMint(tokenProgramId: PublicKey): PublicKey {
 export async function createWrapSolInstruction(
     connection: Connection,
     owner: PublicKey,
-    amount: number,
+    amount: number | bigint,
     useToken2022: boolean = false
 ): Promise<{
     setupIx: TransactionInstruction[],
@@ -506,7 +505,7 @@ export async function createWrapSolInstruction(
 
     if (!ownerWrappedSolAccount) {
         setupIx.push(
-            createAssociatedTokenAccountInstruction(
+            createAssociatedTokenAccountIdempotentInstruction(
                 owner,
                 ownerWrappedSolAta,
                 owner,
@@ -529,7 +528,7 @@ export async function createWrapSolInstruction(
         SystemProgram.transfer({
             fromPubkey: owner,
             toPubkey: ownerWrappedSolAta,
-            lamports: amount,
+            lamports: new BN(amount.toString()),
         })
     );
 
@@ -543,7 +542,6 @@ export async function createWrapSolInstruction(
 export async function createUnwrapSolInstruction(
     connection: Connection,
     owner: PublicKey,
-    amount: number,
     useToken2022: boolean = false,
 ): Promise<{
     setupIx: TransactionInstruction[],
@@ -566,7 +564,7 @@ export async function createUnwrapSolInstruction(
 
     if (!ownerWrappedSolAccount) {
         setupIx.push(
-            createAssociatedTokenAccountInstruction(
+            createAssociatedTokenAccountIdempotentInstruction(
                 owner,
                 ownerWrappedSolAta,
                 owner,
@@ -574,27 +572,17 @@ export async function createUnwrapSolInstruction(
                 tokenProgram,
             )
         );
-        cleanupIx.push(
-            createCloseAccountInstruction(
-                ownerWrappedSolAta,
-                owner,
-                owner,
-                [],
-                tokenProgram
-            )
-        );
-    } else {
-        cleanupIx.push(
-            createTransferInstruction(
-                ownerWrappedSolAta,
-                owner,
-                owner,
-                amount,
-                [],
-                tokenProgram
-            )
-        );
     }
+
+    cleanupIx.push(
+        createCloseAccountInstruction(
+            ownerWrappedSolAta,
+            owner,
+            owner,
+            [],
+            tokenProgram
+        )
+    );
     return { setupIx, cleanupIx };
 }
 
@@ -608,108 +596,102 @@ export function handleSOL(useToken2022: boolean = false): {
     }
 }
 
-export async function handleMintsAndTokenProgram(connection: Connection, currency: PublicKey, collateral: PublicKey): Promise<{
-    currencyMint: PublicKey,
-    collateralMint: PublicKey,
-    currencyTokenProgram: PublicKey,
-    collateralTokenProgram: PublicKey,
-}> {
-    const isCurrencySOL = isSOL(currency);
-    const isCollateralSOL = isSOL(collateral);
-    let currencyTokenProgram: PublicKey;
-    let collateralTokenProgram: PublicKey;
-    let currencyMint: PublicKey = currency;
-    let collateralMint: PublicKey = collateral;
+type MintResult = {
+    mint: PublicKey;
+    tokenProgram: PublicKey;
+    setupIx?: TransactionInstruction[];
+    cleanupIx?: TransactionInstruction[];
+}
 
-    if (isCurrencySOL) {
-        let { tokenProgram, nativeMint } = handleSOL();
-        currencyTokenProgram = tokenProgram;
-        currencyMint = nativeMint;
-    }
-    if (isCollateralSOL) {
-        let { tokenProgram, nativeMint } = handleSOL();
-        collateralTokenProgram = tokenProgram;
-        collateralMint = nativeMint;
-    }
-    if (!isCurrencySOL && !isCollateralSOL) {
-        [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-            getTokenProgram(connection, collateral),
-            getTokenProgram(connection, currency)
-        ]);
-    } else {
-        if (!isCurrencySOL) {
-            currencyTokenProgram = await getTokenProgram(
-                connection,
-                currency
-            );
+type TokenProgramsResult = {
+    currencyMint: PublicKey;
+    collateralMint: PublicKey;
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+}
+
+type TokenProgramsWithSetupResult = TokenProgramsResult & {
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
+}
+
+type WrapMode = "wrap" | "unwrap" | undefined;
+
+export async function handleMint(
+    connection: Connection,
+    mint: PublicKey,
+    owner?: PublicKey,
+    wrapMode?: WrapMode,
+    amount?: number | bigint
+): Promise<MintResult> {
+    if (isSOL(mint)) {
+        const { tokenProgram, nativeMint } = handleSOL();
+        let instructions = { setupIx: [], cleanupIx: [] };
+
+        if (owner && wrapMode) {
+            instructions = wrapMode === "wrap"
+                ? await createWrapSolInstruction(connection, owner, amount!)
+                : await createUnwrapSolInstruction(connection, owner);
         }
-        if (!isCollateralSOL) {
-            collateralTokenProgram = await getTokenProgram(
-                connection,
-                collateral
-            );
-        }
+
+        return {
+            mint: nativeMint,
+            tokenProgram,
+            ...instructions
+        };
     }
 
     return {
-        currencyMint,
-        collateralMint,
-        currencyTokenProgram,
-        collateralTokenProgram,
+        mint,
+        tokenProgram: await getTokenProgram(connection, mint),
+    };
+}
+
+export async function handleMintsAndTokenProgram(
+    connection: Connection,
+    currency: PublicKey,
+    collateral: PublicKey,
+): Promise<TokenProgramsResult> {
+    if (currency.equals(collateral)) {
+        throw new Error('Mints cannot be the same');
+    }
+
+    const [currencyResult, collateralResult] = await Promise.all([
+        handleMint(connection, currency),
+        handleMint(connection, collateral)
+    ]);
+
+    return {
+        currencyMint: currencyResult.mint,
+        collateralMint: collateralResult.mint,
+        currencyTokenProgram: currencyResult.tokenProgram,
+        collateralTokenProgram: collateralResult.tokenProgram,
     };
 }
 
 export async function handleMintsAndTokenProgramWithSetupAndCleanup(
-    connection: Connection, 
-    currency: PublicKey, 
-    collateral: PublicKey
-): Promise<{
-    currencyMint: PublicKey,
-    collateralMint: PublicKey,
-    currencyTokenProgram: PublicKey,
-    collateralTokenProgram: PublicKey,
-}> {
-    const isCurrencySOL = isSOL(currency);
-    const isCollateralSOL = isSOL(collateral);
-    let currencyTokenProgram: PublicKey;
-    let collateralTokenProgram: PublicKey;
-    let currencyMint: PublicKey = currency;
-    let collateralMint: PublicKey = collateral;
+    connection: Connection,
+    owner: PublicKey,
+    currency: PublicKey,
+    collateral: PublicKey,
+    wrapMode: WrapMode,
+    amount?: number | bigint
+): Promise<TokenProgramsWithSetupResult> {
+    if (currency.equals(collateral)) {
+        throw new Error('Mints cannot be the same');
+    }
 
-    if (isCurrencySOL) {
-        let { tokenProgram, nativeMint } = handleSOL();
-        currencyTokenProgram = tokenProgram;
-        currencyMint = nativeMint;
-    }
-    if (isCollateralSOL) {
-        let { tokenProgram, nativeMint } = handleSOL();
-        collateralTokenProgram = tokenProgram;
-        collateralMint = nativeMint;
-    }
-    if (!isCurrencySOL && !isCollateralSOL) {
-        [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-            getTokenProgram(connection, collateral),
-            getTokenProgram(connection, currency)
-        ]);
-    } else {
-        if (!isCurrencySOL) {
-            currencyTokenProgram = await getTokenProgram(
-                connection,
-                currency
-            );
-        }
-        if (!isCollateralSOL) {
-            collateralTokenProgram = await getTokenProgram(
-                connection,
-                collateral
-            );
-        }
-    }
+    const [currencyResult, collateralResult] = await Promise.all([
+        handleMint(connection, currency, owner, wrapMode, amount),
+        handleMint(connection, collateral, owner, wrapMode, amount)
+    ]);
 
     return {
-        currencyMint,
-        collateralMint,
-        currencyTokenProgram,
-        collateralTokenProgram,
+        currencyMint: currencyResult.mint,
+        collateralMint: collateralResult.mint,
+        currencyTokenProgram: currencyResult.tokenProgram,
+        collateralTokenProgram: collateralResult.tokenProgram,
+        setupIx: [...(currencyResult.setupIx || []), ...(collateralResult.setupIx || [])],
+        cleanupIx: [...(currencyResult.cleanupIx || []), ...(collateralResult.cleanupIx || [])]
     };
 }

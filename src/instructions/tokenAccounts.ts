@@ -1,27 +1,14 @@
 import { Program } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
+import { PDA, WASABI_PROGRAM_ID } from '../utils';
 import {
-    TransactionInstruction,
-    Connection,
-    PublicKey
-} from '@solana/web3.js';
-import {
-    PDA,
-    WASABI_PROGRAM_ID,
-    isSOL,
-    handleSOL,
-    getTokenProgram,
-    createUnwrapSolInstruction,
-    createWrapSolInstruction,
-} from '../utils';
-import {
-    createAssociatedTokenAccountInstruction,
     getAssociatedTokenAddressSync,
     TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type TokenArgs = {
-    amount: number;
+    amount: number | bigint;
 };
 
 type TokenAccounts = {
@@ -88,103 +75,4 @@ export async function getTokenInstructionAccounts(
         eventAuthority: PDA.getEventAuthority(),
         program: WASABI_PROGRAM_ID
     };
-}
-
-export async function handleWithdrawRedeemUnwrapSol(
-    connection: Connection,
-    owner: PublicKey,
-    assetMint: PublicKey,
-    amount: number,
-): Promise<{
-    assetMint: PublicKey,
-    assetTokenProgram: PublicKey,
-    setupIx: TransactionInstruction[],
-    cleanupIx: TransactionInstruction[],
-}> {
-    const setup: TransactionInstruction[] = [];
-    const cleanup: TransactionInstruction[] = [];
-    let assetTokenProgram: PublicKey;
-
-    if (isSOL(assetMint)) {
-        const { setupIx, cleanupIx } = await createUnwrapSolInstruction(
-            connection,
-            owner,
-            amount
-        );
-        setup.push(...setupIx);
-        cleanup.push(...cleanupIx);
-        const { tokenProgram, nativeMint } = handleSOL();
-        assetTokenProgram = tokenProgram;
-        assetMint = nativeMint;
-    } else {
-        assetTokenProgram = await getTokenProgram(
-            connection,
-            assetMint,
-        );
-        const ownerAssetAta = getAssociatedTokenAddressSync(
-            assetMint,
-            owner,
-            false,
-            assetTokenProgram
-        );
-        const ownerAssetAccount = await connection.getAccountInfo(ownerAssetAta);
-        if (!ownerAssetAccount) {
-            setup.push(
-                createAssociatedTokenAccountInstruction(
-                    owner,
-                    ownerAssetAta,
-                    owner,
-                    assetMint,
-                    assetTokenProgram,
-                )
-            );
-        }
-    }
-
-    return {
-        assetMint,
-        assetTokenProgram,
-        setupIx: setup,
-        cleanupIx: cleanup,
-    }
-}
-
-export async function handleDepositMintWrapSol(
-    connection: Connection,
-    owner: PublicKey,
-    assetMint: PublicKey,
-    amount: number,
-): Promise<{
-    assetMint: PublicKey,
-    assetTokenProgram: PublicKey,
-    setupIx: TransactionInstruction[],
-    cleanupIx: TransactionInstruction[],
-}> {
-    const setup: TransactionInstruction[] = [];
-    const cleanup: TransactionInstruction[] = [];
-    let assetTokenProgram: PublicKey;
-    if (isSOL(assetMint)) {
-        const { setupIx, cleanupIx } = await createWrapSolInstruction(
-            connection,
-            owner,
-            amount
-        );
-        setup.push(...setupIx);
-        cleanup.push(...cleanupIx);
-        const { tokenProgram, nativeMint } = handleSOL();
-        assetTokenProgram = tokenProgram;
-        assetMint = nativeMint;
-    } else {
-        assetTokenProgram = await getTokenProgram(
-            connection,
-            assetMint
-        );
-    }
-
-    return {
-        assetMint,
-        assetTokenProgram,
-        setupIx: setup,
-        cleanupIx: cleanup,
-    }
 }

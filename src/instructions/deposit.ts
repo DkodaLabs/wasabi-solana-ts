@@ -19,8 +19,8 @@ import {
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
     getTokenInstructionAccounts,
-    handleDepositMintWrapSol,
 } from './tokenAccounts';
+import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 const depositConfig: BaseMethodConfig<
@@ -31,14 +31,15 @@ const depositConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const setup: TransactionInstruction[] = [];
         const {
-            assetMint,
-            assetTokenProgram,
+            mint,
+            tokenProgram,
             setupIx,
             cleanupIx,
-        } = await handleDepositMintWrapSol(
+        } = await handleMint(
             config.program.provider.connection,
-            config.program.provider.publicKey,
             config.accounts.assetMint,
+            config.program.provider.publicKey,
+            'wrap',
             config.args.amount,
         );
 
@@ -46,8 +47,8 @@ const depositConfig: BaseMethodConfig<
 
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
-            assetMint,
-            assetTokenProgram
+            mint,
+            tokenProgram
         );
 
         const ownerShares = await config.program.provider.connection.getAccountInfo(
@@ -72,8 +73,8 @@ const depositConfig: BaseMethodConfig<
                 : {
                     owner: config.program.provider.publicKey,
                     lpVault: allAccounts.lpVault,
-                    assetMint: config.accounts.assetMint,
-                    assetTokenProgram
+                    assetMint: mint,
+                    assetTokenProgram: tokenProgram,
                 },
             args: config.args ? new BN(config.args.amount) : undefined,
             setup,
