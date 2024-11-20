@@ -1,7 +1,7 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, getPermission } from '../utils';
+import { PDA, getPermission, handleMintsAndTokenProgram } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ClosePositionParams = {
@@ -97,29 +97,39 @@ export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts
 ): Promise<ClosePositionSetupInstructionAccountsStrict> {
-    const [owner, collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-        program.account.position.fetch(accounts.position).then((pos) => pos.trader),
-        program.provider.connection.getAccountInfo(accounts.collateral).then((acc) => acc.owner),
-        program.provider.connection.getAccountInfo(accounts.currency).then((acc) => acc.owner)
-    ]);
-    console.log(owner);
+    const [{
+        currencyMint,
+        collateralMint,
+        currencyTokenProgram,
+        collateralTokenProgram,
+    }, owner] = await Promise.all(
+        [
+            handleMintsAndTokenProgram(
+                program.provider.connection,
+                accounts.currency,
+                accounts.collateral,
+            ),
+            program.account.position.fetch(accounts.position).then((pos) => pos.trader)
+        ]
+    );
+
     return {
         owner,
         position: accounts.position,
         pool: accounts.pool,
         collateralVault: getAssociatedTokenAddressSync(
-            accounts.collateral,
+            collateralMint,
             accounts.pool,
             true,
             collateralTokenProgram
         ),
         currencyVault: getAssociatedTokenAddressSync(
-            accounts.currency,
+            currencyMint,
             accounts.pool,
             true,
             currencyTokenProgram
         ),
-        collateral: accounts.collateral,
+        collateral: collateralMint,
         authority: accounts.authority,
         permission: await getPermission(program, accounts.authority),
         closePositionRequest: PDA.getClosePositionRequest(owner),

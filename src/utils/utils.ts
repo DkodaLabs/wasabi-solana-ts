@@ -3,21 +3,31 @@ import {
     PublicKey,
     Connection,
     SendOptions,
+    SystemProgram,
     VersionedTransaction,
+    TransactionInstruction,
     TransactionSignature,
     LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
+    NATIVE_MINT,
+    NATIVE_MINT_2022,
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
     AccountLayout,
     MintLayout,
     getTokenMetadata,
     getAssociatedTokenAddressSync,
+    createSyncNativeInstruction,
+    createAssociatedTokenAccountInstruction,
+    createCloseAccountInstruction,
+    createTransferInstruction,
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
+
+export const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111111");
 
 export const WASABI_PROGRAM_ID = new PublicKey('spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB');
 
@@ -452,4 +462,254 @@ export async function handleSerializedTransaction(
         console.error('Transaction failed:', error);
         throw error;
     }
+}
+
+export function isSOL(mint: PublicKey): boolean {
+    return mint.equals(SOL_MINT);
+}
+
+export function isNativeMint(mint: PublicKey): boolean {
+    return mint.equals(NATIVE_MINT) || mint.equals(NATIVE_MINT_2022);
+}
+
+export function getNativeProgramId(mint: PublicKey): PublicKey {
+    return mint.equals(NATIVE_MINT) ? TOKEN_PROGRAM_ID : TOKEN_2022_PROGRAM_ID;
+}
+
+export function getPreferredNativeMint(tokenProgramId: PublicKey): PublicKey {
+    return tokenProgramId.equals(TOKEN_PROGRAM_ID) ? NATIVE_MINT : NATIVE_MINT_2022;
+}
+
+export async function createWrapSolInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    amount: number,
+    useToken2022: boolean = false
+): Promise<{
+    setupIx: TransactionInstruction[],
+    cleanupIx: TransactionInstruction[],
+}> {
+    const setupIx: TransactionInstruction[] = [];
+    const cleanupIx: TransactionInstruction[] = [];
+    const [nativeMint, tokenProgram] = useToken2022
+        ? [NATIVE_MINT_2022, TOKEN_2022_PROGRAM_ID]
+        : [NATIVE_MINT, TOKEN_PROGRAM_ID];
+
+    const ownerWrappedSolAta = getAssociatedTokenAddressSync(
+        nativeMint,
+        owner,
+        false,
+        tokenProgram
+    );
+
+    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+
+    if (!ownerWrappedSolAccount) {
+        setupIx.push(
+            createAssociatedTokenAccountInstruction(
+                owner,
+                ownerWrappedSolAta,
+                owner,
+                nativeMint,
+                tokenProgram
+            )
+        );
+        cleanupIx.push(
+            createCloseAccountInstruction(
+                ownerWrappedSolAta,
+                owner,
+                owner,
+                [],
+                tokenProgram
+            )
+        );
+    }
+
+    setupIx.push(
+        SystemProgram.transfer({
+            fromPubkey: owner,
+            toPubkey: ownerWrappedSolAta,
+            lamports: amount,
+        })
+    );
+
+    setupIx.push(
+        createSyncNativeInstruction(ownerWrappedSolAta, tokenProgram)
+    );
+
+    return { setupIx, cleanupIx };
+}
+
+export async function createUnwrapSolInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    amount: number,
+    useToken2022: boolean = false,
+): Promise<{
+    setupIx: TransactionInstruction[],
+    cleanupIx: TransactionInstruction[]
+}> {
+    const setupIx: TransactionInstruction[] = [];
+    const cleanupIx: TransactionInstruction[] = [];
+    const [nativeMint, tokenProgram] = useToken2022
+        ? [NATIVE_MINT_2022, TOKEN_2022_PROGRAM_ID]
+        : [NATIVE_MINT, TOKEN_PROGRAM_ID];
+
+    const ownerWrappedSolAta = getAssociatedTokenAddressSync(
+        nativeMint,
+        owner,
+        false,
+        tokenProgram,
+    );
+
+    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+
+    if (!ownerWrappedSolAccount) {
+        setupIx.push(
+            createAssociatedTokenAccountInstruction(
+                owner,
+                ownerWrappedSolAta,
+                owner,
+                nativeMint,
+                tokenProgram,
+            )
+        );
+        cleanupIx.push(
+            createCloseAccountInstruction(
+                ownerWrappedSolAta,
+                owner,
+                owner,
+                [],
+                tokenProgram
+            )
+        );
+    } else {
+        cleanupIx.push(
+            createTransferInstruction(
+                ownerWrappedSolAta,
+                owner,
+                owner,
+                amount,
+                [],
+                tokenProgram
+            )
+        );
+    }
+    return { setupIx, cleanupIx };
+}
+
+export function handleSOL(useToken2022: boolean = false): {
+    tokenProgram: PublicKey,
+    nativeMint: PublicKey
+} {
+    return {
+        tokenProgram: useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+        nativeMint: useToken2022 ? NATIVE_MINT_2022 : NATIVE_MINT
+    }
+}
+
+export async function handleMintsAndTokenProgram(connection: Connection, currency: PublicKey, collateral: PublicKey): Promise<{
+    currencyMint: PublicKey,
+    collateralMint: PublicKey,
+    currencyTokenProgram: PublicKey,
+    collateralTokenProgram: PublicKey,
+}> {
+    const isCurrencySOL = isSOL(currency);
+    const isCollateralSOL = isSOL(collateral);
+    let currencyTokenProgram: PublicKey;
+    let collateralTokenProgram: PublicKey;
+    let currencyMint: PublicKey = currency;
+    let collateralMint: PublicKey = collateral;
+
+    if (isCurrencySOL) {
+        let { tokenProgram, nativeMint } = handleSOL();
+        currencyTokenProgram = tokenProgram;
+        currencyMint = nativeMint;
+    }
+    if (isCollateralSOL) {
+        let { tokenProgram, nativeMint } = handleSOL();
+        collateralTokenProgram = tokenProgram;
+        collateralMint = nativeMint;
+    }
+    if (!isCurrencySOL && !isCollateralSOL) {
+        [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
+            getTokenProgram(connection, collateral),
+            getTokenProgram(connection, currency)
+        ]);
+    } else {
+        if (!isCurrencySOL) {
+            currencyTokenProgram = await getTokenProgram(
+                connection,
+                currency
+            );
+        }
+        if (!isCollateralSOL) {
+            collateralTokenProgram = await getTokenProgram(
+                connection,
+                collateral
+            );
+        }
+    }
+
+    return {
+        currencyMint,
+        collateralMint,
+        currencyTokenProgram,
+        collateralTokenProgram,
+    };
+}
+
+export async function handleMintsAndTokenProgramWithSetupAndCleanup(
+    connection: Connection, 
+    currency: PublicKey, 
+    collateral: PublicKey
+): Promise<{
+    currencyMint: PublicKey,
+    collateralMint: PublicKey,
+    currencyTokenProgram: PublicKey,
+    collateralTokenProgram: PublicKey,
+}> {
+    const isCurrencySOL = isSOL(currency);
+    const isCollateralSOL = isSOL(collateral);
+    let currencyTokenProgram: PublicKey;
+    let collateralTokenProgram: PublicKey;
+    let currencyMint: PublicKey = currency;
+    let collateralMint: PublicKey = collateral;
+
+    if (isCurrencySOL) {
+        let { tokenProgram, nativeMint } = handleSOL();
+        currencyTokenProgram = tokenProgram;
+        currencyMint = nativeMint;
+    }
+    if (isCollateralSOL) {
+        let { tokenProgram, nativeMint } = handleSOL();
+        collateralTokenProgram = tokenProgram;
+        collateralMint = nativeMint;
+    }
+    if (!isCurrencySOL && !isCollateralSOL) {
+        [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
+            getTokenProgram(connection, collateral),
+            getTokenProgram(connection, currency)
+        ]);
+    } else {
+        if (!isCurrencySOL) {
+            currencyTokenProgram = await getTokenProgram(
+                connection,
+                currency
+            );
+        }
+        if (!isCollateralSOL) {
+            collateralTokenProgram = await getTokenProgram(
+                connection,
+                collateral
+            );
+        }
+    }
+
+    return {
+        currencyMint,
+        collateralMint,
+        currencyTokenProgram,
+        collateralTokenProgram,
+    };
 }

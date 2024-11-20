@@ -49,23 +49,23 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         return {
             accounts: config.strict
                 ? {
-                      owner: allAccounts.owner,
-                      closePositionSetup: {
-                          ...allAccounts
-                      }
-                  }
+                    owner: allAccounts.owner,
+                    closePositionSetup: {
+                        ...allAccounts
+                    }
+                }
                 : {
-                      owner: allAccounts.owner,
-                      closePositionSetup: {
-                          owner: allAccounts.owner,
-                          pool: allAccounts.pool,
-                          collateral: allAccounts.collateral,
-                          position: allAccounts.position,
-                          permission: allAccounts.permission,
-                          authority: allAccounts.authority,
-                          tokenProgram: allAccounts.tokenProgram
-                      }
-                  },
+                    owner: allAccounts.owner,
+                    closePositionSetup: {
+                        owner: allAccounts.owner,
+                        pool: allAccounts.pool,
+                        collateral: allAccounts.collateral,
+                        position: allAccounts.position,
+                        permission: allAccounts.permission,
+                        authority: allAccounts.authority,
+                        tokenProgram: allAccounts.tokenProgram
+                    }
+                },
             args: transformArgs(config.args)
         };
     },
@@ -91,25 +91,25 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
         return {
             accounts: config.strict
                 ? {
-                      owner: allAccounts.owner,
-                      closePositionCleanup: {
-                          ...allAccounts
-                      }
-                  }
+                    owner: allAccounts.owner,
+                    closePositionCleanup: {
+                        ...allAccounts
+                    }
+                }
                 : {
-                      owner: allAccounts.owner,
-                      closePositionCleanup: {
-                          owner: allAccounts.owner,
-                          pool: allAccounts.pool,
-                          position: allAccounts.position,
-                          currency: allAccounts.currency,
-                          collateral: allAccounts.collateral,
-                          authority: allAccounts.authority,
-                          feeWallet: allAccounts.feeWallet,
-                          collateralTokenProgram: allAccounts.collateralTokenProgram,
-                          currencyTokenProgram: allAccounts.currencyTokenProgram
-                      }
-                  }
+                    owner: allAccounts.owner,
+                    closePositionCleanup: {
+                        owner: allAccounts.owner,
+                        pool: allAccounts.pool,
+                        position: allAccounts.position,
+                        currency: allAccounts.currency,
+                        collateral: allAccounts.collateral,
+                        authority: allAccounts.authority,
+                        feeWallet: allAccounts.feeWallet,
+                        collateralTokenProgram: allAccounts.collateralTokenProgram,
+                        currencyTokenProgram: allAccounts.currencyTokenProgram
+                    }
+                }
         };
     },
     getMethod: (program) => () => program.methods.closeLongPositionCleanup()

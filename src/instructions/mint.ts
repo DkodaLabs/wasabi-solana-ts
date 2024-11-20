@@ -1,14 +1,19 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import {
     MintArgs,
     MintAccounts,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
-    getTokenInstructionAccounts
+    getTokenInstructionAccounts,
+    handleDepositMintWrapSol,
 } from './tokenAccounts';
-import { getTokenProgram } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const mintConfig: BaseMethodConfig<
@@ -17,14 +22,21 @@ export const mintConfig: BaseMethodConfig<
     TokenInstructionAccounts | TokenInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<MintArgs, MintAccounts>) => {
-        const assetTokenProgram = await getTokenProgram(
+        const {
+            assetMint,
+            assetTokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleDepositMintWrapSol(
             config.program.provider.connection,
-            config.accounts.assetMint
+            config.program.provider.publicKey,
+            config.accounts.assetMint,
+            config.args.amount,
         );
 
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
-            config.accounts.assetMint,
+            assetMint,
             assetTokenProgram
         );
 
@@ -32,12 +44,14 @@ export const mintConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: config.program.provider.publicKey,
-                      lpVault: allAccounts.lpVault,
-                      assetMint: config.accounts.assetMint,
-                      assetTokenProgram
-                  },
-            args: config.args ? new BN(config.args.amount) : undefined
+                    owner: config.program.provider.publicKey,
+                    lpVault: allAccounts.lpVault,
+                    assetMint: config.accounts.assetMint,
+                    assetTokenProgram
+                },
+            args: config.args ? new BN(config.args.amount) : undefined,
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.mint(args)

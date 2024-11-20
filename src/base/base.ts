@@ -6,6 +6,7 @@ export type ProcessResult<T> = {
     accounts: T;
     args?: any;
     setup?: TransactionInstruction[];
+    cleanup?: TransactionInstruction[];
 };
 
 export type ConfigArgs<TArgs, TAccounts> = {
@@ -52,8 +53,12 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
 
     return args.mode === 'instruction'
         ? builder
-              .instruction()
-              .then((ix: TransactionInstruction) => [...(processed.setup || []), ix])
+            .instruction()
+            .then((ix: TransactionInstruction) => [
+                ...(processed.setup || []),
+                ix,
+                ...(processed.cleanup || [])
+            ])
         : builder.rpc();
 }
 

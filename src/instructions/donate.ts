@@ -1,8 +1,19 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionInstruction, PublicKey, TransactionSignature } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
-import { PDA, getTokenProgram } from '../utils';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
+import {
+    PDA,
+    getTokenProgram,
+    isSOL,
+    createWrapSolInstruction,
+    getNativeProgramId,
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -31,10 +42,24 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const tokenProgram = await getTokenProgram(
-            config.program.provider.connection,
-            config.accounts.currency
-        );
+        const setup: TransactionInstruction[] = [];
+        const cleanup: TransactionInstruction[] = [];
+        let tokenProgram: PublicKey;
+        if (isSOL(config.accounts.currency)) {
+            const { setupIx, cleanupIx } = await createWrapSolInstruction(
+                config.program.provider.connection,
+                config.program.provider.publicKey,
+                new BN(config.args.amount)
+            );
+            setup.push(...setupIx);
+            cleanup.push(...cleanupIx);
+            tokenProgram = getNativeProgramId(config.accounts.currency);
+        } else {
+            tokenProgram = await getTokenProgram(
+                config.program.provider.connection,
+                config.accounts.currency
+            );
+        }
 
         const lpVault = PDA.getLpVault(config.accounts.currency);
 
@@ -66,7 +91,9 @@ const donateConfig: BaseMethodConfig<
                     currency: config.accounts.currency,
                     tokenProgram
                 },
-            args: config.args ? new BN(config.args.amount.toString()) : undefined
+            args: config.args ? new BN(config.args.amount.toString()) : undefined,
+            setup,
+            cleanup,
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args)
