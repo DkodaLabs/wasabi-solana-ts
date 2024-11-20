@@ -1,14 +1,14 @@
 import {
-    Raydium,
-    AmmV4Keys,
     AmmRpcData,
+    AmmV4Keys,
     makeAMMSwapInstruction,
+    Raydium,
     SwapInstructionParams
 } from '@raydium-io/raydium-sdk-v2';
-import { BN } from '@coral-xyz/anchor';
-import { TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SwapMode } from './swap';
+import {BN} from '@coral-xyz/anchor';
+import {Connection, PublicKey, TransactionInstruction} from '@solana/web3.js';
+import {getAssociatedTokenAddressSync} from '@solana/spl-token';
+import {SwapMode} from './swap';
 
 type RouteHop = {
     poolId: string;
@@ -268,19 +268,13 @@ export function calculatePriceImpact(
     reserveIn: string | number,
     reserveOut: string | number
 ): number {
-    const in_bn = new BN(amountIn.toString());
-    const out_bn = new BN(amountOut.toString());
-    const reserveIn_bn = new BN(reserveIn.toString());
-    const reserveOut_bn = new BN(reserveOut.toString());
+    const in_bn = new BN(amountIn.toString()).toNumber() / 10 ** 6;
+    const out_bn = new BN(amountOut.toString()).toNumber() / 10 ** 6;
+    const reserveIn_bn = new BN(reserveIn.toString()).toNumber() / 10 ** 6;
+    const reserveOut_bn = new BN(reserveOut.toString()).toNumber() / 10 ** 6;
 
-    const priceBefore = reserveOut_bn.mul(new BN(1000000)).div(reserveIn_bn);
-    const priceAfter = reserveOut_bn.sub(out_bn).mul(new BN(1000000)).div(reserveIn_bn.add(in_bn));
+    const priceBefore = reserveOut_bn / reserveIn_bn;
+    const priceAfter = (reserveOut_bn - out_bn) / (reserveIn_bn + in_bn);
 
-    const priceImpact = priceBefore
-        .sub(priceAfter)
-        .mul(new BN(100))
-        .mul(new BN(1000000))
-        .div(priceBefore);
-
-    return parseFloat(priceImpact.toString()) / 1000000;
+    return (priceBefore - priceAfter) * 100 / priceBefore;
 }
