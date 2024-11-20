@@ -1,8 +1,13 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionInstruction, PublicKey, TransactionSignature } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
-import { PDA, getTokenProgram } from '../utils';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
+import { PDA, handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -31,24 +36,32 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const tokenProgram = await getTokenProgram(
+        const {
+            mint,
+            tokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMint(
             config.program.provider.connection,
-            config.accounts.currency
+            config.accounts.currency,
+            config.program.provider.publicKey,
+            'wrap',
+            config.args.amount
         );
 
-        const lpVault = PDA.getLpVault(config.accounts.currency);
+        const lpVault = PDA.getLpVault(mint);
 
         const allAccounts = {
             owner: config.program.provider.publicKey,
             ownerAssetAccount: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                mint,
                 config.program.provider.publicKey,
                 false,
                 tokenProgram
             ),
             lpVault,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                mint,
                 lpVault,
                 true,
                 tokenProgram
@@ -63,10 +76,12 @@ const donateConfig: BaseMethodConfig<
                 : {
                     owner: allAccounts.owner,
                     lpVault,
-                    currency: config.accounts.currency,
+                    currency: mint,
                     tokenProgram
                 },
-            args: config.args ? new BN(config.args.amount.toString()) : undefined
+            args: config.args ? new BN(config.args.amount) : undefined,
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args)

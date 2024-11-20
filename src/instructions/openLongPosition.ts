@@ -6,7 +6,11 @@ import {
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, getPermission, getTokenProgram } from '../utils';
+import {
+    PDA,
+    handleMintsAndTokenProgram,
+    handleMintsAndTokenProgramWithSetupAndCleanup,
+} from '../utils';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
     OpenPositionSetupArgs,
@@ -37,50 +41,66 @@ const openLongPositionSetupConfig: BaseMethodConfig<
     process: async (
         config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
     ) => {
-        const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral),
-            getTokenProgram(config.program.provider.connection, config.accounts.currency)
-        ]);
-        const lpVault = PDA.getLpVault(config.accounts.currency);
-        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
+        const {
+            currencyMint,
+            collateralMint,
+            currencyTokenProgram,
+            collateralTokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMintsAndTokenProgramWithSetupAndCleanup(
+            config.program.provider.connection,
+            config.accounts.owner,
+            config.accounts.currency,
+            config.accounts.collateral,
+            'wrap',
+            config.args.downPayment,
+        );
+        const lpVault = PDA.getLpVault(currencyMint);
+        const pool = PDA.getLongPool(collateralMint, currencyMint);
         const allAccounts = {
             owner: config.accounts.owner,
             ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                currencyMint,
                 config.accounts.owner,
                 false,
                 currencyTokenProgram
             ),
             ownerCollateralAccount: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
+                collateralMint,
                 config.accounts.owner,
                 false,
                 collateralTokenProgram
             ),
             lpVault,
             vault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                currencyMint,
                 lpVault,
                 true,
                 currencyTokenProgram
             ),
             pool,
             collateralVault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
+                collateralMint,
                 pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                currencyMint,
                 pool,
                 true,
                 currencyTokenProgram
             ),
-            currency: config.accounts.currency,
-            collateral: config.accounts.collateral,
+            currency: currencyMint,
+            collateral: collateralMint,
             openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-            position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+            position: PDA.getPosition(
+                config.accounts.owner,
+                pool,
+                lpVault,
+                config.args.nonce
+            ),
             authority: config.program.provider.publicKey,
             permission: PDA.getSuperAdmin(),//await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
@@ -90,7 +110,6 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             systemProgram: SystemProgram.programId,
             sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
         };
-        console.log(allAccounts.collateralVault);
 
         const args = {
             nonce: config.args.nonce,
@@ -115,7 +134,9 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                     feeWallet: allAccounts.feeWallet,
                     tokenProgram: allAccounts.tokenProgram
                 },
-            args
+            args,
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) =>
@@ -135,21 +156,28 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
     OpenPositionCleanupInstructionAccounts | OpenLongPositionCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const [collateralTokenProgram, currencyTokenProgram] =
-            await config.program.provider.connection
-                .getMultipleAccountsInfo([config.accounts.collateral, config.accounts.currency])
-                .then((acc) => [acc[0].owner, acc[1].owner]);
+        const {
+            currencyMint,
+            collateralMint,
+            currencyTokenProgram,
+            collateralTokenProgram,
+        } = await handleMintsAndTokenProgram(
+            config.program.provider.connection,
+            config.accounts.currency,
+            config.accounts.collateral,
+        );
+
         const allAccounts = {
             owner: config.accounts.owner,
             pool: config.accounts.pool,
             collateralVault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
+                collateralMint,
                 config.accounts.pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
+                currencyMint,
                 config.accounts.pool,
                 true,
                 currencyTokenProgram

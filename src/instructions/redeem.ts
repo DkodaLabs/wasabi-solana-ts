@@ -1,14 +1,22 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    TransactionSignature,
+    TransactionInstruction
+} from '@solana/web3.js';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import {
     RedeemArgs,
     RedeemAccounts,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
-    getTokenInstructionAccounts
+    getTokenInstructionAccounts,
 } from './tokenAccounts';
-import { getTokenProgram } from '../utils';
+import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const redeemConfig: BaseMethodConfig<
@@ -17,27 +25,36 @@ export const redeemConfig: BaseMethodConfig<
     TokenInstructionAccounts | TokenInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<RedeemArgs, RedeemAccounts>) => {
-        const assetTokenProgram = await getTokenProgram(
+        const {
+            mint,
+            tokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMint(
             config.program.provider.connection,
-            config.accounts.assetMint
+            config.accounts.assetMint,
+            config.program.provider.publicKey,
+            'unwrap',
         );
 
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
-            config.accounts.assetMint,
-            assetTokenProgram
+            mint,
+            tokenProgram
         );
 
         return {
             accounts: config.strict
                 ? allAccounts
                 : {
-                      owner: config.program.provider.publicKey,
-                      lpVault: allAccounts.lpVault,
-                      assetMint: config.accounts.assetMint,
-                      assetTokenProgram
-                  },
-            args: config.args ? new BN(config.args.amount) : undefined
+                    owner: config.program.provider.publicKey,
+                    lpVault: allAccounts.lpVault,
+                    assetMint: mint,
+                    assetTokenProgram: tokenProgram
+                },
+            args: config.args ? new BN(config.args.amount) : undefined,
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.redeem(args)

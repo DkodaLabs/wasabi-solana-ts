@@ -3,21 +3,30 @@ import {
     PublicKey,
     Connection,
     SendOptions,
+    SystemProgram,
     VersionedTransaction,
+    TransactionInstruction,
     TransactionSignature,
     LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
+    NATIVE_MINT,
+    NATIVE_MINT_2022,
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
     AccountLayout,
     MintLayout,
     getTokenMetadata,
     getAssociatedTokenAddressSync,
+    createSyncNativeInstruction,
+    createCloseAccountInstruction,
+    createAssociatedTokenAccountIdempotentInstruction,
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
+
+export const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111111");
 
 export const WASABI_PROGRAM_ID = new PublicKey('spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB');
 
@@ -452,4 +461,237 @@ export async function handleSerializedTransaction(
         console.error('Transaction failed:', error);
         throw error;
     }
+}
+
+export function isSOL(mint: PublicKey): boolean {
+    return mint.equals(SOL_MINT);
+}
+
+export function isNativeMint(mint: PublicKey): boolean {
+    return mint.equals(NATIVE_MINT) || mint.equals(NATIVE_MINT_2022);
+}
+
+export function getNativeProgramId(mint: PublicKey): PublicKey {
+    return mint.equals(NATIVE_MINT) ? TOKEN_PROGRAM_ID : TOKEN_2022_PROGRAM_ID;
+}
+
+export function getPreferredNativeMint(tokenProgramId: PublicKey): PublicKey {
+    return tokenProgramId.equals(TOKEN_PROGRAM_ID) ? NATIVE_MINT : NATIVE_MINT_2022;
+}
+
+export async function createWrapSolInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    amount: number | bigint,
+    useToken2022: boolean = false
+): Promise<{
+    setupIx: TransactionInstruction[],
+    cleanupIx: TransactionInstruction[],
+}> {
+    const setupIx: TransactionInstruction[] = [];
+    const cleanupIx: TransactionInstruction[] = [];
+    const [nativeMint, tokenProgram] = useToken2022
+        ? [NATIVE_MINT_2022, TOKEN_2022_PROGRAM_ID]
+        : [NATIVE_MINT, TOKEN_PROGRAM_ID];
+
+    const ownerWrappedSolAta = getAssociatedTokenAddressSync(
+        nativeMint,
+        owner,
+        false,
+        tokenProgram
+    );
+
+    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+
+    if (!ownerWrappedSolAccount) {
+        setupIx.push(
+            createAssociatedTokenAccountIdempotentInstruction(
+                owner,
+                ownerWrappedSolAta,
+                owner,
+                nativeMint,
+                tokenProgram
+            )
+        );
+        cleanupIx.push(
+            createCloseAccountInstruction(
+                ownerWrappedSolAta,
+                owner,
+                owner,
+                [],
+                tokenProgram
+            )
+        );
+    }
+
+    setupIx.push(
+        SystemProgram.transfer({
+            fromPubkey: owner,
+            toPubkey: ownerWrappedSolAta,
+            lamports: new BN(amount.toString()),
+        })
+    );
+
+    setupIx.push(
+        createSyncNativeInstruction(ownerWrappedSolAta, tokenProgram)
+    );
+
+    return { setupIx, cleanupIx };
+}
+
+export async function createUnwrapSolInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    useToken2022: boolean = false,
+): Promise<{
+    setupIx: TransactionInstruction[],
+    cleanupIx: TransactionInstruction[]
+}> {
+    const setupIx: TransactionInstruction[] = [];
+    const cleanupIx: TransactionInstruction[] = [];
+    const [nativeMint, tokenProgram] = useToken2022
+        ? [NATIVE_MINT_2022, TOKEN_2022_PROGRAM_ID]
+        : [NATIVE_MINT, TOKEN_PROGRAM_ID];
+
+    const ownerWrappedSolAta = getAssociatedTokenAddressSync(
+        nativeMint,
+        owner,
+        false,
+        tokenProgram,
+    );
+
+    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+
+    if (!ownerWrappedSolAccount) {
+        setupIx.push(
+            createAssociatedTokenAccountIdempotentInstruction(
+                owner,
+                ownerWrappedSolAta,
+                owner,
+                nativeMint,
+                tokenProgram,
+            )
+        );
+    }
+
+    cleanupIx.push(
+        createCloseAccountInstruction(
+            ownerWrappedSolAta,
+            owner,
+            owner,
+            [],
+            tokenProgram
+        )
+    );
+    return { setupIx, cleanupIx };
+}
+
+export function handleSOL(useToken2022: boolean = false): {
+    tokenProgram: PublicKey,
+    nativeMint: PublicKey
+} {
+    return {
+        tokenProgram: useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+        nativeMint: useToken2022 ? NATIVE_MINT_2022 : NATIVE_MINT
+    }
+}
+
+type MintResult = {
+    mint: PublicKey;
+    tokenProgram: PublicKey;
+    setupIx?: TransactionInstruction[];
+    cleanupIx?: TransactionInstruction[];
+}
+
+type TokenProgramsResult = {
+    currencyMint: PublicKey;
+    collateralMint: PublicKey;
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+}
+
+type TokenProgramsWithSetupResult = TokenProgramsResult & {
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
+}
+
+type WrapMode = "wrap" | "unwrap" | undefined;
+
+export async function handleMint(
+    connection: Connection,
+    mint: PublicKey,
+    owner?: PublicKey,
+    wrapMode?: WrapMode,
+    amount?: number | bigint
+): Promise<MintResult> {
+    if (isSOL(mint)) {
+        const { tokenProgram, nativeMint } = handleSOL();
+        let instructions = { setupIx: [], cleanupIx: [] };
+
+        if (owner && wrapMode) {
+            instructions = wrapMode === "wrap"
+                ? await createWrapSolInstruction(connection, owner, amount!)
+                : await createUnwrapSolInstruction(connection, owner);
+        }
+
+        return {
+            mint: nativeMint,
+            tokenProgram,
+            ...instructions
+        };
+    }
+
+    return {
+        mint,
+        tokenProgram: await getTokenProgram(connection, mint),
+    };
+}
+
+export async function handleMintsAndTokenProgram(
+    connection: Connection,
+    currency: PublicKey,
+    collateral: PublicKey,
+): Promise<TokenProgramsResult> {
+    if (currency.equals(collateral)) {
+        throw new Error('Mints cannot be the same');
+    }
+
+    const [currencyResult, collateralResult] = await Promise.all([
+        handleMint(connection, currency),
+        handleMint(connection, collateral)
+    ]);
+
+    return {
+        currencyMint: currencyResult.mint,
+        collateralMint: collateralResult.mint,
+        currencyTokenProgram: currencyResult.tokenProgram,
+        collateralTokenProgram: collateralResult.tokenProgram,
+    };
+}
+
+export async function handleMintsAndTokenProgramWithSetupAndCleanup(
+    connection: Connection,
+    owner: PublicKey,
+    currency: PublicKey,
+    collateral: PublicKey,
+    wrapMode: WrapMode,
+    amount?: number | bigint
+): Promise<TokenProgramsWithSetupResult> {
+    if (currency.equals(collateral)) {
+        throw new Error('Mints cannot be the same');
+    }
+
+    const [currencyResult, collateralResult] = await Promise.all([
+        handleMint(connection, currency, owner, wrapMode, amount),
+        handleMint(connection, collateral, owner, wrapMode, amount)
+    ]);
+
+    return {
+        currencyMint: currencyResult.mint,
+        collateralMint: collateralResult.mint,
+        currencyTokenProgram: currencyResult.tokenProgram,
+        collateralTokenProgram: collateralResult.tokenProgram,
+        setupIx: [...(currencyResult.setupIx || []), ...(collateralResult.setupIx || [])],
+        cleanupIx: [...(currencyResult.cleanupIx || []), ...(collateralResult.cleanupIx || [])]
+    };
 }

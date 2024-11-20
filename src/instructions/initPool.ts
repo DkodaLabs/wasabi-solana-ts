@@ -1,7 +1,7 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, getTokenProgram, getPermission } from '../utils';
+import { PDA, getPermission, handleMintsAndTokenProgram } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitPoolAccounts = {
@@ -32,30 +32,37 @@ export async function getInitPoolInstructionAccounts(
     accounts: InitPoolAccounts,
     pool_type: 'long' | 'short'
 ): Promise<InitPoolInstructionAccountsStrict> {
+    const {
+        currencyMint,
+        collateralMint,
+        currencyTokenProgram,
+        collateralTokenProgram,
+    } = await handleMintsAndTokenProgram(
+        program.provider.connection,
+        accounts.currency,
+        accounts.collateral
+    );
+
     const pool =
         pool_type === 'long'
-            ? PDA.getLongPool(accounts.currency, accounts.collateral)
-            : PDA.getShortPool(accounts.collateral, accounts.currency);
-    const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-        getTokenProgram(program.provider.connection, accounts.collateral),
-        getTokenProgram(program.provider.connection, accounts.currency)
-    ]);
+            ? PDA.getLongPool(collateralMint, currencyMint)
+            : PDA.getShortPool(collateralMint, currencyMint);
 
     return {
         payer: program.provider.publicKey,
         authority: accounts.admin,
         permission: await getPermission(program, accounts.admin),
-        collateral: accounts.collateral,
-        currency: accounts.currency,
+        collateral: collateralMint,
+        currency: currencyMint,
         pool,
         collateralVault: getAssociatedTokenAddressSync(
-            accounts.collateral,
+            collateralMint,
             pool,
             true,
             collateralTokenProgram
         ),
         currencyVault: getAssociatedTokenAddressSync(
-            accounts.currency,
+            currencyMint,
             pool,
             true,
             currencyTokenProgram

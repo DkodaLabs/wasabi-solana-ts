@@ -2,7 +2,13 @@ import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
-import { getTokenProgram, PDA } from '../utils';
+import {
+    getTokenProgram,
+    PDA,
+    isSOL,
+    handleSOL,
+    createUnwrapSolInstruction,
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ClaimPositionAccounts = {
@@ -40,34 +46,72 @@ export const claimPositionConfig: BaseMethodConfig<
     ClaimPositionInstructionAccounts | ClaimPositionInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClaimPositionAccounts>) => {
-        const [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral),
-            getTokenProgram(config.program.provider.connection, config.accounts.currency)
-        ]);
+        const setup: TransactionInstruction[] = [];
+        const cleanup: TransactionInstruction[] = [];
+        const isCurrencySOL = isSOL(config.accounts.currency);
+        const isCollateralSOL = isSOL(config.accounts.collateral);
+        let currencyTokenProgram: PublicKey;
+        let collateralTokenProgram: PublicKey;
+        let currencyMint: PublicKey = config.accounts.currency;
+        let collateralMint: PublicKey = config.accounts.collateral;
+
+        // TODO: We need to actually calculate the transfer amounts in the program
+        // to create the wrapped tokens...
+        if (isCurrencySOL) {
+            let { tokenProgram, nativeMint } = handleSOL();
+            currencyTokenProgram = tokenProgram;
+            currencyMint = nativeMint;
+        }
+        if (isCollateralSOL) {
+            let { tokenProgram, nativeMint } = handleSOL();
+            collateralTokenProgram = tokenProgram;
+            collateralMint = nativeMint;
+        }
+
+        if (!isCurrencySOL && !isCollateralSOL) {
+            [collateralTokenProgram, currencyTokenProgram] = await Promise.all([
+                getTokenProgram(config.program.provider.connection, config.accounts.collateral),
+                getTokenProgram(config.program.provider.connection, config.accounts.currency)
+            ]);
+        } else {
+            if (!isCurrencySOL) {
+                currencyTokenProgram = await getTokenProgram(
+                    config.program.provider.connection,
+                    config.accounts.currency
+                );
+            }
+            if (!isCollateralSOL) {
+                collateralTokenProgram = await getTokenProgram(
+                    config.program.provider.connection,
+                    config.accounts.collateral
+                );
+            }
+        }
+
         const traderCurrencyAccount = getAssociatedTokenAddressSync(
-            config.accounts.currency,
+            currencyMint,
             config.program.provider.publicKey,
             false,
             currencyTokenProgram
         );
         const traderCollateralAccount = getAssociatedTokenAddressSync(
-            config.accounts.collateral,
+            collateralMint,
             config.program.provider.publicKey,
             false,
             collateralTokenProgram
         );
         const poolInfo = await config.program.account.basePool.fetch(config.accounts.pool);
         const lpVault = poolInfo.isLongPool
-            ? PDA.getLpVault(config.accounts.currency)
-            : PDA.getLpVault(config.accounts.currency);
+            ? PDA.getLpVault(currencyMint)
+            : PDA.getLpVault(currencyMint);
         const vault = getAssociatedTokenAddressSync(
-            config.accounts.currency,
+            currencyMint,
             lpVault,
             true,
             currencyTokenProgram
         );
         const collateralVault = getAssociatedTokenAddressSync(
-            config.accounts.collateral,
+            collateralMint,
             config.accounts.pool,
             true,
             collateralTokenProgram
@@ -80,8 +124,8 @@ export const claimPositionConfig: BaseMethodConfig<
             position: config.accounts.position,
             pool: config.accounts.pool,
             collateralVault,
-            currency: config.accounts.currency,
-            collateral: config.accounts.collateral,
+            currency: currencyMint,
+            collateral: collateralMint,
             lpVault,
             vault,
             feeWallet: config.accounts.feeWallet,
@@ -95,14 +139,14 @@ export const claimPositionConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      position: allAccounts.position,
-                      pool: allAccounts.pool,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      feeWallet: allAccounts.feeWallet,
-                      collateralTokenProgram: allAccounts.collateralTokenProgram,
-                      currencyTokenProgram: allAccounts.currencyTokenProgram
-                  }
+                    position: allAccounts.position,
+                    pool: allAccounts.pool,
+                    collateral: allAccounts.collateral,
+                    currency: allAccounts.currency,
+                    feeWallet: allAccounts.feeWallet,
+                    collateralTokenProgram: allAccounts.collateralTokenProgram,
+                    currencyTokenProgram: allAccounts.currencyTokenProgram
+                }
         };
     },
     getMethod: (program) => () => program.methods.claimPosition()

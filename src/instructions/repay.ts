@@ -1,12 +1,12 @@
-import {BN, Program} from '@coral-xyz/anchor';
+import { BN, Program } from '@coral-xyz/anchor';
 import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { PDA, getTokenProgram } from '../utils';
+import { PDA, handleMint } from '../utils';
 
 export type RepayArgs = {
-    amount: bigint; // u64
+    amount: number | bigint; // u64
 };
 
 export type RepayAccounts = {
@@ -27,23 +27,31 @@ const repayConfig: BaseMethodConfig<
     RepayInstructionAccounts | RepayInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<RepayArgs, RepayAccounts>) => {
-        const lpVault = PDA.getLpVault(config.accounts.mint);
-        const [lpVaultInfo, tokenProgram] = await Promise.all([
-            config.program.account.lpVault.fetch(lpVault),
-            getTokenProgram(config.program.provider.connection, config.accounts.mint)
-        ]);
+        const {
+            mint,
+            tokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMint(
+            config.program.provider.connection,
+            config.accounts.mint,
+            config.program.provider.publicKey,
+            'wrap',
+        );
+        const lpVault = PDA.getLpVault(mint);
+        const lpVaultInfo = await config.program.account.lpVault.fetch(lpVault);
 
         const allAccounts = {
             payer: config.program.provider.publicKey,
-            mint: config.accounts.mint,
+            mint,
             source: getAssociatedTokenAddressSync(
-                config.accounts.mint,
+                mint,
                 config.program.provider.publicKey,
                 false,
                 tokenProgram
             ),
             lpVault,
-            vault: getAssociatedTokenAddressSync(config.accounts.mint, lpVault, true, tokenProgram),
+            vault: getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram),
             tokenProgram
         };
 
@@ -51,13 +59,15 @@ const repayConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      payer: allAccounts.payer,
-                      mint: allAccounts.mint,
-                      source: allAccounts.source,
-                      lpVault,
-                      tokenProgram
-                  },
-            args: lpVaultInfo.totalBorrowed.add(new BN(config.args.amount.toString()))
+                    payer: allAccounts.payer,
+                    mint: allAccounts.mint,
+                    source: allAccounts.source,
+                    lpVault,
+                    tokenProgram
+                },
+            args: lpVaultInfo.totalBorrowed.add(new BN(config.args.amount.toString())),
+            setup: setupIx,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.repay(args)

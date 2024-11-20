@@ -1,11 +1,14 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { PDA, WASABI_PROGRAM_ID } from '../utils';
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import {
+    getAssociatedTokenAddressSync,
+    TOKEN_2022_PROGRAM_ID,
+} from '@solana/spl-token';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type TokenArgs = {
-    amount: number;
+    amount: number | bigint;
 };
 
 type TokenAccounts = {

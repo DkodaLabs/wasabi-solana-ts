@@ -25,13 +25,13 @@ const initLongPoolConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      payer: allAccounts.payer,
-                      permission: allAccounts.permission,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      collateralTokenProgram: allAccounts.collateralTokenProgram,
-                      currencyTokenProgram: allAccounts.currencyTokenProgram
-                  }
+                    payer: allAccounts.payer,
+                    permission: allAccounts.permission,
+                    collateral: allAccounts.collateral,
+                    currency: allAccounts.currency,
+                    collateralTokenProgram: allAccounts.collateralTokenProgram,
+                    currencyTokenProgram: allAccounts.currencyTokenProgram
+                }
         };
     },
     getMethod: (program) => () => program.methods.initLongPool()

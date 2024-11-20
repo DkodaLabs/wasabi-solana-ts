@@ -1,16 +1,27 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
-import { BaseMethodConfig, handleMethodCall, ConfigArgs, constructMethodCallArgs } from '../base';
+import {
+    TransactionSignature,
+    TransactionInstruction
+} from '@solana/web3.js';
+import {
+    TOKEN_2022_PROGRAM_ID,
+    createAssociatedTokenAccountInstruction
+} from '@solana/spl-token';
+import {
+    BaseMethodConfig,
+    handleMethodCall,
+    ConfigArgs,
+    constructMethodCallArgs
+} from '../base';
 import {
     DepositAccounts,
     DepositArgs,
     TokenInstructionAccounts,
     TokenInstructionAccountsStrict,
-    getTokenInstructionAccounts
+    getTokenInstructionAccounts,
 } from './tokenAccounts';
-import { getTokenProgram } from '../utils';
+import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 
 const depositConfig: BaseMethodConfig<
     DepositArgs,
@@ -18,22 +29,32 @@ const depositConfig: BaseMethodConfig<
     TokenInstructionAccounts | TokenInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
-        const assetTokenProgram = await getTokenProgram(
+        const setup: TransactionInstruction[] = [];
+        const {
+            mint,
+            tokenProgram,
+            setupIx,
+            cleanupIx,
+        } = await handleMint(
             config.program.provider.connection,
-            config.accounts.assetMint
+            config.accounts.assetMint,
+            config.program.provider.publicKey,
+            'wrap',
+            config.args.amount,
         );
+
+        setup.push(...setupIx);
 
         const allAccounts = await getTokenInstructionAccounts(
             config.program,
-            config.accounts.assetMint,
-            assetTokenProgram
+            mint,
+            tokenProgram
         );
-
-        const setup: TransactionInstruction[] = [];
 
         const ownerShares = await config.program.provider.connection.getAccountInfo(
             allAccounts.ownerSharesAccount
         );
+
         if (!ownerShares) {
             setup.push(
                 createAssociatedTokenAccountInstruction(
@@ -52,11 +73,12 @@ const depositConfig: BaseMethodConfig<
                 : {
                     owner: config.program.provider.publicKey,
                     lpVault: allAccounts.lpVault,
-                    assetMint: config.accounts.assetMint,
-                    assetTokenProgram
+                    assetMint: mint,
+                    assetTokenProgram: tokenProgram,
                 },
             args: config.args ? new BN(config.args.amount) : undefined,
-            setup
+            setup,
+            cleanup: cleanupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.deposit(args)
