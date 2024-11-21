@@ -52,7 +52,7 @@ export const redeemConfig: BaseMethodConfig<
                     assetMint: mint,
                     assetTokenProgram: tokenProgram
                 },
-            args: config.args ? new BN(config.args.amount) : undefined,
+            args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
             cleanup: cleanupIx,
         };
