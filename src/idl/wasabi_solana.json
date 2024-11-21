@@ -575,6 +575,7 @@
             },
             {
               "name": "lp_vault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -1014,6 +1015,7 @@
             },
             {
               "name": "lp_vault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -2972,6 +2974,7 @@
             },
             {
               "name": "lp_vault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -5174,6 +5177,7 @@
             },
             {
               "name": "lp_vault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -5630,6 +5634,7 @@
             },
             {
               "name": "lp_vault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -6541,6 +6546,26 @@
       "code": 6021,
       "name": "LPingDisabled",
       "msg": "LPing disabled"
+    },
+    {
+      "code": 6022,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6023,
+      "name": "ArithmeticUnderflow",
+      "msg": "Arithmetic underflow"
+    },
+    {
+      "code": 6024,
+      "name": "U64Overflow",
+      "msg": "Amount exceeds u64"
+    },
+    {
+      "code": 6025,
+      "name": "ZeroDivision",
+      "msg": "Division by zero"
     }
   ],
   "types": [
@@ -7303,11 +7328,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "source_bal_before",
+            "name": "maker_bal_before",
             "type": "u64"
           },
           {
-            "name": "destination_bal_before",
+            "name": "taker_bal_before",
             "type": "u64"
           }
         ]

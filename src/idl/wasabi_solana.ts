@@ -581,6 +581,7 @@ export type WasabiSolana = {
             },
             {
               "name": "lpVault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -1020,6 +1021,7 @@ export type WasabiSolana = {
             },
             {
               "name": "lpVault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -2978,6 +2980,7 @@ export type WasabiSolana = {
             },
             {
               "name": "lpVault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -5180,6 +5183,7 @@ export type WasabiSolana = {
             },
             {
               "name": "lpVault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -5636,6 +5640,7 @@ export type WasabiSolana = {
             },
             {
               "name": "lpVault",
+              "writable": true,
               "relations": [
                 "position"
               ]
@@ -6547,6 +6552,26 @@ export type WasabiSolana = {
       "code": 6021,
       "name": "lPingDisabled",
       "msg": "LPing disabled"
+    },
+    {
+      "code": 6022,
+      "name": "arithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6023,
+      "name": "arithmeticUnderflow",
+      "msg": "Arithmetic underflow"
+    },
+    {
+      "code": 6024,
+      "name": "u64Overflow",
+      "msg": "Amount exceeds u64"
+    },
+    {
+      "code": 6025,
+      "name": "zeroDivision",
+      "msg": "Division by zero"
     }
   ],
   "types": [
@@ -7309,11 +7334,11 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "sourceBalBefore",
+            "name": "makerBalBefore",
             "type": "u64"
           },
           {
-            "name": "destinationBalBefore",
+            "name": "takerBalBefore",
             "type": "u64"
           }
         ]

@@ -78,7 +78,7 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
     LiquidatePositionCleanupInstructionAccounts | LiquidatePositionCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
-        const allAccounts = await getClosePositionCleanupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts
         );
@@ -86,21 +86,23 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? {
                     closePositionCleanup: {
-                        ...allAccounts
+                        ...accounts
                     }
                 }
                 : {
                     closePositionCleanup: {
-                        owner: allAccounts.owner,
-                        authority: allAccounts.authority,
-                        collateral: allAccounts.collateral,
-                        currency: allAccounts.currency,
-                        position: allAccounts.position,
-                        feeWallet: allAccounts.feeWallet,
-                        collateralTokenProgram: allAccounts.collateralTokenProgram,
-                        currencyTokenProgram: allAccounts.currencyTokenProgram
+                        owner: accounts.owner,
+                        authority: accounts.authority,
+                        collateral: accounts.collateral,
+                        currency: accounts.currency,
+                        position: accounts.position,
+                        feeWallet: accounts.feeWallet,
+                        collateralTokenProgram: accounts.collateralTokenProgram,
+                        currencyTokenProgram: accounts.currencyTokenProgram
                     }
-                }
+                },
+            setup: ixes.setupIx,
+            cleanup: ixes.cleanupIx,
         };
     },
     getMethod: (program) => () => program.methods.liquidatePositionCleanup()
