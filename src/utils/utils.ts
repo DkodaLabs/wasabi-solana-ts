@@ -528,7 +528,7 @@ export async function createWrapSolInstruction(
         SystemProgram.transfer({
             fromPubkey: owner,
             toPubkey: ownerWrappedSolAta,
-            lamports: new BN(amount.toString()),
+            lamports: amount,
         })
     );
 
