@@ -9,6 +9,7 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PDA,
     getPermission,
+    createAtaIfNeeded,
     handleMintsAndTokenProgram,
     handleMintsAndTokenProgramWithSetupAndCleanup,
 } from '../utils';
@@ -195,30 +196,50 @@ export async function getClosePositionCleanupInstructionAccounts(
         ),
     ]);
 
+    let ownerCurrencyAta = getAssociatedTokenAddressSync(currencyMint, owner, false, currencyTokenProgram);
+    let ownerCollateralAta = getAssociatedTokenAddressSync(collateralMint, owner, false, collateralTokenProgram);
+
+    const [currencyAtaIx, collateralAtaIx] = await Promise.all([
+        createAtaIfNeeded(
+            program.provider.connection,
+            owner,
+            currencyMint,
+            ownerCurrencyAta,
+            currencyTokenProgram,
+            program.provider.publicKey,
+        ),
+        createAtaIfNeeded(
+            program.provider.connection,
+            owner,
+            collateralMint,
+            ownerCollateralAta,
+            collateralTokenProgram,
+            program.provider.publicKey
+        )
+    ]);
+
+    if (currencyAtaIx) {
+        setupIx.push(currencyAtaIx);
+    }
+
+    if (collateralAtaIx) {
+        setupIx.push(collateralAtaIx);
+    }
+
     return {
         accounts: {
             owner,
-            ownerCollateralAccount: getAssociatedTokenAddressSync(
-                collateralMint,
-                owner,
-                false,
-                collateralTokenProgram
-            ),
-            ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                currencyMint,
-                owner,
-                false,
-                currencyTokenProgram
-            ),
+            ownerCollateralAccount: ownerCollateralAta,
+            ownerCurrencyAccount: ownerCurrencyAta,
             pool: accounts.pool,
             collateralVault: getAssociatedTokenAddressSync(
-                accounts.collateral,
+                collateralMint,
                 accounts.pool,
                 true,
                 collateralTokenProgram
             ),
             currencyVault: getAssociatedTokenAddressSync(
-                accounts.currency,
+                currencyMint,
                 accounts.pool,
                 true,
                 currencyTokenProgram

@@ -479,6 +479,28 @@ export function getPreferredNativeMint(tokenProgramId: PublicKey): PublicKey {
     return tokenProgramId.equals(TOKEN_PROGRAM_ID) ? NATIVE_MINT : NATIVE_MINT_2022;
 }
 
+export async function createAtaIfNeeded(
+    connection: Connection,
+    owner: PublicKey,
+    mint: PublicKey,
+    ata: PublicKey,
+    tokenProgram: PublicKey,
+    payer?: PublicKey,
+): Promise<TransactionInstruction | null> {
+    if (isNativeMint(mint)) return null;
+
+    const account = await connection.getAccountInfo(ata);
+    if (!account) {
+        return createAssociatedTokenAccountIdempotentInstruction(
+            payer ? payer : owner,
+            ata,
+            owner,
+            mint,
+            tokenProgram
+        );
+    }
+}
+
 export async function createWrapSolInstruction(
     connection: Connection,
     owner: PublicKey,
