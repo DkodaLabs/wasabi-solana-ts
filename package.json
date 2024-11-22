@@ -1,6 +1,6 @@
 {
   "name": "wasabi-solana-ts",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "Typescript library for the Wasabi program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "publish": "npm publish",
     "prepare": "npm run build",
     "test": "mocha -r ts-node/register 'test/**/*.ts'",
     "lint": "eslint 'src/**/*.{js,ts}'",
