@@ -19,6 +19,18 @@ export type ClosePositionParams = {
     feeWallet: PublicKey,
 } & ClosePositionSetupArgs;
 
+export type ExitOrderSetupInstructionAccounts = {
+    closePositionSetup: ClosePositionSetupInstructionAccounts,
+}
+
+export type ExitOrderSetupInstructionAccountsStrict = {
+    closePositionSetup: ClosePositionSetupInstructionAccountsStrict,
+}
+
+export type ExitOrderCleanupInstructionAccounts = {
+    closePositionCleanup: ClosePositionCleanupInstructionAccounts,
+}
+
 export type ClosePositionSetupArgs = {
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
