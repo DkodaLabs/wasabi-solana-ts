@@ -42,9 +42,10 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
     CloseLongPositionSetupInstructionAccounts | CloseLongPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            CloseType.MARKET,
         );
 
         return {
@@ -68,6 +69,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                     }
                 },
             args: transformArgs(config.args),
+            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -88,7 +90,6 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.MARKET,
         );
         return {
             accounts: config.strict

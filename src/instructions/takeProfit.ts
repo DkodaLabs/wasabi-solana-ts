@@ -35,9 +35,10 @@ const takeProfitSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            CloseType.TAKE_PROFIT,
         );
 
         return {
@@ -53,7 +54,8 @@ const takeProfitSetupConfig: BaseMethodConfig<
                     authority: accounts.authority,
                     tokenProgram: accounts.tokenProgram
                 }
-            }
+            },
+            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) => program.methods.takeProfitSetup(
@@ -73,7 +75,6 @@ const takeProfitCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.TAKE_PROFIT,
         );
         return {
             accounts: config.strict ?

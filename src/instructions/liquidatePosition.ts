@@ -38,30 +38,31 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
     LiquidatePositionSetupInstructionAccounts | LiquidatePositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const allAccounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            CloseType.LIQUIDATION,
         );
-        console.log(allAccounts);
 
         return {
             accounts: config.strict
                 ? {
                     closePositionSetup: {
-                        ...allAccounts
+                        ...accounts
                     }
                 }
                 : {
                     closePositionSetup: {
-                        owner: allAccounts.owner,
-                        position: allAccounts.position,
-                        pool: allAccounts.pool,
-                        collateral: allAccounts.collateral,
-                        permission: allAccounts.permission,
-                        tokenProgram: allAccounts.tokenProgram
+                        owner: accounts.owner,
+                        position: accounts.position,
+                        pool: accounts.pool,
+                        collateral: accounts.collateral,
+                        permission: accounts.permission,
+                        tokenProgram: accounts.tokenProgram
                     }
                 },
-            args: transformArgs(config.args)
+            args: transformArgs(config.args),
+            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -82,7 +83,6 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.LIQUIDATION,
         );
         return {
             accounts: config.strict

@@ -35,9 +35,10 @@ const stopLossSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            CloseType.STOP_LOSS,
         );
 
         return {
@@ -53,7 +54,8 @@ const stopLossSetupConfig: BaseMethodConfig<
                     authority: accounts.authority,
                     tokenProgram: accounts.tokenProgram
                 }
-            }
+            },
+            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) => program.methods.stopLossSetup(
@@ -73,7 +75,6 @@ const stopLossCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.STOP_LOSS
         );
         return {
             accounts: config.strict ?

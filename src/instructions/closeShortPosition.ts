@@ -42,32 +42,34 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
     CloseShortPositionSetupInstructionAccounts | CloseShortPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const allAccounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
+            CloseType.MARKET
         );
 
         return {
             accounts: config.strict
                 ? {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionSetup: {
-                        ...allAccounts
+                        ...accounts
                     }
                 }
                 : {
-                    owner: allAccounts.owner,
+                    owner: accounts.owner,
                     closePositionSetup: {
-                        owner: allAccounts.owner,
-                        pool: allAccounts.pool,
-                        collateral: allAccounts.collateral,
-                        position: allAccounts.position,
-                        permission: allAccounts.permission,
-                        authority: allAccounts.authority,
-                        tokenProgram: allAccounts.tokenProgram
+                        owner: accounts.owner,
+                        pool: accounts.pool,
+                        collateral: accounts.collateral,
+                        position: accounts.position,
+                        permission: accounts.permission,
+                        authority: accounts.authority,
+                        tokenProgram: accounts.tokenProgram
                     }
                 },
-            args: transformArgs(config.args)
+            args: transformArgs(config.args),
+            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -89,7 +91,6 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.MARKET,
         );
         return {
             accounts: config.strict
