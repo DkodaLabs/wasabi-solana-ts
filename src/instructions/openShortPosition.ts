@@ -19,8 +19,8 @@ import {
 import {
     PDA,
     getPermission,
+    handleMint,
     handleMintsAndTokenProgram,
-    handleMintsAndTokenProgramWithSetupAndCleanup,
 } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -44,32 +44,29 @@ const openShortPositionSetupConfig: BaseMethodConfig<
     process: async (
         config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
     ) => {
-        const {
-            currencyMint,
-            collateralMint,
-            currencyTokenProgram,
-            collateralTokenProgram,
-            setupIx,
-            cleanupIx,
-        } = await handleMintsAndTokenProgramWithSetupAndCleanup(
-            config.program.provider.connection,
-            config.accounts.owner,
-            config.accounts.currency,
-            config.accounts.collateral,
-            'wrap',
-            config.args.downPayment,
-        );
+        const [
+            { mint: currencyMint, tokenProgram: currencyTokenProgram },
+            {
+                mint: collateralMint,
+                tokenProgram: collateralTokenProgram,
+                setupIx,
+                cleanupIx
+            }
+        ] = await Promise.all([
+            handleMint(config.program.provider.connection, config.accounts.currency),
+            handleMint(
+                config.program.provider.connection,
+                config.accounts.collateral,
+                config.program.provider.publicKey,
+                'wrap',
+                config.args.downPayment,
+            )
+        ]);
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
         const allAccounts = {
             owner: config.accounts.owner,
-            ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                currencyMint,
-                config.accounts.owner,
-                false,
-                currencyTokenProgram
-            ),
             ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
                 collateralMint,
                 config.accounts.owner,
@@ -81,7 +78,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 currencyMint,
                 lpVault,
                 true,
-                collateralTokenProgram
+                currencyTokenProgram,
             ),
             pool,
             collateralVault: getAssociatedTokenAddressSync(
@@ -107,7 +104,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             currencyTokenProgram,
             collateralTokenProgram,
             systemProgram: SystemProgram.programId,
-            sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
+            sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
         };
 
         const args = {

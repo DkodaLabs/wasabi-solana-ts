@@ -3946,66 +3946,6 @@
           "signer": true
         },
         {
-          "name": "owner_currency_account",
-          "docs": [
-            "The account that holds the owner's base currency"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "owner"
-              },
-              {
-                "kind": "account",
-                "path": "currency_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
           "name": "owner_target_currency_account",
           "docs": [
             "The account that holds the owner's target currency"
@@ -6566,6 +6506,11 @@
       "code": 6025,
       "name": "ZeroDivision",
       "msg": "Division by zero"
+    },
+    {
+      "code": 6026,
+      "name": "LiquidationThresholdNotReached",
+      "msg": "Liquidation threshold not reached"
     }
   ],
   "types": [

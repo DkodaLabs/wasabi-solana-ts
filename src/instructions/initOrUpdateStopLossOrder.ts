@@ -10,8 +10,8 @@ import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitOrUpdateStopLossArgs = {
-    makerAmount: number; // u64
-    takerAmount: number; // u64
+    makerAmount: number | bigint; // u64
+    takerAmount: number | bigint; // u64
 };
 
 export type InitOrUpdateStopLossAccounts = {
@@ -52,8 +52,8 @@ const initOrUpdateStopLossConfig: BaseMethodConfig<
                       position: allAccounts.position
                   },
             args: {
-                makerAmount: new BN(config.args.makerAmount),
-                takerAmount: new BN(config.args.takerAmount)
+                makerAmount: new BN(config.args.makerAmount.toString()),
+                takerAmount: new BN(config.args.takerAmount.toString())
             }
         };
     },

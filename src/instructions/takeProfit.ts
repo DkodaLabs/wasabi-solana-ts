@@ -12,6 +12,7 @@ import {
 import {
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
+    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
@@ -69,7 +70,11 @@ const takeProfitCleanupConfig: BaseMethodConfig<
     ExitOrderCleanupInstructionAccounts | TakeProfitCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(config.program, config.accounts);
+        const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
+            config.program,
+            config.accounts,
+            CloseType.TAKE_PROFIT,
+        );
         return {
             accounts: config.strict ?
                 {

@@ -1,6 +1,7 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
+    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionSetupInstructionAccounts,
@@ -86,7 +87,8 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            CloseType.MARKET,
         );
         return {
             accounts: config.strict
