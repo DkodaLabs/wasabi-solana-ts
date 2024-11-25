@@ -17,17 +17,21 @@ import {
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
+    ClosePositionCleanupInstructionAccounts,
     ClosePositionCleanupInstructionAccountsStrict,
     ExitOrderSetupInstructionAccounts,
     ExitOrderSetupInstructionAccountsStrict,
-    ExitOrderCleanupInstructionAccounts,
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+type StopLossCleanupInstructionAccounts = {
+    stopLossOrder: PublicKey;
+    closePositionCleanup: ClosePositionCleanupInstructionAccounts;
+}
 type StopLossCleanupInstructionAccountsStrict = {
-    stopLoss: PublicKey;
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict,
+    stopLossOrder: PublicKey;
+    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict;
 }
 
 const stopLossSetupConfig: BaseMethodConfig<
@@ -71,22 +75,24 @@ const stopLossSetupConfig: BaseMethodConfig<
 const stopLossCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    ExitOrderCleanupInstructionAccounts | StopLossCleanupInstructionAccountsStrict
+    StopLossCleanupInstructionAccounts | StopLossCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
         );
+
+        const stopLossPubkey = PDA.getStopLossOrder(accounts.position);
+        console.log(stopLossPubkey);
         return {
-            accounts: config.strict ?
-                {
-                    stopLoss: PDA.getStopLossOrder(accounts.position),
-                    closePositionCleanup: {
-                        ...accounts,
-                    }
+            accounts: config.strict
+                ? {
+                    stopLossOrder: stopLossPubkey,
+                    closePositionCleanup: accounts
                 } :
                 {
+                    stopLossOrder: stopLossPubkey,
                     closePositionCleanup: {
                         owner: accounts.owner,
                         pool: accounts.pool,

@@ -17,17 +17,21 @@ import {
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
+    ClosePositionCleanupInstructionAccounts,
     ClosePositionCleanupInstructionAccountsStrict,
     ExitOrderSetupInstructionAccounts,
     ExitOrderSetupInstructionAccountsStrict,
-    ExitOrderCleanupInstructionAccounts,
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+type TakeProfitCleanupInstructionAccounts = {
+    takeProfitOrder: PublicKey;
+    closePositionCleanup: ClosePositionCleanupInstructionAccounts;
+}
 type TakeProfitCleanupInstructionAccountsStrict = {
-    takeProfit: PublicKey;
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict,
+    takeProfitOrder: PublicKey;
+    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict;
 }
 
 const takeProfitSetupConfig: BaseMethodConfig<
@@ -71,22 +75,24 @@ const takeProfitSetupConfig: BaseMethodConfig<
 const takeProfitCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    ExitOrderCleanupInstructionAccounts | TakeProfitCleanupInstructionAccountsStrict
+    TakeProfitCleanupInstructionAccounts | TakeProfitCleanupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
         );
+        const takeProfit = PDA.getTakeProfitOrder(accounts.position);
         return {
             accounts: config.strict ?
                 {
-                    takeProfit: PDA.getTakeProfitOrder(accounts.position),
+                    takeProfitOrder: takeProfit,
                     closePositionCleanup: {
                         ...accounts,
                     }
                 } :
                 {
+                    takeProfitOrder: takeProfit,
                     closePositionCleanup: {
                         owner: accounts.owner,
                         pool: accounts.pool,
