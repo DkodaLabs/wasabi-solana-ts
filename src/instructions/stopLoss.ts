@@ -10,6 +10,7 @@ import {
     constructMethodCallArgs
 } from '../base';
 import {
+    transformArgs,
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
     CloseType,
@@ -55,6 +56,7 @@ const stopLossSetupConfig: BaseMethodConfig<
                     tokenProgram: accounts.tokenProgram
                 }
             },
+            args: transformArgs(config.args),
             setup: ixes.setup,
         };
     },

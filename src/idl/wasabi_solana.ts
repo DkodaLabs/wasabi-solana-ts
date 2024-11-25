@@ -1328,12 +1328,19 @@ export type WasabiSolana = {
       ],
       "accounts": [
         {
+          "name": "closer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "trader",
           "writable": true,
-          "signer": true,
           "relations": [
             "position"
           ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "position"
@@ -1387,12 +1394,19 @@ export type WasabiSolana = {
       ],
       "accounts": [
         {
+          "name": "closer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "trader",
           "writable": true,
-          "signer": true,
           "relations": [
             "position"
           ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "position"

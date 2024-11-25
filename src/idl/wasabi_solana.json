@@ -1322,12 +1322,19 @@
       ],
       "accounts": [
         {
+          "name": "closer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "trader",
           "writable": true,
-          "signer": true,
           "relations": [
             "position"
           ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "position"
@@ -1381,12 +1388,19 @@
       ],
       "accounts": [
         {
+          "name": "closer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "trader",
           "writable": true,
-          "signer": true,
           "relations": [
             "position"
           ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "position"
