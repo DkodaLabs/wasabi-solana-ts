@@ -144,35 +144,38 @@ async function handleOrdersCheck(
     positionAddress: PublicKey,
     closeType?: CloseType
 ): Promise<TransactionInstruction[]> {
-    const shouldCheckStopLoss = closeType === CloseType.MARKET
-        || closeType === CloseType.LIQUIDATION
-        || closeType === CloseType.TAKE_PROFIT;
-    const shouldCheckTakeProfit = closeType === CloseType.MARKET
-        || closeType === CloseType.LIQUIDATION
-        || closeType === CloseType.STOP_LOSS;
+    // TODO: Implement cancelling of orders
+    // const shouldCheckStopLoss = closeType === CloseType.MARKET
+    //     || closeType === CloseType.LIQUIDATION
+    //     || closeType === CloseType.TAKE_PROFIT;
+    // const shouldCheckTakeProfit = closeType === CloseType.MARKET
+    //     || closeType === CloseType.LIQUIDATION
+    //     || closeType === CloseType.STOP_LOSS;
+    //
+    // const [stopLoss, takeProfit] = await Promise.all([
+    //     shouldCheckStopLoss ? program.account.stopLossOrder.fetch(PDA.getStopLossOrder(positionAddress))
+    //         .catch(() => null) : null,
+    //     shouldCheckTakeProfit ? program.account.takeProfitOrder.fetch(PDA.getTakeProfitOrder(positionAddress))
+    //         .catch(() => null) : null,
+    // ]);
+    //
+    // const ixes = [];
+    //
+    // if (stopLoss) {
+    //     ixes.push(
+    //         ...(await createCloseStopLossOrderInstruction(program, { position: positionAddress }))
+    //     );
+    // }
+    //
+    // if (takeProfit) {
+    //     ixes.push(
+    //         ...(await createCloseTakeProfitOrderInstruction(program, { position: positionAddress }))
+    //     );
+    // }
+    //
+    // return ixes;
 
-    const [stopLoss, takeProfit] = await Promise.all([
-        shouldCheckStopLoss ? program.account.stopLossOrder.fetch(PDA.getStopLossOrder(positionAddress))
-            .catch(() => null) : null,
-        shouldCheckTakeProfit ? program.account.takeProfitOrder.fetch(PDA.getTakeProfitOrder(positionAddress))
-            .catch(() => null) : null,
-    ]);
-
-    const ixes = [];
-
-    if (stopLoss) {
-        ixes.push(
-            ...(await createCloseStopLossOrderInstruction(program, { position: positionAddress }))
-        );
-    }
-
-    if (takeProfit) {
-        ixes.push(
-            ...(await createCloseTakeProfitOrderInstruction(program, { position: positionAddress }))
-        );
-    }
-
-    return ixes;
+    return [];
 }
 
 export async function getClosePositionSetupInstructionAccounts(
