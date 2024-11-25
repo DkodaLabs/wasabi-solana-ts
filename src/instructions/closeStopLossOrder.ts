@@ -23,20 +23,35 @@ const closeStopLossOrderConfig: BaseMethodConfig<
     CloseStopLossOrderInstructionAccounts | CloseStopLossOrderInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, CloseStopLossOrderAccounts>) => {
-        const trader = await config.program.account.position
-            .fetch(config.accounts.position)
-            .then((pos) => pos.trader);
+        let permission = PDA.getAdmin(config.program.provider.publicKey);
+        const [trader, permissionAccount] = await Promise.all([
+            config.program.account.position
+                .fetch(config.accounts.position)
+                .then((pos) => pos.trader),
+            config.program.account.permission.fetch(permission).catch(() => null),
+        ]);
+
+        if (!permissionAccount) {
+            permission = PDA.getSuperAdmin()
+        }
+
         const allAccounts = {
+            closer: config.program.provider.publicKey,
             trader,
+            permission,
             position: config.accounts.position,
             stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
         };
+
         return {
             accounts: config.strict
                 ? allAccounts
                 : {
-                      position: config.accounts.position
-                  }
+                    closer: allAccounts.closer,
+                    permission,
+                    position: config.accounts.position
+
+                }
         };
     },
     getMethod: (program) => () => program.methods.closeStopLossOrder()

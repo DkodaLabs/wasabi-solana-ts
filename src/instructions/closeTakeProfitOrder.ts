@@ -23,11 +23,22 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
     CloseTakeProfitOrderInstructionAccounts | CloseTakeProfitOrderInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<void, CloseTakeProfitOrderAccounts>) => {
-        const trader = await config.program.account.position
-            .fetch(config.accounts.position)
-            .then((pos) => pos.trader);
+        let permission = PDA.getAdmin(config.program.provider.publicKey);
+        const [trader, permissionAccount] = await Promise.all([
+            config.program.account.position
+                .fetch(config.accounts.position)
+                .then((pos) => pos.trader),
+            config.program.account.permission.fetch(permission),
+        ]);
+
+        if (!permissionAccount) {
+            permission = PDA.getSuperAdmin();
+        }
+
         const allAccounts = {
+            closer: config.program.provider.publicKey,
             trader,
+            permission,
             position: config.accounts.position,
             takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position)
         };
@@ -35,8 +46,10 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             accounts: config.strict
                 ? allAccounts
                 : {
-                      position: config.accounts.position
-                  }
+                    closer: allAccounts.closer,
+                    permission,
+                    position: config.accounts.position
+                }
         };
     },
     getMethod: (program) => () => program.methods.closeTakeProfitOrder()
