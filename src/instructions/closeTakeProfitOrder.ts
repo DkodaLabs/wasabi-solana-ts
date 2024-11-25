@@ -28,7 +28,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             config.program.account.position
                 .fetch(config.accounts.position)
                 .then((pos) => pos.trader),
-            config.program.account.permission.fetch(permission),
+            config.program.account.permission.fetch(permission).catch(() => null),
         ]);
 
         if (!permissionAccount) {
