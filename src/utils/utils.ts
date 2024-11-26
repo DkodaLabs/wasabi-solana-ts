@@ -646,9 +646,9 @@ export async function handleMint(
     wrapMode?: WrapMode,
     amount?: number | bigint
 ): Promise<MintResult> {
+    let instructions = { setupIx: [], cleanupIx: [] };
     if (isSOL(mint)) {
         const { tokenProgram, nativeMint } = handleSOL();
-        let instructions = { setupIx: [], cleanupIx: [] };
 
         if (owner && wrapMode) {
             instructions = wrapMode === "wrap"
@@ -666,6 +666,7 @@ export async function handleMint(
     return {
         mint,
         tokenProgram: await getTokenProgram(connection, mint),
+        ...instructions
     };
 }
 
