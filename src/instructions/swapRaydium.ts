@@ -59,7 +59,7 @@ export async function getRaydiumRouteQuote(
         owner: inputMint,
         connection,
         disableFeatureCheck: true,
-        disableLoadToken: false,
+        disableLoadToken: true, // TODO: investigate if we need
         blockhashCommitment: 'confirmed'
     });
 
