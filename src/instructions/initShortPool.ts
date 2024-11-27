@@ -48,7 +48,7 @@ export async function createInitShortPoolInstruction(
             program,
             accounts,
             initShortPoolConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )
@@ -66,7 +66,7 @@ export async function initShortPool(
             program,
             accounts,
             initShortPoolConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute
         )

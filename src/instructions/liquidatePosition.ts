@@ -2,7 +2,6 @@ import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
-    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
@@ -38,10 +37,9 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
     LiquidatePositionSetupInstructionAccounts | LiquidatePositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+        const accounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.LIQUIDATION,
         );
 
         return {
@@ -62,7 +60,6 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
                     }
                 },
             args: transformArgs(config.args),
-            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -83,6 +80,7 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
+            'LIQUIDATION',
         );
         return {
             accounts: config.strict
@@ -99,6 +97,7 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
                         currency: accounts.currency,
                         position: accounts.position,
                         feeWallet: accounts.feeWallet,
+                        liquidationWallet: accounts.liquidationWallet,
                         collateralTokenProgram: accounts.collateralTokenProgram,
                         currencyTokenProgram: accounts.currencyTokenProgram
                     }
@@ -122,7 +121,7 @@ export async function createLiquidatePositionSetupInstruction(
             program,
             accounts,
             liquidatePositionSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -141,7 +140,7 @@ export async function createLiquidatePositionCleanupInstruction(
             program,
             accounts,
             liquidatePositionCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

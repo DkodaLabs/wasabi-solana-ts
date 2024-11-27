@@ -2,6 +2,10 @@ import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+export type IxAccountsStrictness = 'NO_STRICT' | 'PARTIAL' | 'STRICT';
+export type PriorityFeeLevel = 'NORMAL' | 'OPTIMAL' | 'MAX';
+export type BuildMode = 'TRANSACTION' | 'INSTRUCTION';
+
 export type ProcessResult<T> = {
     accounts: T;
     args?: any;
@@ -19,7 +23,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>;
-    mode: 'instruction' | 'transaction';
+    mode: BuildMode,
 } & ConfigArgs<TArgs, TAccounts>;
 
 export type BaseMethodConfig<
@@ -55,7 +59,7 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
 
     console.log(builder);
 
-    return args.mode === 'instruction'
+    return args.mode === 'INSTRUCTION'
         ? builder
             .instruction()
             .then((ix: TransactionInstruction) => [
@@ -70,7 +74,7 @@ export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramA
     program: Program<WasabiSolana>,
     accounts: TAccounts,
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>,
-    mode: 'instruction' | 'transaction',
+    mode: BuildMode,
     strict: boolean = true,
     increaseCompute: boolean = false,
     args?: TArgs

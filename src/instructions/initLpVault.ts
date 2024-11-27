@@ -94,7 +94,7 @@ export async function createInitLpVaultInstruction(
             program,
             accounts,
             initLpVaultConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -114,7 +114,7 @@ export async function initLpVault(
             program,
             accounts,
             initLpVaultConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

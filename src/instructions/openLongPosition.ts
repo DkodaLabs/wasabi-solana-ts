@@ -104,6 +104,12 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             authority: config.program.provider.publicKey,
             permission: PDA.getSuperAdmin(),//await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
+            feeWalletAta: getAssociatedTokenAddressSync(
+                currencyMint,
+                config.accounts.feeWallet,
+                true,
+                currencyTokenProgram
+            ),
             debtController: PDA.getDebtController(),
             globalSettings: PDA.getGlobalSettings(),
             tokenProgram: currencyTokenProgram,
@@ -213,7 +219,7 @@ export async function createOpenLongPositionSetupInstruction(
             program,
             accounts,
             openLongPositionSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -232,7 +238,7 @@ export async function createOpenLongPositionCleanupInstruction(
             program,
             accounts,
             openLongPositionCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

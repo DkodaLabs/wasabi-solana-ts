@@ -100,6 +100,12 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             authority: config.program.provider.publicKey,
             permission: await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
+            feeWalletAta: getAssociatedTokenAddressSync(
+                collateralMint,
+                config.accounts.feeWallet,
+                true,
+                collateralTokenProgram
+            ),
             globalSettings: PDA.getGlobalSettings(),
             currencyTokenProgram,
             collateralTokenProgram,
@@ -223,7 +229,7 @@ export async function createOpenShortPositionSetupInstruction(
             program,
             accounts,
             openShortPositionSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -242,7 +248,7 @@ export async function createOpenShortPositionCleanupInstruction(
             program,
             accounts,
             openShortPositionCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

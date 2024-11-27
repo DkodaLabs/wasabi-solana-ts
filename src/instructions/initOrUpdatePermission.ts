@@ -16,6 +16,7 @@ export type InitOrUpdatePermissionArgs = {
     canCosignSwaps: boolean;
     canBorrowFromVaults: boolean;
     canInitPools: boolean;
+    canManageWallets: boolean;
 };
 
 export type InitOrUpdatePermissionAccounts = {
@@ -89,7 +90,7 @@ export async function createInitOrUpdatePermissionInstruction(
             program,
             accounts,
             initOrUpdatePermissionConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -109,7 +110,7 @@ export async function initOrUpdatePermission(
             program,
             accounts,
             initOrUpdatePermissionConfig,
-            'instruction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

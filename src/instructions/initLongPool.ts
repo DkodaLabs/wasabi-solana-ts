@@ -48,7 +48,7 @@ export async function createInitLongPoolInstruction(
             program,
             accounts,
             initLongPoolConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )
@@ -66,7 +66,7 @@ export async function initLongPool(
             program,
             accounts,
             initLongPoolConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute
         )

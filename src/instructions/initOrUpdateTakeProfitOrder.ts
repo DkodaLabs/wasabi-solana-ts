@@ -73,7 +73,7 @@ export function createInitOrUpdateTakeProfitInstruction(
             program,
             accounts,
             initOrUpdateTakeProfitConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -93,7 +93,7 @@ export function initOrUpdateTakeProfit(
             program,
             accounts,
             initOrUpdateTakeProfitConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

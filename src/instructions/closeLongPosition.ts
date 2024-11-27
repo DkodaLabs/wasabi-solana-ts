@@ -1,7 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
-    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionSetupInstructionAccounts,
@@ -42,10 +41,9 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
     CloseLongPositionSetupInstructionAccounts | CloseLongPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+        const accounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.MARKET,
         );
 
         return {
@@ -69,7 +67,6 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                     }
                 },
             args: transformArgs(config.args),
-            //setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -90,6 +87,7 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
+            'MARKET',
         );
         return {
             accounts: config.strict
@@ -109,6 +107,7 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
                         collateral: accounts.collateral,
                         authority: accounts.authority,
                         feeWallet: accounts.feeWallet,
+                        liquidationWallet: accounts.liquidationWallet,
                         collateralTokenProgram: accounts.collateralTokenProgram,
                         currencyTokenProgram: accounts.currencyTokenProgram
                     }
@@ -132,7 +131,7 @@ export async function createCloseLongPositionSetupInstruction(
             program,
             accounts,
             closeLongPositionSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -151,7 +150,7 @@ export async function createCloseLongPositionCleanupInstruction(
             program,
             accounts,
             closeLongPositionCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

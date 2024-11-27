@@ -7,7 +7,6 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 //TODO: CHECK
 export type InitGlobalSettingsArgs = {
     superAdmin: PublicKey;
-    feeWallet: PublicKey;
     statuses: number; // u16
 };
 
@@ -58,7 +57,7 @@ export async function createInitGlobalSettingsInstruction(
             program,
             accounts,
             initGlobalSettingsConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -78,7 +77,7 @@ export async function initGlobalSettings(
             program,
             accounts,
             initGlobalSettingsConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

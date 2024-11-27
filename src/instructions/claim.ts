@@ -163,7 +163,7 @@ export async function createClaimPositionInstruction(
             program,
             accounts,
             claimPositionConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )
@@ -181,7 +181,7 @@ export async function claimPosition(
             program,
             accounts,
             claimPositionConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute
         )

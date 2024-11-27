@@ -70,6 +70,7 @@ export type OpenPositionSetupInstructionBaseStrictAccounts = {
     collateralVault: PublicKey;
     currencyVault: PublicKey;
     position: PublicKey;
+    feeWalletAta: PublicKey;
     globalSettings: PublicKey;
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;

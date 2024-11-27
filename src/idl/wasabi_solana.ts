@@ -14,122 +14,6 @@ export type WasabiSolana = {
   },
   "instructions": [
     {
-      "name": "adminBorrow",
-      "discriminator": [
-        91,
-        71,
-        12,
-        87,
-        146,
-        172,
-        111,
-        108
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "authority",
-          "docs": [
-            "The key that has permission to init the vault"
-          ],
-          "signer": true,
-          "relations": [
-            "permission"
-          ]
-        },
-        {
-          "name": "permission"
-        },
-        {
-          "name": "vault",
-          "docs": [
-            "Source of the borrowed tokens"
-          ],
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
-        },
-        {
-          "name": "destination",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "authority"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "currency"
-        },
-        {
-          "name": "lpVault",
-          "writable": true
-        },
-        {
-          "name": "tokenProgram"
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "claimPosition",
       "discriminator": [
         168,
@@ -290,6 +174,7 @@ export type WasabiSolana = {
         },
         {
           "name": "lpVault",
+          "writable": true,
           "relations": [
             "position"
           ]
@@ -303,7 +188,160 @@ export type WasabiSolana = {
         },
         {
           "name": "feeWallet",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_wallet.nonce",
+                "account": "protocolWallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "feeWalletCurrencyAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "feeWallet"
+              },
+              {
+                "kind": "account",
+                "path": "currencyTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "feeWalletCollateralAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "feeWallet"
+              },
+              {
+                "kind": "account",
+                "path": "collateralTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "debtController",
@@ -598,7 +636,315 @@ export type WasabiSolana = {
             },
             {
               "name": "feeWallet",
-              "writable": true
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "fee_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "feeWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "feeWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWallet",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "liquidation_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "liquidationWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
             },
             {
               "name": "debtController",
@@ -1038,7 +1384,315 @@ export type WasabiSolana = {
             },
             {
               "name": "feeWallet",
-              "writable": true
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "fee_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "feeWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "feeWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWallet",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "liquidation_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "liquidationWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
             },
             {
               "name": "debtController",
@@ -1449,6 +2103,324 @@ export type WasabiSolana = {
       "args": []
     },
     {
+      "name": "closeWallet",
+      "docs": [
+        "WARNING: Do not call unless you are sure the wallet's ATAs are closed"
+      ],
+      "discriminator": [
+        35,
+        212,
+        234,
+        224,
+        244,
+        208,
+        31,
+        204
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "protocolWallet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "account",
+                "path": "protocol_wallet.wallet_type",
+                "account": "protocolWallet"
+              },
+              {
+                "kind": "account",
+                "path": "protocol_wallet.nonce",
+                "account": "protocolWallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "collectFees",
+      "discriminator": [
+        164,
+        152,
+        207,
+        99,
+        30,
+        186,
+        19,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "authorityAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "asset"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset"
+        },
+        {
+          "name": "protocolWallet",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "account",
+                "path": "protocol_wallet.wallet_type",
+                "account": "protocolWallet"
+              },
+              {
+                "kind": "account",
+                "path": "protocol_wallet.nonce",
+                "account": "protocolWallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "protocolWalletAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "protocolWallet"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "asset"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "deposit",
       "discriminator": [
         242,
@@ -1778,6 +2750,9 @@ export type WasabiSolana = {
           "name": "currency"
         },
         {
+          "name": "permission"
+        },
+        {
           "name": "globalSettings",
           "pda": {
             "seeds": [
@@ -1812,6 +2787,113 @@ export type WasabiSolana = {
         {
           "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "generateWallet",
+      "discriminator": [
+        155,
+        62,
+        135,
+        88,
+        119,
+        61,
+        234,
+        86
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "protocolWallet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "arg",
+                "path": "walletType"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "walletType",
+          "type": "u8"
+        },
+        {
+          "name": "nonce",
+          "type": "u8"
         }
       ]
     },
@@ -1900,6 +2982,10 @@ export type WasabiSolana = {
         {
           "name": "maxLeverage",
           "type": "u64"
+        },
+        {
+          "name": "liquidationFee",
+          "type": "u8"
         }
       ]
     },
@@ -3011,7 +4097,315 @@ export type WasabiSolana = {
             },
             {
               "name": "feeWallet",
-              "writable": true
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "fee_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "feeWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "feeWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWallet",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "liquidation_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "liquidationWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
             },
             {
               "name": "debtController",
@@ -3202,241 +4596,6 @@ export type WasabiSolana = {
         {
           "name": "expiration",
           "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "mint",
-      "discriminator": [
-        51,
-        57,
-        225,
-        47,
-        182,
-        146,
-        137,
-        166
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "docs": [
-            "The key of the user that owns the assets"
-          ],
-          "signer": true
-        },
-        {
-          "name": "ownerAssetAccount",
-          "docs": [
-            "The Owner's token account that holds the assets"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "owner"
-              },
-              {
-                "kind": "account",
-                "path": "assetTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "assetMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "ownerSharesAccount",
-          "docs": [
-            "The Owner's token account that stores share tokens"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "owner"
-              },
-              {
-                "kind": "account",
-                "path": "sharesTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "sharesMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "lpVault",
-          "writable": true
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
-        },
-        {
-          "name": "assetMint"
-        },
-        {
-          "name": "sharesMint",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
-        },
-        {
-          "name": "globalSettings",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  115,
-                  101,
-                  116,
-                  116,
-                  105,
-                  110,
-                  103,
-                  115
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "assetTokenProgram"
-        },
-        {
-          "name": "sharesTokenProgram",
-          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-        },
-        {
-          "name": "eventAuthority",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  95,
-                  95,
-                  101,
-                  118,
-                  101,
-                  110,
-                  116,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "program"
-        }
-      ],
-      "args": [
-        {
-          "name": "sharesAmount",
-          "type": "u64"
         }
       ]
     },
@@ -3718,7 +4877,102 @@ export type WasabiSolana = {
         },
         {
           "name": "feeWallet",
-          "writable": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_wallet.nonce",
+                "account": "protocolWallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "feeWalletAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "feeWallet"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "debtController",
@@ -4134,6 +5388,7 @@ export type WasabiSolana = {
         },
         {
           "name": "authority",
+          "writable": true,
           "signer": true,
           "relations": [
             "permission"
@@ -4144,7 +5399,102 @@ export type WasabiSolana = {
         },
         {
           "name": "feeWallet",
-          "writable": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "globalSettings"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_wallet.nonce",
+                "account": "protocolWallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "feeWalletAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "feeWallet"
+              },
+              {
+                "kind": "account",
+                "path": "collateralTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "globalSettings",
@@ -4451,105 +5801,113 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "repay",
+      "name": "removePermission",
       "discriminator": [
-        234,
-        103,
-        67,
-        82,
-        208,
-        234,
-        219,
-        166
+        122,
+        51,
+        186,
+        238,
+        78,
+        104,
+        205,
+        204
       ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "authority",
           "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mint",
-          "docs": [
-            "Mint of the tokens to be transfered - required for `TransferChecked`"
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
           ]
         },
         {
-          "name": "source",
+          "name": "superAdminPermission"
+        },
+        {
+          "name": "permission",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setLiquidationFee",
+      "discriminator": [
+        23,
+        215,
+        203,
+        90,
+        133,
+        247,
+        235,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
+          ]
+        },
+        {
+          "name": "superAdminPermission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "debtController",
           "writable": true,
           "pda": {
             "seeds": [
               {
-                "kind": "account",
-                "path": "payer"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "mint"
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
-        },
-        {
-          "name": "lpVault",
-          "writable": true
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
-        },
-        {
-          "name": "tokenProgram"
         }
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "u64"
+          "name": "liquidationFee",
+          "type": "u8"
         }
       ]
     },
@@ -5154,7 +6512,315 @@ export type WasabiSolana = {
             },
             {
               "name": "feeWallet",
-              "writable": true
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "fee_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "feeWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "feeWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWallet",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "liquidation_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "liquidationWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
             },
             {
               "name": "debtController",
@@ -5611,7 +7277,315 @@ export type WasabiSolana = {
             },
             {
               "name": "feeWallet",
-              "writable": true
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "fee_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "feeWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "feeWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "feeWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWallet",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      112,
+                      114,
+                      111,
+                      116,
+                      111,
+                      99,
+                      111,
+                      108,
+                      95,
+                      119,
+                      97,
+                      108,
+                      108,
+                      101,
+                      116
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "globalSettings"
+                  },
+                  {
+                    "kind": "const",
+                    "value": [
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "liquidation_wallet.nonce",
+                    "account": "protocolWallet"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "liquidationWalletCurrencyAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currencyTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "liquidationWalletCollateralAccount",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "liquidationWallet"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateralTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "collateral"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
             },
             {
               "name": "debtController",
@@ -6225,6 +8199,19 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "protocolWallet",
+      "discriminator": [
+        203,
+        212,
+        103,
+        145,
+        255,
+        197,
+        203,
+        25
+      ]
+    },
+    {
       "name": "stopLossOrder",
       "discriminator": [
         43,
@@ -6656,6 +8643,10 @@ export type WasabiSolana = {
           {
             "name": "maxLeverage",
             "type": "u64"
+          },
+          {
+            "name": "liquidationFee",
+            "type": "u8"
           }
         ]
       }
@@ -6739,10 +8730,6 @@ export type WasabiSolana = {
               "Bit mapping of enabled features. Status allow disabling trading, lping, etc."
             ],
             "type": "u16"
-          },
-          {
-            "name": "protocolFeeWallet",
-            "type": "pubkey"
           }
         ]
       }
@@ -6754,10 +8741,6 @@ export type WasabiSolana = {
         "fields": [
           {
             "name": "superAdmin",
-            "type": "pubkey"
-          },
-          {
-            "name": "feeWallet",
             "type": "pubkey"
           },
           {
@@ -6818,6 +8801,10 @@ export type WasabiSolana = {
           },
           {
             "name": "canInitPools",
+            "type": "bool"
+          },
+          {
+            "name": "canManageWallets",
             "type": "bool"
           }
         ]
@@ -7254,6 +9241,26 @@ export type WasabiSolana = {
           {
             "name": "feesToBePaid",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocolWallet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "walletType",
+            "type": "u8"
           }
         ]
       }

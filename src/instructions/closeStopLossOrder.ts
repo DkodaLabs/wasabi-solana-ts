@@ -68,7 +68,7 @@ export async function createCloseStopLossOrderInstruction(
             program,
             accounts,
             closeStopLossOrderConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )
@@ -86,7 +86,7 @@ export async function closeStopLossOrder(
             program,
             accounts,
             closeStopLossOrderConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute
         )

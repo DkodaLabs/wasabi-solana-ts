@@ -99,7 +99,7 @@ export async function createDonateInstruction(
             program,
             accounts,
             donateConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -119,7 +119,7 @@ export async function donate(
             program,
             accounts,
             donateConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

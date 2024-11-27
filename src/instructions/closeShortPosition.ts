@@ -1,7 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
-    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionSetupInstructionAccounts,
@@ -42,10 +41,9 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
     CloseShortPositionSetupInstructionAccounts | CloseShortPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+        const accounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.MARKET
         );
 
         return {
@@ -69,7 +67,6 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
                     }
                 },
             args: transformArgs(config.args),
-            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) =>
@@ -91,6 +88,7 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
+            'MARKET',
         );
         return {
             accounts: config.strict
@@ -113,6 +111,7 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
                         collateral: accounts.collateral,
                         authority: accounts.authority,
                         feeWallet: accounts.feeWallet,
+                        liquidationWallet: accounts.liquidationWallet,
                         collateralTokenProgram: accounts.collateralTokenProgram,
                         currencyTokenProgram: accounts.currencyTokenProgram
                     }
@@ -136,7 +135,7 @@ export async function createCloseShortPositionSetupInstruction(
             program,
             accounts,
             closeShortPositionSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -155,7 +154,7 @@ export async function createCloseShortPositionCleanupInstruction(
             program,
             accounts,
             closeShortPositionCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

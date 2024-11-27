@@ -54,7 +54,7 @@ export async function createSetMaxApyInstruction(
             program,
             accounts,
             setMaxApyConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -74,7 +74,7 @@ export async function setMaxApy(
             program,
             accounts,
             setMaxApyConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

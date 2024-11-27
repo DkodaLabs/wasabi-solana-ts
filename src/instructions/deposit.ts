@@ -96,7 +96,7 @@ export async function createDepositInstruction(
             program,
             accounts,
             depositConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -116,7 +116,7 @@ export async function deposit(
             program,
             accounts,
             depositConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

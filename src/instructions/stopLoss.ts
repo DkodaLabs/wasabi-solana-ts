@@ -13,7 +13,6 @@ import {
     transformArgs,
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
-    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
@@ -40,10 +39,9 @@ const stopLossSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+        const accounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.STOP_LOSS,
         );
 
         return {
@@ -61,7 +59,6 @@ const stopLossSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            //setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) => program.methods.stopLossSetup(
@@ -81,10 +78,10 @@ const stopLossCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
+            'STOP_LOSS',
         );
 
         const stopLossPubkey = PDA.getStopLossOrder(accounts.position);
-        console.log(stopLossPubkey);
         return {
             accounts: config.strict
                 ? {
@@ -101,6 +98,7 @@ const stopLossCleanupConfig: BaseMethodConfig<
                         collateral: accounts.collateral,
                         authority: accounts.authority,
                         feeWallet: accounts.feeWallet,
+                        liquidationWallet: accounts.liquidationWallet,
                         collateralTokenProgram: accounts.collateralTokenProgram,
                         currencyTokenProgram: accounts.currencyTokenProgram
                     }
@@ -124,7 +122,7 @@ export async function createStopLossSetupInstruction(
             program,
             accounts,
             stopLossSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -143,7 +141,7 @@ export async function createStopLossCleanupInstruction(
             program,
             accounts,
             stopLossCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

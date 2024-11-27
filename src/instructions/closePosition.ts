@@ -18,17 +18,7 @@ import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-export enum CloseType {
-    MARKET,
-    LIQUIDATION,
-    TAKE_PROFIT,
-    STOP_LOSS,
-}
-
-export type ClosePositionParams = {
-    position: PublicKey,
-    feeWallet: PublicKey,
-} & ClosePositionSetupArgs;
+export type CloseType = 'MARKET' | 'LIQUIDATION' | 'TAKE_PROFIT' | 'STOP_LOSS';
 
 export type ExitOrderSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts,
@@ -37,6 +27,11 @@ export type ExitOrderSetupInstructionAccounts = {
 export type ExitOrderSetupInstructionAccountsStrict = {
     closePositionSetup: ClosePositionSetupInstructionAccountsStrict,
 }
+
+export type ClosePositionParams = {
+    position: PublicKey,
+    feeWallet: PublicKey,
+} & ClosePositionSetupArgs;
 
 export type ClosePositionSetupArgs = {
     /// The minimum amount out required when swapping
@@ -75,14 +70,6 @@ export type ClosePositionSetupInstructionAccountsStrict = {
     sysvarInfo: PublicKey;
 } & ClosePositionSetupInstructionAccounts;
 
-type CpsAndIx = {
-    accounts: ClosePositionSetupInstructionAccountsStrict,
-    ixes: {
-        setup?: TransactionInstruction[],
-        cleanup?: TransactionInstruction[],
-    }
-}
-
 export type ClosePositionCleanupAccounts = {
     authority: PublicKey; // derived
     position: PublicKey; // requires passing
@@ -90,6 +77,7 @@ export type ClosePositionCleanupAccounts = {
     collateral: PublicKey; // derived
     currency: PublicKey; // derived
     feeWallet: PublicKey; // requires passing
+    liquidationWallet: PublicKey; // requires passing
 };
 
 export type ClosePositionCleanupInstructionAccounts = {
@@ -99,6 +87,7 @@ export type ClosePositionCleanupInstructionAccounts = {
     currency: PublicKey;
     position: PublicKey;
     feeWallet: PublicKey;
+    liquidationWallet: PublicKey;
     collateralTokenProgram: PublicKey;
     currencyTokenProgram: PublicKey;
 };
@@ -112,6 +101,10 @@ export type ClosePositionCleanupInstructionAccountsStrict = {
     closePositionRequest: PublicKey;
     lpVault: PublicKey;
     vault: PublicKey;
+    feeWalletCurrencyAccount: PublicKey;
+    feeWalletCollateralAccount: PublicKey;
+    liquidationWalletCurrencyAccount: PublicKey;
+    liquidationWalletCollateralAccount: PublicKey;
     debtController: PublicKey;
     globalSettings: PublicKey;
 } & ClosePositionCleanupInstructionAccounts;
@@ -138,57 +131,16 @@ export function transformArgs(args: ClosePositionSetupArgs): {
     };
 }
 
-// Close order when exiting positions if they exist
-async function handleOrdersCheck(
-    program: Program<WasabiSolana>,
-    positionAddress: PublicKey,
-    closeType?: CloseType
-): Promise<TransactionInstruction[]> {
-    // TODO: Implement cancelling of orders
-    // const shouldCheckStopLoss = closeType === CloseType.MARKET
-    //     || closeType === CloseType.LIQUIDATION
-    //     || closeType === CloseType.TAKE_PROFIT;
-    // const shouldCheckTakeProfit = closeType === CloseType.MARKET
-    //     || closeType === CloseType.LIQUIDATION
-    //     || closeType === CloseType.STOP_LOSS;
-    //
-    // const [stopLoss, takeProfit] = await Promise.all([
-    //     shouldCheckStopLoss ? program.account.stopLossOrder.fetch(PDA.getStopLossOrder(positionAddress))
-    //         .catch(() => null) : null,
-    //     shouldCheckTakeProfit ? program.account.takeProfitOrder.fetch(PDA.getTakeProfitOrder(positionAddress))
-    //         .catch(() => null) : null,
-    // ]);
-    //
-    // const ixes = [];
-    //
-    // if (stopLoss) {
-    //     ixes.push(
-    //         ...(await createCloseStopLossOrderInstruction(program, { position: positionAddress }))
-    //     );
-    // }
-    //
-    // if (takeProfit) {
-    //     ixes.push(
-    //         ...(await createCloseTakeProfitOrderInstruction(program, { position: positionAddress }))
-    //     );
-    // }
-    //
-    // return ixes;
-
-    return [];
-}
-
 export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts,
-    closeType: CloseType,
-): Promise<CpsAndIx> {
+): Promise<ClosePositionSetupInstructionAccountsStrict> {
     const [{
         currencyMint,
         collateralMint,
         currencyTokenProgram,
         collateralTokenProgram,
-    }, owner, ixes] = await Promise.all(
+    }, owner] = await Promise.all(
         [
             handleMintsAndTokenProgram(
                 program.provider.connection,
@@ -196,38 +148,32 @@ export async function getClosePositionSetupInstructionAccounts(
                 accounts.collateral,
             ),
             program.account.position.fetch(accounts.position).then((pos) => pos.trader),
-            handleOrdersCheck(program, accounts.position, closeType),
         ]
     );
 
     return {
-        accounts: {
-            owner,
-            position: accounts.position,
-            pool: accounts.pool,
-            collateralVault: getAssociatedTokenAddressSync(
-                collateralMint,
-                accounts.pool,
-                true,
-                collateralTokenProgram
-            ),
-            currencyVault: getAssociatedTokenAddressSync(
-                currencyMint,
-                accounts.pool,
-                true,
-                currencyTokenProgram
-            ),
-            collateral: collateralMint,
-            authority: accounts.authority,
-            permission: await getPermission(program, accounts.authority),
-            closePositionRequest: PDA.getClosePositionRequest(owner),
-            tokenProgram: collateralTokenProgram,
-            systemProgram: SystemProgram.programId,
-            sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
-        },
-        ixes: {
-            setup: ixes,
-        }
+        owner,
+        position: accounts.position,
+        pool: accounts.pool,
+        collateralVault: getAssociatedTokenAddressSync(
+            collateralMint,
+            accounts.pool,
+            true,
+            collateralTokenProgram
+        ),
+        currencyVault: getAssociatedTokenAddressSync(
+            currencyMint,
+            accounts.pool,
+            true,
+            currencyTokenProgram
+        ),
+        collateral: collateralMint,
+        authority: accounts.authority,
+        permission: await getPermission(program, accounts.authority),
+        closePositionRequest: PDA.getClosePositionRequest(owner),
+        tokenProgram: collateralTokenProgram,
+        systemProgram: SystemProgram.programId,
+        sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
     };
 }
 
@@ -256,6 +202,43 @@ async function fetchVaultAddress(
 ): Promise<PublicKey> {
     const lpVaultData = await program.account.lpVault.fetch(lpVault);
     return lpVaultData.vault;
+}
+
+// Close order when exiting positions if they exist
+async function handleOrdersCheck(
+    program: Program<WasabiSolana>,
+    positionAddress: PublicKey,
+    closeType?: CloseType
+): Promise<TransactionInstruction[]> {
+    const shouldCheckStopLoss = closeType === 'MARKET'
+        || closeType === 'LIQUIDATION'
+        || closeType === 'TAKE_PROFIT'
+    const shouldCheckTakeProfit = closeType === 'MARKET'
+        || closeType === 'LIQUIDATION'
+        || closeType === 'STOP_LOSS'
+
+    const [stopLoss, takeProfit] = await Promise.all([
+        shouldCheckStopLoss ? program.account.stopLossOrder.fetch(PDA.getStopLossOrder(positionAddress))
+            .catch(() => null) : null,
+        shouldCheckTakeProfit ? program.account.takeProfitOrder.fetch(PDA.getTakeProfitOrder(positionAddress))
+            .catch(() => null) : null,
+    ]);
+
+    const ixes = [];
+
+    if (stopLoss) {
+        ixes.push(
+            ...(await createCloseStopLossOrderInstruction(program, { position: positionAddress }))
+        );
+    }
+
+    if (takeProfit) {
+        ixes.push(
+            ...(await createCloseTakeProfitOrderInstruction(program, { position: positionAddress }))
+        );
+    }
+
+    return ixes;
 }
 
 async function setupTokenAccounts(
@@ -306,14 +289,17 @@ async function setupTokenAccounts(
 export async function getClosePositionCleanupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
+    closeType?: CloseType,
 ): Promise<CpcuAndIx> {
     const { owner, lpVault } = await fetchPositionData(program, accounts.position);
 
     const [
         vault,
+        orderIxes,
         tokenSetup
     ] = await Promise.all([
         fetchVaultAddress(program, lpVault),
+        handleOrdersCheck(program, accounts.position, closeType),
         setupTokenAccounts(
             program.provider.connection,
             owner,
@@ -349,6 +335,31 @@ export async function getClosePositionCleanupInstructionAccounts(
             lpVault,
             vault,
             feeWallet: accounts.feeWallet,
+            feeWalletCurrencyAccount: getAssociatedTokenAddressSync(
+                tokenSetup.currencyMint, 
+                accounts.feeWallet, 
+                false, 
+                tokenSetup.currencyTokenProgram
+            ),
+            feeWalletCollateralAccount: getAssociatedTokenAddressSync(
+                tokenSetup.collateralMint,
+                accounts.feeWallet,
+                false,
+                tokenSetup.collateralTokenProgram,
+            ),
+            liquidationWallet: accounts.liquidationWallet,
+            liquidationWalletCurrencyAccount: getAssociatedTokenAddressSync(
+                tokenSetup.currencyMint,
+                accounts.liquidationWallet,
+                false,
+                tokenSetup.collateralTokenProgram,
+            ),
+            liquidationWalletCollateralAccount: getAssociatedTokenAddressSync(
+                tokenSetup.collateralMint,
+                accounts.liquidationWallet,
+                false,
+                tokenSetup.collateralTokenProgram,
+            ),
             debtController: PDA.getDebtController(),
             globalSettings: PDA.getGlobalSettings(),
             currencyTokenProgram: tokenSetup.currencyTokenProgram,
@@ -356,7 +367,7 @@ export async function getClosePositionCleanupInstructionAccounts(
         },
         ixes: {
             setupIx: tokenSetup.setupIx,
-            cleanupIx: tokenSetup.cleanupIx,
+            cleanupIx: [...tokenSetup.cleanupIx, ...orderIxes]
         }
     };
 }

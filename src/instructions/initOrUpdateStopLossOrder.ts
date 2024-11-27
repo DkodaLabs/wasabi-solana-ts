@@ -73,7 +73,7 @@ export function createInitOrUpdateStopLossInstruction(
             program,
             accounts,
             initOrUpdateStopLossConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -93,7 +93,7 @@ export function initOrUpdateStopLoss(
             program,
             accounts,
             initOrUpdateStopLossConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

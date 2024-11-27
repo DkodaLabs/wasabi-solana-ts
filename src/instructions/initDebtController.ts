@@ -7,6 +7,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 export type InitDebtControllerArgs = {
     maxApy: number; // u64
     maxLeverage: number; // u64
+    liquidationFee: number, // u8
 };
 
 export type InitDebtControllerAccounts = {
@@ -49,7 +50,7 @@ export const initDebtControllerConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.initDebtController(args.maxApy, args.maxLeverage)
+        program.methods.initDebtController(new BN(args.maxApy), new BN(args.maxLeverage), args.liquidationFee)
 };
 
 export async function createInitDebtControllerInstruction(
@@ -64,7 +65,7 @@ export async function createInitDebtControllerInstruction(
             program,
             accounts,
             initDebtControllerConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -84,7 +85,7 @@ export async function initDebtController(
             program,
             accounts,
             initDebtControllerConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

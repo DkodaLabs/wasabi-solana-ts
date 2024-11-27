@@ -13,7 +13,6 @@ import {
     transformArgs,
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
-    CloseType,
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
@@ -40,10 +39,9 @@ const takeProfitSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+        const accounts = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            CloseType.TAKE_PROFIT,
         );
 
         return {
@@ -61,7 +59,6 @@ const takeProfitSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: ixes.setup,
         };
     },
     getMethod: (program) => (args) => program.methods.takeProfitSetup(
@@ -81,6 +78,7 @@ const takeProfitCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
+            'TAKE_PROFIT',
         );
         const takeProfit = PDA.getTakeProfitOrder(accounts.position);
         return {
@@ -101,6 +99,7 @@ const takeProfitCleanupConfig: BaseMethodConfig<
                         collateral: accounts.collateral,
                         authority: accounts.authority,
                         feeWallet: accounts.feeWallet,
+                        liquidationWallet: accounts.liquidationWallet,
                         collateralTokenProgram: accounts.collateralTokenProgram,
                         currencyTokenProgram: accounts.currencyTokenProgram
                     }
@@ -124,7 +123,7 @@ export async function createTakeProfitSetupInstruction(
             program,
             accounts,
             takeProfitSetupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -143,7 +142,7 @@ export async function createTakeProfitCleanupInstruction(
             program,
             accounts,
             takeProfitCleanupConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )

@@ -72,7 +72,7 @@ export async function createWithdrawInstruction(
             program,
             accounts,
             withdrawConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -92,7 +92,7 @@ export async function withdraw(
             program,
             accounts,
             withdrawConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

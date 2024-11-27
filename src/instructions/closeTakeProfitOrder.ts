@@ -66,7 +66,7 @@ export async function createCloseTakeProfitOrderInstruction(
             program,
             accounts,
             closeTakeProfitOrderConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute
         )
@@ -84,7 +84,7 @@ export async function closeTakeProfitOrder(
             program,
             accounts,
             closeTakeProfitOrderConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute
         )

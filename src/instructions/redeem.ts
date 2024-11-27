@@ -72,7 +72,7 @@ export async function createRedeemInstruction(
             program,
             accounts,
             redeemConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -92,7 +92,7 @@ export async function redeem(
             program,
             accounts,
             redeemConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

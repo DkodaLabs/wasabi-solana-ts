@@ -63,7 +63,7 @@ export async function createUpdateVaultMaxBorrowInstruction(
             program,
             accounts,
             updateVaultMaxBorrowConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -83,7 +83,7 @@ export async function updateVaultMaxBorrow(
             program,
             accounts,
             updateVaultMaxBorrowConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args

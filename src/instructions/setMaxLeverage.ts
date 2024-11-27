@@ -54,7 +54,7 @@ export async function createSetMaxLeverageInstruction(
             program,
             accounts,
             setMaxLeverageConfig,
-            'instruction',
+            'INSTRUCTION',
             strict,
             increaseCompute,
             args
@@ -74,7 +74,7 @@ export async function setMaxLeverage(
             program,
             accounts,
             setMaxLeverageConfig,
-            'transaction',
+            'TRANSACTION',
             strict,
             increaseCompute,
             args
