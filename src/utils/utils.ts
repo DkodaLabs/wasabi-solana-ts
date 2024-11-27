@@ -26,8 +26,6 @@ import {
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
-export type WalletType = 'FEE' | 'LIQUIDATION';
-
 export const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111111");
 
 export const WASABI_PROGRAM_ID = new PublicKey('spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB');
@@ -45,7 +43,6 @@ export const SEED_PREFIX = {
     TAKE_PROFIT_ORDER: 'take_profit_order',
     DEBT_CONTROLLER: 'debt_controller',
     GLOBAL_SETTINGS: 'global_settings',
-    PROTOCOL_WALLET: 'protocol_wallet',
     EVENT_AUTHORITY: '__event_authority'
 } as const;
 
@@ -217,26 +214,6 @@ export const PDA = {
             WASABI_PROGRAM_ID
         );
     },
-
-    getFeeWallet(nonce: number): PublicKey {
-        return PDA.getProtocolWalletAddress('FEE', nonce);
-    },
-
-    getLiquidationWallet(nonce: number): PublicKey {
-        return PDA.getProtocolWalletAddress('LIQUIDATION', nonce);
-    },
-
-    getProtocolWalletAddress(walletType: WalletType, nonce: number): PublicKey {
-        return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.PROTOCOL_WALLET),
-                PDA.getGlobalSettings().toBuffer(),
-                walletType === 'FEE' ? Buffer.from([0]) : Buffer.from([1]),
-                Buffer.from([nonce]),
-            ],
-            WASABI_PROGRAM_ID,
-        );
-    }
 };
 
 type TokenData = {
