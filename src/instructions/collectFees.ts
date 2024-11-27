@@ -32,7 +32,7 @@ type CollectFeesInstructionAccountsStrict = CollectFeesInstructionAccounts & {
     systemProgram: PublicKey;
 }
 
-export const closeWalletConfig: BaseMethodConfig<
+export const collectFeesConfig: BaseMethodConfig<
     null,
     CollectFeesAccounts,
     CollectFeesInstructionAccounts | CollectFeesInstructionAccountsStrict
@@ -87,7 +87,7 @@ export async function createCollectFeesInstruction(
         constructMethodCallArgs(
             program,
             accounts,
-            closeWalletConfig,
+            collectFeesConfig,
             'INSTRUCTION',
             strict,
             increaseCompute,
@@ -105,7 +105,7 @@ export async function collectFees(
         constructMethodCallArgs(
             program,
             accounts,
-            closeWalletConfig,
+            collectFeesConfig,
             'INSTRUCTION',
             strict,
             increaseCompute,

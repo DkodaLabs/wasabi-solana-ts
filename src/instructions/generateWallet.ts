@@ -11,10 +11,9 @@ import {
     handleMethodCall,
     constructMethodCallArgs,
 } from '../base';
-import { PDA, getPermission } from '../utils';
+import { PDA, getPermission, WalletType } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-export type WalletType = 'FEE' | 'LIQUIDATION';
 
 export type GenerateWalletArgs = {
     walletType: WalletType,

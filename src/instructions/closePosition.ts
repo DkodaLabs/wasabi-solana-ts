@@ -295,11 +295,11 @@ export async function getClosePositionCleanupInstructionAccounts(
 
     const [
         vault,
-        orderIxes,
+        //orderIxes,
         tokenSetup
     ] = await Promise.all([
         fetchVaultAddress(program, lpVault),
-        handleOrdersCheck(program, accounts.position, closeType),
+        //handleOrdersCheck(program, accounts.position, closeType),
         setupTokenAccounts(
             program.provider.connection,
             owner,
@@ -367,7 +367,7 @@ export async function getClosePositionCleanupInstructionAccounts(
         },
         ixes: {
             setupIx: tokenSetup.setupIx,
-            cleanupIx: [...tokenSetup.cleanupIx, ...orderIxes]
+            cleanupIx: tokenSetup.cleanupIx, //...orderIxes]
         }
     };
 }

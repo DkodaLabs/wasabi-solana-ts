@@ -23,7 +23,7 @@ type RemovePermissionInstructionAccounts = {
     permission: PublicKey;
 }
 
-export const closeWalletConfig: BaseMethodConfig<
+export const removePermissionConfig: BaseMethodConfig<
     null,
     RemovePermissionAccounts,
     RemovePermissionInstructionAccounts | null
@@ -49,7 +49,7 @@ export async function createRemovePermissionInstruction(
         constructMethodCallArgs(
             program,
             accounts,
-            closeWalletConfig,
+            removePermissionConfig,
             'INSTRUCTION',
             null,
             increaseCompute,
@@ -57,7 +57,7 @@ export async function createRemovePermissionInstruction(
     ) as Promise<TransactionInstruction[]>;
 }
 
-export async function collectFees(
+export async function removePermission(
     program: Program<WasabiSolana>,
     accounts: RemovePermissionAccounts,
     increaseCompute: boolean = false,
@@ -66,7 +66,7 @@ export async function collectFees(
         constructMethodCallArgs(
             program,
             accounts,
-            closeWalletConfig,
+            removePermissionConfig,
             'INSTRUCTION',
             null,
             increaseCompute,
