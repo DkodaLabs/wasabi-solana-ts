@@ -7,7 +7,6 @@ import {
     PDA,
     isSOL,
     handleSOL,
-    createUnwrapSolInstruction,
 } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 

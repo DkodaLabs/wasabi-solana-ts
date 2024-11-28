@@ -57,16 +57,21 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
         builder.preInstructions(processed.setup);
     }
 
-    console.log(builder);
+    console.log(processed.setup);
 
     return args.mode === 'INSTRUCTION'
         ? builder
             .instruction()
-            .then((ix: TransactionInstruction) => [
-                ...(processed.setup || []),
-                ix,
-                ...(processed.cleanup || [])
-            ])
+            .then((ix: TransactionInstruction) => {
+                const ixes =
+                    [
+                        ...(processed.setup || []),
+                        ix,
+                        ...(processed.cleanup || [])
+                    ];
+                console.log(ixes);
+                return ixes;
+            })
         : builder.rpc();
 }
 

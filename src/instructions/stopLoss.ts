@@ -39,9 +39,10 @@ const stopLossSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
+            'STOP_LOSS',
         );
 
         return {
@@ -59,6 +60,7 @@ const stopLossSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
+            setup: ixes.setupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.stopLossSetup(
@@ -78,7 +80,6 @@ const stopLossCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            'STOP_LOSS',
         );
 
         const stopLossPubkey = PDA.getStopLossOrder(accounts.position);
