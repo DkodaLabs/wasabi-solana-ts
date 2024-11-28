@@ -3,7 +3,8 @@ import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.j
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
-    getAssociatedTokenAddressSync
+    getAssociatedTokenAddressSync,
+    createAssociatedTokenAccountIdempotentInstruction,
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -48,18 +49,28 @@ export const initLpVaultConfig: BaseMethodConfig<
             config.accounts.assetMint
         );
         const lpVault = PDA.getLpVault(mint);
+        const vault = getAssociatedTokenAddressSync(
+            mint,
+            lpVault,
+            true,
+            tokenProgram,
+        );
+
+        const createVaultIx = createAssociatedTokenAccountIdempotentInstruction(
+            config.program.provider.publicKey,
+            vault,
+            lpVault,
+            mint,
+            tokenProgram
+        );
+
         const allAccounts = {
             payer: config.program.provider.publicKey,
             authority: config.program.provider.publicKey,
             permission: await getPermission(config.program, config.accounts.admin),
             lpVault,
             assetMint: config.accounts.assetMint,
-            vault: getAssociatedTokenAddressSync(
-                mint,
-                lpVault,
-                true,
-                tokenProgram,
-            ),
+            vault,
             sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
             assetTokenProgram: tokenProgram,
             sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
@@ -76,7 +87,8 @@ export const initLpVaultConfig: BaseMethodConfig<
                     assetMint: allAccounts.assetMint,
                     assetTokenProgram: tokenProgram,
                 },
-            args: config.args
+            args: config.args,
+            setup: [createVaultIx],
         };
     },
     getMethod: (program) => (args) => program.methods.initLpVault(args)
