@@ -10,6 +10,7 @@ import {
     PDA,
     handleMintsAndTokenProgram,
     handleMintsAndTokenProgramWithSetupAndCleanup,
+    getPermission,
 } from '../utils';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import {
@@ -102,7 +103,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 config.args.nonce
             ),
             authority: config.program.provider.publicKey,
-            permission: PDA.getSuperAdmin(),//await getPermission(config.program, config.program.provider.publicKey),
+            permission: await getPermission(config.program, config.program.provider.publicKey),
             feeWallet: config.accounts.feeWallet,
             feeWalletAta: getAssociatedTokenAddressSync(
                 currencyMint,
