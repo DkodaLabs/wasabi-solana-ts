@@ -1,5 +1,5 @@
 {
-  "address": "spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB",
+  "address": "3mqNHRsAXLZ7pweFfyBULoF9RjJPrJ4rhberL2pSEMLn",
   "metadata": {
     "name": "wasabi_solana",
     "version": "0.1.0",
@@ -6547,15 +6547,7 @@
             "type": "bool"
           },
           {
-            "name": "can_borrow_from_vaults",
-            "type": "bool"
-          },
-          {
             "name": "can_init_pools",
-            "type": "bool"
-          },
-          {
-            "name": "can_manage_wallets",
             "type": "bool"
           }
         ]

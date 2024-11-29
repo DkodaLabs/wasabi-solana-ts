@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/wasabi_solana.json`.
  */
 export type WasabiSolana = {
-  "address": "spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB",
+  "address": "3mqNHRsAXLZ7pweFfyBULoF9RjJPrJ4rhberL2pSEMLn",
   "metadata": {
     "name": "wasabiSolana",
     "version": "0.1.0",
@@ -6553,15 +6553,7 @@ export type WasabiSolana = {
             "type": "bool"
           },
           {
-            "name": "canBorrowFromVaults",
-            "type": "bool"
-          },
-          {
             "name": "canInitPools",
-            "type": "bool"
-          },
-          {
-            "name": "canManageWallets",
             "type": "bool"
           }
         ]
