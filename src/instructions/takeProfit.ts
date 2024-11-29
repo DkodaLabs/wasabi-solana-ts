@@ -39,9 +39,10 @@ const takeProfitSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
+            'TAKE_PROFIT'
         );
 
         return {
@@ -59,6 +60,7 @@ const takeProfitSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
+            setup: ixes.setupIx,
         };
     },
     getMethod: (program) => (args) => program.methods.takeProfitSetup(
@@ -78,7 +80,6 @@ const takeProfitCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            'TAKE_PROFIT',
         );
         const takeProfit = PDA.getTakeProfitOrder(accounts.position);
         return {

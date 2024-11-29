@@ -2148,7 +2148,6 @@ export type WasabiSolana = {
         },
         {
           "name": "vault",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2220,11 +2219,51 @@ export type WasabiSolana = {
           }
         },
         {
+          "name": "sharesMetadata",
+          "docs": [
+            "CHECK"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMetadataProgram"
+              },
+              {
+                "kind": "account",
+                "path": "sharesMint"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "tokenMetadataProgram"
+            }
+          }
+        },
+        {
           "name": "assetTokenProgram"
         },
         {
           "name": "sharesTokenProgram",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
           "name": "associatedTokenProgram",
@@ -2233,6 +2272,9 @@ export type WasabiSolana = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [

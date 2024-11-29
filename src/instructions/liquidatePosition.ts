@@ -37,9 +37,10 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
     LiquidatePositionSetupInstructionAccounts | LiquidatePositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const accounts = await getClosePositionSetupInstructionAccounts(
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
+            'LIQUIDATION',
         );
 
         return {
@@ -60,6 +61,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
                     }
                 },
             args: transformArgs(config.args),
+            setup: ixes.setupIx,
         };
     },
     getMethod: (program) => (args) =>
@@ -80,7 +82,6 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
-            'LIQUIDATION',
         );
         return {
             accounts: config.strict
