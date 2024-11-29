@@ -28,7 +28,7 @@ import { Metaplex } from '@metaplex-foundation/js';
 
 export const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111111");
 
-export const WASABI_PROGRAM_ID = new PublicKey('spicyfuhLBKM2ebrUF7jf59WDNgF7xXeLq62GyKnKrB');
+export const WASABI_PROGRAM_ID = new PublicKey('spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c');
 
 export const SEED_PREFIX = {
     LONG_POOL: 'long_pool',

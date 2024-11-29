@@ -1,5 +1,5 @@
 {
-  "address": "3mqNHRsAXLZ7pweFfyBULoF9RjJPrJ4rhberL2pSEMLn",
+  "address": "spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c",
   "metadata": {
     "name": "wasabi_solana",
     "version": "0.1.0",
@@ -4188,6 +4188,86 @@
       "args": []
     },
     {
+      "name": "set_fee_wallet",
+      "discriminator": [
+        108,
+        242,
+        79,
+        79,
+        203,
+        119,
+        109,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "super_admin_permission"
+          ]
+        },
+        {
+          "name": "super_admin_permission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "set_liquidation_fee",
       "discriminator": [
         23,
@@ -4264,6 +4344,86 @@
         {
           "name": "liquidation_fee",
           "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "set_liquidation_wallet",
+      "discriminator": [
+        177,
+        5,
+        36,
+        205,
+        72,
+        178,
+        234,
+        5
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "super_admin_permission"
+          ]
+        },
+        {
+          "name": "super_admin_permission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "liquidation_wallet",
+          "type": "pubkey"
         }
       ]
     },
@@ -6459,6 +6619,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "super_admin",
+            "type": "pubkey"
+          },
           {
             "name": "fee_wallet",
             "type": "pubkey"

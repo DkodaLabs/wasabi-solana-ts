@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/wasabi_solana.json`.
  */
 export type WasabiSolana = {
-  "address": "3mqNHRsAXLZ7pweFfyBULoF9RjJPrJ4rhberL2pSEMLn",
+  "address": "spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c",
   "metadata": {
     "name": "wasabiSolana",
     "version": "0.1.0",
@@ -4194,6 +4194,86 @@ export type WasabiSolana = {
       "args": []
     },
     {
+      "name": "setFeeWallet",
+      "discriminator": [
+        108,
+        242,
+        79,
+        79,
+        203,
+        119,
+        109,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
+          ]
+        },
+        {
+          "name": "superAdminPermission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "feeWallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "setLiquidationFee",
       "discriminator": [
         23,
@@ -4270,6 +4350,86 @@ export type WasabiSolana = {
         {
           "name": "liquidationFee",
           "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "setLiquidationWallet",
+      "discriminator": [
+        177,
+        5,
+        36,
+        205,
+        72,
+        178,
+        234,
+        5
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
+          ]
+        },
+        {
+          "name": "superAdminPermission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "liquidationWallet",
+          "type": "pubkey"
         }
       ]
     },
@@ -6465,6 +6625,10 @@ export type WasabiSolana = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "superAdmin",
+            "type": "pubkey"
+          },
           {
             "name": "feeWallet",
             "type": "pubkey"
