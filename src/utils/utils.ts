@@ -647,7 +647,7 @@ export async function handleMint(
     amount?: number | bigint
 ): Promise<MintResult> {
     let instructions = { setupIx: [], cleanupIx: [] };
-    if (isSOL(mint)) {
+    if (isNativeMint(mint)) {
         const { tokenProgram, nativeMint } = handleSOL();
 
         if (owner && wrapMode) {
