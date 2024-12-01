@@ -254,9 +254,9 @@ async function handleOrdersCheck(
         );
     }
 
-    console.log('stopLoss:', stopLoss);
-    console.log('takeProfit:', takeProfit);
-    console.log('returning ixes:', ixes);
+    console.debug('stopLoss:', stopLoss);
+    console.debug('takeProfit:', takeProfit);
+    console.debug('returning ixes:', ixes);
 
     return ixes;
 }
