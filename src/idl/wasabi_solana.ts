@@ -274,128 +274,14 @@ export type WasabiSolana = {
               "docs": [
                 "The wallet that owns the assets"
               ],
+              "writable": true,
+              "relations": [
+                "ownerPayoutAccount"
+              ]
+            },
+            {
+              "name": "ownerPayoutAccount",
               "writable": true
-            },
-            {
-              "name": "ownerCollateralAccount",
-              "docs": [
-                "The account that holds the owner's collateral currency.",
-                "NOTE: this account is only used when closing `Short` Positions"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateralTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateral"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
-            },
-            {
-              "name": "ownerCurrencyAccount",
-              "docs": [
-                "The account that holds the owner's base currency"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currencyTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currency"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
             },
             {
               "name": "pool",
@@ -718,128 +604,14 @@ export type WasabiSolana = {
               "docs": [
                 "The wallet that owns the assets"
               ],
+              "writable": true,
+              "relations": [
+                "ownerPayoutAccount"
+              ]
+            },
+            {
+              "name": "ownerPayoutAccount",
               "writable": true
-            },
-            {
-              "name": "ownerCollateralAccount",
-              "docs": [
-                "The account that holds the owner's collateral currency.",
-                "NOTE: this account is only used when closing `Short` Positions"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateralTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateral"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
-            },
-            {
-              "name": "ownerCurrencyAccount",
-              "docs": [
-                "The account that holds the owner's base currency"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currencyTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currency"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
             },
             {
               "name": "pool",
@@ -1002,72 +774,6 @@ export type WasabiSolana = {
           ],
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "ownerCollateralAccount",
-          "docs": [
-            "Account where user will receive their payout"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "owner"
-              },
-              {
-                "kind": "account",
-                "path": "collateralTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "collateral"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "collateral"
-        },
-        {
-          "name": "collateralTokenProgram"
         }
       ],
       "args": []
@@ -2744,128 +2450,14 @@ export type WasabiSolana = {
               "docs": [
                 "The wallet that owns the assets"
               ],
+              "writable": true,
+              "relations": [
+                "ownerPayoutAccount"
+              ]
+            },
+            {
+              "name": "ownerPayoutAccount",
               "writable": true
-            },
-            {
-              "name": "ownerCollateralAccount",
-              "docs": [
-                "The account that holds the owner's collateral currency.",
-                "NOTE: this account is only used when closing `Short` Positions"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateralTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateral"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
-            },
-            {
-              "name": "ownerCurrencyAccount",
-              "docs": [
-                "The account that holds the owner's base currency"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currencyTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currency"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
             },
             {
               "name": "pool",
@@ -4825,128 +4417,14 @@ export type WasabiSolana = {
               "docs": [
                 "The wallet that owns the assets"
               ],
+              "writable": true,
+              "relations": [
+                "ownerPayoutAccount"
+              ]
+            },
+            {
+              "name": "ownerPayoutAccount",
               "writable": true
-            },
-            {
-              "name": "ownerCollateralAccount",
-              "docs": [
-                "The account that holds the owner's collateral currency.",
-                "NOTE: this account is only used when closing `Short` Positions"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateralTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateral"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
-            },
-            {
-              "name": "ownerCurrencyAccount",
-              "docs": [
-                "The account that holds the owner's base currency"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currencyTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currency"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
             },
             {
               "name": "pool",
@@ -5286,128 +4764,14 @@ export type WasabiSolana = {
               "docs": [
                 "The wallet that owns the assets"
               ],
+              "writable": true,
+              "relations": [
+                "ownerPayoutAccount"
+              ]
+            },
+            {
+              "name": "ownerPayoutAccount",
               "writable": true
-            },
-            {
-              "name": "ownerCollateralAccount",
-              "docs": [
-                "The account that holds the owner's collateral currency.",
-                "NOTE: this account is only used when closing `Short` Positions"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateralTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "collateral"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
-            },
-            {
-              "name": "ownerCurrencyAccount",
-              "docs": [
-                "The account that holds the owner's base currency"
-              ],
-              "writable": true,
-              "pda": {
-                "seeds": [
-                  {
-                    "kind": "account",
-                    "path": "owner"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currencyTokenProgram"
-                  },
-                  {
-                    "kind": "account",
-                    "path": "currency"
-                  }
-                ],
-                "program": {
-                  "kind": "const",
-                  "value": [
-                    140,
-                    151,
-                    37,
-                    143,
-                    78,
-                    36,
-                    137,
-                    241,
-                    187,
-                    61,
-                    16,
-                    41,
-                    20,
-                    142,
-                    13,
-                    131,
-                    11,
-                    90,
-                    19,
-                    153,
-                    218,
-                    255,
-                    16,
-                    132,
-                    4,
-                    142,
-                    123,
-                    216,
-                    219,
-                    233,
-                    248,
-                    89
-                  ]
-                }
-              }
             },
             {
               "name": "pool",
@@ -6419,6 +5783,21 @@ export type WasabiSolana = {
       "code": 6026,
       "name": "liquidationThresholdNotReached",
       "msg": "Liquidation threshold not reached"
+    },
+    {
+      "code": 6027,
+      "name": "invalidAccountOwner",
+      "msg": "Payout token account is not owned by the correct wallet"
+    },
+    {
+      "code": 6028,
+      "name": "incorrectTokenProgram",
+      "msg": "Payout token account is not owned by the correct token program"
+    },
+    {
+      "code": 6029,
+      "name": "mintMismatch",
+      "msg": "The payout token account's associated mint does not match"
     }
   ],
   "types": [

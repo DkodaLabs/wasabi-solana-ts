@@ -93,8 +93,7 @@ export type ClosePositionCleanupInstructionAccounts = {
 };
 
 export type ClosePositionCleanupInstructionAccountsStrict = {
-    ownerCollateralAccount: PublicKey;
-    ownerCurrencyAccount: PublicKey;
+    ownerPayoutAccount: PublicKey;
     pool: PublicKey;
     collateralVault: PublicKey;
     currencyVault: PublicKey;
@@ -149,7 +148,7 @@ export async function getClosePositionSetupInstructionAccounts(
         collateralMint,
         currencyTokenProgram,
         collateralTokenProgram,
-    }, owner] = await Promise.all(
+    }, owner, orderIx] = await Promise.all(
         [
             handleMintsAndTokenProgram(
                 program.provider.connection,
@@ -157,10 +156,10 @@ export async function getClosePositionSetupInstructionAccounts(
                 accounts.collateral,
             ),
             program.account.position.fetch(accounts.position).then((pos) => pos.trader),
-        ]
+            handleOrdersCheck(program, accounts.position, closeType)
+        ],
     );
 
-    const orderIx = await handleOrdersCheck(program, accounts.position, closeType);
 
     return {
         accounts: {
@@ -198,8 +197,7 @@ type TokenSetupResult = {
     collateralMint: PublicKey;
     currencyTokenProgram: PublicKey;
     collateralTokenProgram: PublicKey;
-    ownerCurrencyAta: PublicKey;
-    ownerCollateralAta: PublicKey;
+    ownerPayoutAccount: PublicKey;
     setupIx: any[];
     cleanupIx: any[];
 }
@@ -254,11 +252,25 @@ async function handleOrdersCheck(
         );
     }
 
-    console.debug('stopLoss:', stopLoss);
-    console.debug('takeProfit:', takeProfit);
-    console.debug('returning ixes:', ixes);
-
     return ixes;
+}
+
+async function handleAtaCheck(
+    connection: Connection,
+    owner: PublicKey,
+    asset: PublicKey,
+    tokenProgram: PublicKey,
+    payer: PublicKey,
+): Promise<{
+    ata: PublicKey,
+    ix: TransactionInstruction,
+}> {
+    const ata = getAssociatedTokenAddressSync(asset, owner, true, tokenProgram);
+    return {
+        ata,
+        ix: await createAtaIfNeeded(connection, owner, asset, ata, tokenProgram, payer),
+    };
+
 }
 
 async function setupTokenAccounts(
@@ -266,7 +278,8 @@ async function setupTokenAccounts(
     owner: PublicKey,
     currency: PublicKey,
     collateral: PublicKey,
-    payer: PublicKey
+    payer: PublicKey,
+    isLong: boolean,
 ): Promise<TokenSetupResult> {
     const {
         currencyMint,
@@ -283,24 +296,22 @@ async function setupTokenAccounts(
         'unwrap'
     );
 
-    const ownerCurrencyAta = getAssociatedTokenAddressSync(currencyMint, owner, false, currencyTokenProgram);
-    const ownerCollateralAta = getAssociatedTokenAddressSync(collateralMint, owner, false, collateralTokenProgram);
+    const { ata, ix } = await handleAtaCheck(
+        connection,
+        owner,
+        isLong ? currencyMint : collateralMint,
+        isLong ? currencyTokenProgram : collateralTokenProgram,
+        payer
+    );
 
-    const [currencyAtaIx, collateralAtaIx] = await Promise.all([
-        createAtaIfNeeded(connection, owner, currencyMint, ownerCurrencyAta, currencyTokenProgram, payer),
-        createAtaIfNeeded(connection, owner, collateralMint, ownerCollateralAta, collateralTokenProgram, payer)
-    ]);
-
-    if (currencyAtaIx) setupIx.push(currencyAtaIx);
-    if (collateralAtaIx) setupIx.push(collateralAtaIx);
+    if (ix) setupIx.push(ix);
 
     return {
         currencyMint,
         collateralMint,
         currencyTokenProgram,
         collateralTokenProgram,
-        ownerCurrencyAta,
-        ownerCollateralAta,
+        ownerPayoutAccount: ata,
         setupIx,
         cleanupIx,
     };
@@ -314,25 +325,23 @@ export async function getClosePositionCleanupInstructionAccounts(
 
     const [
         vault,
-        //orderIxes,
         tokenSetup
     ] = await Promise.all([
         fetchVaultAddress(program, lpVault),
-        //handleOrdersCheck(program, accounts.position, closeType),
         setupTokenAccounts(
             program.provider.connection,
             owner,
             accounts.currency,
             accounts.collateral,
-            program.provider.publicKey
+            program.provider.publicKey,
+            await program.account.basePool.fetch(accounts.pool).then(pool => pool.isLongPool),
         ),
     ]);
 
     return {
         accounts: {
             owner,
-            ownerCollateralAccount: tokenSetup.ownerCollateralAta,
-            ownerCurrencyAccount: tokenSetup.ownerCurrencyAta,
+            ownerPayoutAccount: tokenSetup.ownerPayoutAccount,
             pool: accounts.pool,
             collateralVault: getAssociatedTokenAddressSync(
                 tokenSetup.collateralMint,

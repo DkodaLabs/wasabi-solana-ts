@@ -95,9 +95,6 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
             accounts: config.strict
                 ? {
                     owner: accounts.owner,
-                    ownerCollateralAccount: accounts.ownerCollateralAccount,
-                    collateral: accounts.collateral,
-                    collateralTokenProgram: accounts.collateralTokenProgram,
                     closePositionCleanup: {
                         ...accounts
                     }

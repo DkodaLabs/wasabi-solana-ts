@@ -47,8 +47,6 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 
-    console.debug(processed.accounts);
-
     const builder = args.strict
         ? methodBuilder.accountsStrict(processed.accounts)
         : methodBuilder.accounts(processed.accounts);
@@ -56,8 +54,6 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     if (processed.setup) {
         builder.preInstructions(processed.setup);
     }
-
-    console.debug(processed.setup);
 
     return args.mode === 'INSTRUCTION'
         ? builder
@@ -69,7 +65,6 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
                         ix,
                         ...(processed.cleanup || [])
                     ];
-                console.debug(ixes);
                 return ixes;
             })
         : builder.rpc();
