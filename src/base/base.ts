@@ -1,10 +1,31 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
+import {
+    TransactionInstruction,
+    TransactionSignature,
+    ComputeBudgetProgram,
+    PublicKey
+} from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
+const COMPUTE_VALUES = {
+    LIMIT: {
+        TOKEN: 200_000,
+        TRADE: 500_000,
+    },
+    PRICE: {
+        NORMAL: 50_000,
+        FAST: 100_000,
+        TURBO: 1_000_000,
+    },
+};
+
 export type IxAccountsStrictness = 'NO_STRICT' | 'PARTIAL' | 'STRICT';
-export type PriorityFeeLevel = 'NORMAL' | 'OPTIMAL' | 'MAX';
 export type BuildMode = 'TRANSACTION' | 'INSTRUCTION';
+export type Level = 'NORMAL' | 'FAST' | 'TURBO';
+type FeeLevel = {
+    level: Level,
+    ixType: 'VAULT' | 'TRADE';
+};
 
 export type ProcessResult<T> = {
     accounts: T;
@@ -16,8 +37,7 @@ export type ProcessResult<T> = {
 export type ConfigArgs<TArgs, TAccounts> = {
     program: Program<WasabiSolana>;
     accounts: TAccounts;
-    strict: boolean;
-    increaseCompute: boolean;
+    feeLevel?: FeeLevel;
     args?: TArgs;
 };
 
@@ -41,19 +61,17 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     const processed = await args.config.process({
         program: args.program,
         accounts: args.accounts,
-        strict: args.strict,
-        increaseCompute: args.increaseCompute,
+        feeLevel: args.feeLevel,
         args: args.args
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 
-    const builder = args.strict
-        ? methodBuilder.accountsStrict(processed.accounts)
-        : methodBuilder.accounts(processed.accounts);
+    const builder = methodBuilder.accountsStrict(processed.accounts);
 
-    if (processed.setup) {
-        builder.preInstructions(processed.setup);
-    }
+    builder.preInstructions([
+        args.feeLevel ? getComputeIxes(args.feeLevel) : [],
+        ...(processed.setup || []),
+    ]);
 
     return args.mode === 'INSTRUCTION'
         ? builder
@@ -75,8 +93,7 @@ export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramA
     accounts: TAccounts,
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>,
     mode: BuildMode,
-    strict: boolean = true,
-    increaseCompute: boolean = false,
+    feeLevel?: FeeLevel,
     args?: TArgs
 ): MethodCallArgs<TArgs, TAccounts, TProgramAccounts> {
     return {
@@ -84,8 +101,18 @@ export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramA
         accounts,
         config,
         mode,
-        strict,
-        increaseCompute,
+        feeLevel,
         args
     };
+}
+
+function getComputeIxes(feeLevel: FeeLevel): TransactionInstruction[] {
+    return [
+        ComputeBudgetProgram.setComputeUnitLimit({
+            units: COMPUTE_VALUES.LIMIT[feeLevel.level]
+        }),
+        ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: COMPUTE_VALUES.PRICE[feeLevel.ixType]
+        }),
+    ];
 }

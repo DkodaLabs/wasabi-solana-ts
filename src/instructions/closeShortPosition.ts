@@ -12,7 +12,13 @@ import {
     getClosePositionCleanupInstructionAccounts,
     transformArgs
 } from './closePosition';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type CloseShortPositionSetupInstructionAccounts = {
@@ -48,25 +54,12 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict
-                ? {
-                    owner: accounts.owner,
-                    closePositionSetup: {
-                        ...accounts
-                    }
+            accounts: {
+                owner: accounts.owner,
+                closePositionSetup: {
+                    ...accounts
                 }
-                : {
-                    owner: accounts.owner,
-                    closePositionSetup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        collateral: accounts.collateral,
-                        position: accounts.position,
-                        permission: accounts.permission,
-                        authority: accounts.authority,
-                        tokenProgram: accounts.tokenProgram
-                    }
-                },
+            },
             args: transformArgs(config.args),
             setup: ixes.setupIx,
         };
@@ -92,28 +85,12 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
             config.accounts,
         );
         return {
-            accounts: config.strict
-                ? {
-                    owner: accounts.owner,
-                    closePositionCleanup: {
-                        ...accounts
-                    }
+            accounts: {
+                owner: accounts.owner,
+                closePositionCleanup: {
+                    ...accounts
                 }
-                : {
-                    owner: accounts.owner,
-                    closePositionCleanup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        position: accounts.position,
-                        currency: accounts.currency,
-                        collateral: accounts.collateral,
-                        authority: accounts.authority,
-                        feeWallet: accounts.feeWallet,
-                        liquidationWallet: accounts.liquidationWallet,
-                        collateralTokenProgram: accounts.collateralTokenProgram,
-                        currencyTokenProgram: accounts.currencyTokenProgram
-                    }
-                },
+            },
             setup: ixes.setupIx,
             cleanup: ixes.cleanupIx,
         };
@@ -125,8 +102,7 @@ export async function createCloseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -134,8 +110,10 @@ export async function createCloseShortPositionSetupInstruction(
             accounts,
             closeShortPositionSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -144,8 +122,6 @@ export async function createCloseShortPositionSetupInstruction(
 export async function createCloseShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -153,8 +129,6 @@ export async function createCloseShortPositionCleanupInstruction(
             accounts,
             closeShortPositionCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

@@ -334,13 +334,16 @@ export async function getUserVaultBalances(
     program: Program<WasabiSolana>,
     wallet?: PublicKey
 ): Promise<{ asset: PublicKey; shares: bigint }[]> {
-    const vaults = await program.account.lpVault.all();
-    const shareMints = vaults.map((vault) => vault.account.sharesMint);
-
     const walletToCheck = wallet || program.provider.publicKey;
-    const tokenAccounts = await program.provider.connection.getTokenAccountsByOwner(walletToCheck, {
-        programId: TOKEN_2022_PROGRAM_ID
-    });
+
+    const [vaults, tokenAccounts] = await Promise.all([
+        program.account.lpVault.all(),
+        program.provider.connection.getTokenAccountsByOwner(walletToCheck, {
+            programId: TOKEN_2022_PROGRAM_ID
+        })
+    ]);
+
+    const shareMints = vaults.map((vault) => vault.account.sharesMint);
 
     const shareBalances = await Promise.all(
         tokenAccounts.value.map(async ({ account }) => {

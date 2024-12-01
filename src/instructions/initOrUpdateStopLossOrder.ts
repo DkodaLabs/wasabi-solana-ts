@@ -5,7 +5,13 @@ import {
     PublicKey,
     SystemProgram
 } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { 
+    BaseMethodConfig, 
+    ConfigArgs, 
+    Level,
+    handleMethodCall, 
+    constructMethodCallArgs 
+} from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -21,36 +27,26 @@ export type InitOrUpdateStopLossAccounts = {
 type InitOrUpdateStopLossInstructionAccounts = {
     trader: PublicKey;
     position: PublicKey;
-};
-
-type InitOrUpdateStopLossInstructionAccountsStrict = {
     stopLossOrder: PublicKey;
     systemProgram: PublicKey;
-} & InitOrUpdateStopLossInstructionAccounts;
+};
 
 const initOrUpdateStopLossConfig: BaseMethodConfig<
     InitOrUpdateStopLossArgs,
     InitOrUpdateStopLossAccounts,
-    InitOrUpdateStopLossInstructionAccounts | InitOrUpdateStopLossInstructionAccountsStrict
+    InitOrUpdateStopLossInstructionAccounts
 > = {
     process: async (config: ConfigArgs<InitOrUpdateStopLossArgs, InitOrUpdateStopLossAccounts>) => {
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
-        const allAccounts = {
-            trader,
-            position: config.accounts.position,
-            stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
-            systemProgram: SystemProgram.programId
-        };
-
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                      trader,
-                      position: allAccounts.position
-                  },
+            accounts: {
+                trader,
+                position: config.accounts.position,
+                stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
+                systemProgram: SystemProgram.programId
+            },
             args: {
                 makerAmount: new BN(config.args.makerAmount.toString()),
                 takerAmount: new BN(config.args.takerAmount.toString())
@@ -65,8 +61,7 @@ export function createInitOrUpdateStopLossInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdateStopLossArgs,
     accounts: InitOrUpdateStopLossAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -74,8 +69,10 @@ export function createInitOrUpdateStopLossInstruction(
             accounts,
             initOrUpdateStopLossConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -85,8 +82,7 @@ export function initOrUpdateStopLoss(
     program: Program<WasabiSolana>,
     args: InitOrUpdateStopLossArgs,
     accounts: InitOrUpdateStopLossAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -94,8 +90,10 @@ export function initOrUpdateStopLoss(
             accounts,
             initOrUpdateStopLossConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionSignature>;

@@ -6,15 +6,19 @@ import {
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
     OpenPositionCleanupInstructionAccounts,
     OpenPositionSetupInstructionBaseAccounts,
-    OpenPositionSetupInstructionBaseStrictAccounts,
-    OpenPositionCleanupInstructionBaseStrictAccounts,
 } from './openPosition';
 import {
     PDA,
@@ -29,17 +33,15 @@ type OpenShortPositionSetupInstructionAccounts = {
     currencyTokenProgram: PublicKey;
 } & OpenPositionSetupInstructionBaseAccounts;
 
-type OpenShortPositionSetupInstructionAccountsStrict = OpenPositionSetupInstructionBaseStrictAccounts & OpenShortPositionSetupInstructionAccounts;
-
-type OpenShortPositionCleanupInstructionAccountsStrict = {
+type OpenShortPositionCleanupInstructionAccounts = {
     vault: PublicKey;
     debtController: PublicKey;
-} & OpenPositionCleanupInstructionAccounts & OpenPositionCleanupInstructionBaseStrictAccounts;
+} & OpenPositionCleanupInstructionAccounts;
 
 const openShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
-    OpenShortPositionSetupInstructionAccounts | OpenShortPositionSetupInstructionAccountsStrict
+    OpenShortPositionSetupInstructionAccounts
 > = {
     process: async (
         config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
@@ -65,79 +67,69 @@ const openShortPositionSetupConfig: BaseMethodConfig<
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
-        const allAccounts = {
-            owner: config.accounts.owner,
-            ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
-                collateralMint,
-                config.accounts.owner,
-                false,
-                collateralTokenProgram
-            ),
-            lpVault,
-            vault: getAssociatedTokenAddressSync(
-                currencyMint,
-                lpVault,
-                true,
-                currencyTokenProgram,
-            ),
-            pool,
-            collateralVault: getAssociatedTokenAddressSync(
-                collateralMint,
-                pool,
-                true,
-                collateralTokenProgram
-            ),
-            currencyVault: getAssociatedTokenAddressSync(
-                currencyMint,
-                pool,
-                true,
-                currencyTokenProgram
-            ),
-            currency: currencyMint,
-            collateral: collateralMint,
-            openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-            position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
-            authority: config.program.provider.publicKey,
-            permission: await getPermission(config.program, config.program.provider.publicKey),
-            feeWallet: config.accounts.feeWallet,
-            feeWalletAta: getAssociatedTokenAddressSync(
-                collateralMint,
-                config.accounts.feeWallet,
-                true,
-                collateralTokenProgram
-            ),
-            globalSettings: PDA.getGlobalSettings(),
-            currencyTokenProgram,
-            collateralTokenProgram,
-            systemProgram: SystemProgram.programId,
-            sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
-        };
-
-        const args = {
-            nonce: config.args.nonce,
-            minTargetAmount: new BN(config.args.minTargetAmount),
-            downPayment: new BN(config.args.downPayment),
-            principal: new BN(config.args.principal),
-            fee: new BN(config.args.fee),
-            expiration: new BN(config.args.expiration)
-        };
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    owner: allAccounts.owner,
-                    lpVault,
-                    pool: allAccounts.pool,
-                    currency: allAccounts.currency,
-                    collateral: allAccounts.collateral,
-                    permission: allAccounts.permission,
-                    authority: allAccounts.authority,
-                    feeWallet: allAccounts.feeWallet,
+            accounts: {
+                owner: config.accounts.owner,
+                ownerCurrencyAccount: getAssociatedTokenAddressSync(
+                    currencyMint,
+                    config.accounts.owner,
+                    false,
                     currencyTokenProgram,
+                ),
+                ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
+                    collateralMint,
+                    config.accounts.owner,
+                    false,
                     collateralTokenProgram
-                },
-            args,
+                ),
+                lpVault,
+                vault: getAssociatedTokenAddressSync(
+                    currencyMint,
+                    lpVault,
+                    true,
+                    currencyTokenProgram,
+                ),
+                pool,
+                collateralVault: getAssociatedTokenAddressSync(
+                    collateralMint,
+                    pool,
+                    true,
+                    collateralTokenProgram
+                ),
+                currencyVault: getAssociatedTokenAddressSync(
+                    currencyMint,
+                    pool,
+                    true,
+                    currencyTokenProgram
+                ),
+                currency: currencyMint,
+                collateral: collateralMint,
+                openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
+                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+                authority: config.program.provider.publicKey,
+                permission: await getPermission(config.program, config.program.provider.publicKey),
+                feeWallet: config.accounts.feeWallet,
+                feeWalletAta: getAssociatedTokenAddressSync(
+                    collateralMint,
+                    config.accounts.feeWallet,
+                    true,
+                    collateralTokenProgram
+                ),
+                globalSettings: PDA.getGlobalSettings(),
+                currencyTokenProgram,
+                collateralTokenProgram,
+                systemProgram: SystemProgram.programId,
+                sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
+            },
+            args: {
+                nonce: config.args.nonce,
+                minTargetAmount: new BN(config.args.minTargetAmount),
+                downPayment: new BN(config.args.downPayment),
+                principal: new BN(config.args.principal),
+                fee: new BN(config.args.fee),
+                expiration: new BN(config.args.expiration)
+            },
             setup: setupIx,
             cleanup: cleanupIx,
         };
@@ -156,7 +148,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
 const openShortPositionCleanupConfig: BaseMethodConfig<
     void,
     OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts | OpenShortPositionCleanupInstructionAccountsStrict
+    OpenShortPositionCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
         const {
@@ -170,48 +162,37 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
             config.accounts.collateral,
         );
         const lpVault = PDA.getLpVault(config.accounts.currency);
-        const allAccounts = {
-            owner: config.accounts.owner,
-            position: config.accounts.position,
-            pool: config.accounts.pool,
-            collateralVault: getAssociatedTokenAddressSync(
-                collateralMint,
-                config.accounts.pool,
-                true,
-                collateralTokenProgram
-            ),
-            currencyVault: getAssociatedTokenAddressSync(
-                currencyMint,
-                config.accounts.pool,
-                true,
-                currencyTokenProgram
-            ),
-            lpVault,
-            vault: getAssociatedTokenAddressSync(
-                currencyMint,
-                lpVault,
-                true,
-                currencyTokenProgram,
-            ),
-            collateral: collateralMint,
-            currency: currencyMint,
-            openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-            debtController: PDA.getDebtController(),
-            tokenProgram: currencyTokenProgram
-        };
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    owner: allAccounts.owner,
-                    pool: allAccounts.pool,
+            accounts: {
+                owner: config.accounts.owner,
+                position: config.accounts.position,
+                pool: config.accounts.pool,
+                collateralVault: getAssociatedTokenAddressSync(
+                    collateralMint,
+                    config.accounts.pool,
+                    true,
+                    collateralTokenProgram
+                ),
+                currencyVault: getAssociatedTokenAddressSync(
+                    currencyMint,
+                    config.accounts.pool,
+                    true,
+                    currencyTokenProgram
+                ),
+                lpVault,
+                vault: getAssociatedTokenAddressSync(
+                    currencyMint,
                     lpVault,
-                    collateral: allAccounts.collateral,
-                    currency: allAccounts.currency,
-                    position: allAccounts.position,
-                    tokenProgram: allAccounts.tokenProgram
-                }
+                    true,
+                    currencyTokenProgram,
+                ),
+                collateral: collateralMint,
+                currency: currencyMint,
+                openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
+                debtController: PDA.getDebtController(),
+                tokenProgram: currencyTokenProgram
+            },
         };
     },
     getMethod: (program) => () => program.methods.openShortPositionCleanup()
@@ -221,8 +202,7 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -230,8 +210,10 @@ export async function createOpenShortPositionSetupInstruction(
             accounts,
             openShortPositionSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -240,8 +222,6 @@ export async function createOpenShortPositionSetupInstruction(
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -249,8 +229,6 @@ export async function createOpenShortPositionCleanupInstruction(
             accounts,
             openShortPositionCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

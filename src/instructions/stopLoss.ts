@@ -6,6 +6,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
+    Level,
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
@@ -17,9 +18,7 @@ import {
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
     ClosePositionCleanupInstructionAccounts,
-    ClosePositionCleanupInstructionAccountsStrict,
     ExitOrderSetupInstructionAccounts,
-    ExitOrderSetupInstructionAccountsStrict,
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -28,15 +27,11 @@ type StopLossCleanupInstructionAccounts = {
     stopLossOrder: PublicKey;
     closePositionCleanup: ClosePositionCleanupInstructionAccounts;
 }
-type StopLossCleanupInstructionAccountsStrict = {
-    stopLossOrder: PublicKey;
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict;
-}
 
 const stopLossSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
-    ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
+    ExitOrderSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
@@ -46,18 +41,8 @@ const stopLossSetupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict ? {
+            accounts: {
                 closePositionSetup: accounts
-            } : {
-                closePositionSetup: {
-                    owner: accounts.owner,
-                    pool: accounts.pool,
-                    collateral: accounts.collateral,
-                    position: accounts.position,
-                    permission: accounts.permission,
-                    authority: accounts.authority,
-                    tokenProgram: accounts.tokenProgram
-                }
             },
             args: transformArgs(config.args),
             setup: ixes.setupIx,
@@ -74,7 +59,7 @@ const stopLossSetupConfig: BaseMethodConfig<
 const stopLossCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    StopLossCleanupInstructionAccounts | StopLossCleanupInstructionAccountsStrict
+    StopLossCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
@@ -84,26 +69,10 @@ const stopLossCleanupConfig: BaseMethodConfig<
 
         const stopLossPubkey = PDA.getStopLossOrder(accounts.position);
         return {
-            accounts: config.strict
-                ? {
-                    stopLossOrder: stopLossPubkey,
-                    closePositionCleanup: accounts
-                } :
-                {
-                    stopLossOrder: stopLossPubkey,
-                    closePositionCleanup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        position: accounts.position,
-                        currency: accounts.currency,
-                        collateral: accounts.collateral,
-                        authority: accounts.authority,
-                        feeWallet: accounts.feeWallet,
-                        liquidationWallet: accounts.liquidationWallet,
-                        collateralTokenProgram: accounts.collateralTokenProgram,
-                        currencyTokenProgram: accounts.currencyTokenProgram
-                    }
-                },
+            accounts: {
+                stopLossOrder: stopLossPubkey,
+                closePositionCleanup: accounts
+            },
             setup: ixes.setupIx,
             cleanup: ixes.cleanupIx,
         };
@@ -115,8 +84,7 @@ export async function createStopLossSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -124,8 +92,10 @@ export async function createStopLossSetupInstruction(
             accounts,
             stopLossSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -134,8 +104,6 @@ export async function createStopLossSetupInstruction(
 export async function createStopLossCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -143,8 +111,6 @@ export async function createStopLossCleanupInstruction(
             accounts,
             stopLossCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

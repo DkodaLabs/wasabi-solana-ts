@@ -4,6 +4,7 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
+    Level,
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
@@ -51,34 +52,26 @@ const donateConfig: BaseMethodConfig<
 
         const lpVault = PDA.getLpVault(mint);
 
-        const allAccounts = {
-            owner: config.program.provider.publicKey,
-            ownerAssetAccount: getAssociatedTokenAddressSync(
-                mint,
-                config.program.provider.publicKey,
-                false,
-                tokenProgram
-            ),
-            lpVault,
-            vault: getAssociatedTokenAddressSync(
-                mint,
-                lpVault,
-                true,
-                tokenProgram
-            ),
-            currency: config.accounts.currency,
-            globalSettings: PDA.getGlobalSettings(),
-            tokenProgram
-        };
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    owner: allAccounts.owner,
-                    lpVault,
-                    currency: mint,
+            accounts: {
+                owner: config.program.provider.publicKey,
+                ownerAssetAccount: getAssociatedTokenAddressSync(
+                    mint,
+                    config.program.provider.publicKey,
+                    false,
                     tokenProgram
-                },
+                ),
+                lpVault,
+                vault: getAssociatedTokenAddressSync(
+                    mint,
+                    lpVault,
+                    true,
+                    tokenProgram
+                ),
+                currency: config.accounts.currency,
+                globalSettings: PDA.getGlobalSettings(),
+                tokenProgram
+            },
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
             cleanup: cleanupIx,
@@ -91,8 +84,7 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -100,8 +92,10 @@ export async function createDonateInstruction(
             accounts,
             donateConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -111,8 +105,7 @@ export async function donate(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -120,8 +113,10 @@ export async function donate(
             accounts,
             donateConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionSignature>;

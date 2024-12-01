@@ -1,6 +1,12 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -35,7 +41,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             permission = PDA.getSuperAdmin();
         }
 
-        const allAccounts = {
+        const accounts = {
             closer: config.program.provider.publicKey,
             trader,
             permission,
@@ -43,13 +49,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position)
         };
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    closer: allAccounts.closer,
-                    permission,
-                    position: config.accounts.position
-                }
+            accounts
         };
     },
     getMethod: (program) => () => program.methods.closeTakeProfitOrder()
@@ -58,8 +58,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
 export async function createCloseTakeProfitOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseTakeProfitOrderAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -67,8 +66,10 @@ export async function createCloseTakeProfitOrderInstruction(
             accounts,
             closeTakeProfitOrderConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            }
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -76,8 +77,7 @@ export async function createCloseTakeProfitOrderInstruction(
 export async function closeTakeProfitOrder(
     program: Program<WasabiSolana>,
     accounts: CloseTakeProfitOrderAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -85,8 +85,10 @@ export async function closeTakeProfitOrder(
             accounts,
             closeTakeProfitOrderConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            }
         )
     ) as Promise<TransactionSignature>;
 }

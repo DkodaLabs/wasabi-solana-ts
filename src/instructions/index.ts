@@ -6,12 +6,9 @@ export * from './closeStopLossOrder.js';
 export * from './closeTakeProfitOrder.js';
 export * from './deposit.js';
 export * from './donate.js';
-export * from './initDebtController.js';
-export * from './initGlobalSettings.js';
 export * from './initLongPool.js';
 export * from './initPool.js';
 export * from './initLpVault.js';
-export * from './initOrUpdatePermission.js';
 export * from './initShortPool.js';
 export * from './initOrUpdateStopLossOrder.js';
 export * from './initOrUpdateTakeProfitOrder.js';
@@ -20,14 +17,6 @@ export * from './openPosition.js';
 export * from './openLongPosition.js';
 export * from './openShortPosition.js';
 export * from './redeem.js';
-export * from './removePermission.js';
-export * from './setMaxApy.js';
 export * from './stopLoss.js';
-export * from './setMaxLeverage.js';
 export * from './takeProfit.js';
-export * from './updateLpVaultMaxBorrow.js';
 export * from './withdraw.js';
-export * from './setSuperAdmin.js';
-export * from './setTradeState.js';
-export * from './setLpState.js'
-

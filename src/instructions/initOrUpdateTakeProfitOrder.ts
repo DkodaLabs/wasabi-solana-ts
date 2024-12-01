@@ -5,7 +5,13 @@ import {
     PublicKey,
     SystemProgram
 } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -21,36 +27,27 @@ export type InitOrUpdateTakeProfitAccounts = {
 type InitOrUpdateTakeProfitInstructionAccounts = {
     trader: PublicKey;
     position: PublicKey;
-};
-
-type InitOrUpdateTakeProfitInstructionAccountsStrict = {
     takeProfitOrder: PublicKey;
     systemProgram: PublicKey;
-} & InitOrUpdateTakeProfitInstructionAccounts;
+};
 
 const initOrUpdateTakeProfitConfig: BaseMethodConfig<
     InitOrUpdateTakeProfitArgs,
     InitOrUpdateTakeProfitAccounts,
-    InitOrUpdateTakeProfitInstructionAccounts | InitOrUpdateTakeProfitInstructionAccountsStrict
+    InitOrUpdateTakeProfitInstructionAccounts
 > = {
     process: async (config: ConfigArgs<InitOrUpdateTakeProfitArgs, InitOrUpdateTakeProfitAccounts>) => {
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
-        const allAccounts = {
-            trader,
-            position: config.accounts.position,
-            takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position),
-            systemProgram: SystemProgram.programId
-        };
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                      trader,
-                      position: allAccounts.position
-                  },
+            accounts: {
+                trader,
+                position: config.accounts.position,
+                takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position),
+                systemProgram: SystemProgram.programId
+            },
             args: {
                 makerAmount: new BN(config.args.makerAmount.toString()),
                 takerAmount: new BN(config.args.takerAmount.toString())
@@ -65,8 +62,7 @@ export function createInitOrUpdateTakeProfitInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdateTakeProfitArgs,
     accounts: InitOrUpdateTakeProfitAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -74,8 +70,10 @@ export function createInitOrUpdateTakeProfitInstruction(
             accounts,
             initOrUpdateTakeProfitConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -85,8 +83,7 @@ export function initOrUpdateTakeProfit(
     program: Program<WasabiSolana>,
     args: InitOrUpdateTakeProfitArgs,
     accounts: InitOrUpdateTakeProfitAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -94,8 +91,10 @@ export function initOrUpdateTakeProfit(
             accounts,
             initOrUpdateTakeProfitConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionSignature>;

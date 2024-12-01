@@ -6,6 +6,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
+    Level,
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
@@ -17,9 +18,7 @@ import {
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
     ClosePositionCleanupInstructionAccounts,
-    ClosePositionCleanupInstructionAccountsStrict,
     ExitOrderSetupInstructionAccounts,
-    ExitOrderSetupInstructionAccountsStrict,
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -28,15 +27,11 @@ type TakeProfitCleanupInstructionAccounts = {
     takeProfitOrder: PublicKey;
     closePositionCleanup: ClosePositionCleanupInstructionAccounts;
 }
-type TakeProfitCleanupInstructionAccountsStrict = {
-    takeProfitOrder: PublicKey;
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict;
-}
 
 const takeProfitSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
-    ExitOrderSetupInstructionAccounts | ExitOrderSetupInstructionAccountsStrict
+    ExitOrderSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
@@ -46,18 +41,8 @@ const takeProfitSetupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict ? {
+            accounts: {
                 closePositionSetup: accounts
-            } : {
-                closePositionSetup: {
-                    owner: accounts.owner,
-                    pool: accounts.pool,
-                    collateral: accounts.collateral,
-                    position: accounts.position,
-                    permission: accounts.permission,
-                    authority: accounts.authority,
-                    tokenProgram: accounts.tokenProgram
-                }
             },
             args: transformArgs(config.args),
             setup: ixes.setupIx,
@@ -74,37 +59,21 @@ const takeProfitSetupConfig: BaseMethodConfig<
 const takeProfitCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    TakeProfitCleanupInstructionAccounts | TakeProfitCleanupInstructionAccountsStrict
+    TakeProfitCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
             config.accounts,
         );
-        const takeProfit = PDA.getTakeProfitOrder(accounts.position);
+
         return {
-            accounts: config.strict ?
-                {
-                    takeProfitOrder: takeProfit,
-                    closePositionCleanup: {
-                        ...accounts,
-                    }
-                } :
-                {
-                    takeProfitOrder: takeProfit,
-                    closePositionCleanup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        position: accounts.position,
-                        currency: accounts.currency,
-                        collateral: accounts.collateral,
-                        authority: accounts.authority,
-                        feeWallet: accounts.feeWallet,
-                        liquidationWallet: accounts.liquidationWallet,
-                        collateralTokenProgram: accounts.collateralTokenProgram,
-                        currencyTokenProgram: accounts.currencyTokenProgram
-                    }
+            accounts: {
+                takeProfitOrder: PDA.getTakeProfitOrder(accounts.position),
+                closePositionCleanup: {
+                    ...accounts,
                 },
+            },
             setup: ixes.setupIx,
             cleanup: ixes.cleanupIx,
         };
@@ -116,8 +85,7 @@ export async function createTakeProfitSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -125,8 +93,10 @@ export async function createTakeProfitSetupInstruction(
             accounts,
             takeProfitSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -135,8 +105,6 @@ export async function createTakeProfitSetupInstruction(
 export async function createTakeProfitCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -144,8 +112,6 @@ export async function createTakeProfitCleanupInstruction(
             accounts,
             takeProfitCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

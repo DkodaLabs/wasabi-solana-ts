@@ -9,15 +9,15 @@ import {
 } from '@solana/spl-token';
 import {
     BaseMethodConfig,
-    handleMethodCall,
     ConfigArgs,
-    constructMethodCallArgs
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs,
 } from '../base';
 import {
     DepositAccounts,
     DepositArgs,
     TokenInstructionAccounts,
-    TokenInstructionAccountsStrict,
     getTokenInstructionAccounts,
 } from './tokenAccounts';
 import { handleMint } from '../utils';
@@ -26,7 +26,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 const depositConfig: BaseMethodConfig<
     DepositArgs,
     DepositAccounts,
-    TokenInstructionAccounts | TokenInstructionAccountsStrict
+    TokenInstructionAccounts
 > = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const setup: TransactionInstruction[] = [];
@@ -45,37 +45,30 @@ const depositConfig: BaseMethodConfig<
 
         setup.push(...setupIx);
 
-        const allAccounts = await getTokenInstructionAccounts(
+        const accounts = await getTokenInstructionAccounts(
             config.program,
             mint,
             tokenProgram
         );
 
         const ownerShares = await config.program.provider.connection.getAccountInfo(
-            allAccounts.ownerSharesAccount
+            accounts.ownerSharesAccount
         );
 
         if (!ownerShares) {
             setup.push(
                 createAssociatedTokenAccountInstruction(
                     config.program.provider.publicKey,
-                    allAccounts.ownerSharesAccount,
+                    accounts.ownerSharesAccount,
                     config.program.provider.publicKey,
-                    allAccounts.sharesMint,
+                    accounts.sharesMint,
                     TOKEN_2022_PROGRAM_ID
                 )
             );
         }
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    owner: config.program.provider.publicKey,
-                    lpVault: allAccounts.lpVault,
-                    assetMint: mint,
-                    assetTokenProgram: tokenProgram,
-                },
+            accounts,
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup,
             cleanup: cleanupIx,
@@ -88,8 +81,7 @@ export async function createDepositInstruction(
     program: Program<WasabiSolana>,
     args: DepositArgs,
     accounts: DepositAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -97,8 +89,10 @@ export async function createDepositInstruction(
             accounts,
             depositConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -108,8 +102,7 @@ export async function deposit(
     program: Program<WasabiSolana>,
     args: DepositArgs,
     accounts: DepositAccounts,
-    strict: boolean = true,
-    increaseCompute = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -117,8 +110,10 @@ export async function deposit(
             accounts,
             depositConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionSignature>;

@@ -1,6 +1,12 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -9,18 +15,15 @@ export type CloseStopLossOrderAccounts = {
 };
 
 type CloseStopLossOrderInstructionAccounts = {
-    position: PublicKey;
-};
-
-type CloseStopLossOrderInstructionAccountsStrict = {
     trader: PublicKey;
+    position: PublicKey;
     stopLossOrder: PublicKey;
-} & CloseStopLossOrderInstructionAccounts;
+};
 
 const closeStopLossOrderConfig: BaseMethodConfig<
     void,
     CloseStopLossOrderAccounts,
-    CloseStopLossOrderInstructionAccounts | CloseStopLossOrderInstructionAccountsStrict
+    CloseStopLossOrderInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, CloseStopLossOrderAccounts>) => {
         let permission = PDA.getAdmin(config.program.provider.publicKey);
@@ -31,27 +34,14 @@ const closeStopLossOrderConfig: BaseMethodConfig<
             config.program.account.permission.fetch(permission).catch(() => null),
         ]);
 
-        if (!permissionAccount) {
-            permission = PDA.getSuperAdmin()
-        }
-
-        const allAccounts = {
-            closer: config.program.provider.publicKey,
-            trader,
-            permission,
-            position: config.accounts.position,
-            stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
-        };
-
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    closer: allAccounts.closer,
-                    permission,
-                    position: config.accounts.position
-
-                }
+            accounts: {
+                closer: config.program.provider.publicKey,
+                trader,
+                permission: permissionAccount ? PDA.getSuperAdmin() : permission,
+                position: config.accounts.position,
+                stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
+            },
         };
     },
     getMethod: (program) => () => program.methods.closeStopLossOrder()
@@ -60,8 +50,7 @@ const closeStopLossOrderConfig: BaseMethodConfig<
 export async function createCloseStopLossOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -69,8 +58,10 @@ export async function createCloseStopLossOrderInstruction(
             accounts,
             closeStopLossOrderConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'VAULT'
+            },
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -78,8 +69,7 @@ export async function createCloseStopLossOrderInstruction(
 export async function closeStopLossOrder(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -87,8 +77,10 @@ export async function closeStopLossOrder(
             accounts,
             closeStopLossOrderConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
         )
     ) as Promise<TransactionSignature>;
 }

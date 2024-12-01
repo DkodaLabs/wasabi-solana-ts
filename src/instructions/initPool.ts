@@ -9,29 +9,27 @@ export type InitPoolAccounts = {
     collateral: PublicKey;
     admin: PublicKey;
 };
+
 export type InitPoolInstructionAccounts = {
     payer: PublicKey;
+    authority: PublicKey;
     permission: PublicKey;
+    pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
     collateral: PublicKey;
     currency: PublicKey;
     collateralTokenProgram: PublicKey;
     currencyTokenProgram: PublicKey;
-};
-
-export type InitPoolInstructionAccountsStrict = {
-    authority: PublicKey;
-    pool: PublicKey;
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
     associatedTokenProgram: PublicKey;
     systemProgram: PublicKey;
-} & InitPoolInstructionAccounts;
+};
 
 export async function getInitPoolInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
     pool_type: 'long' | 'short'
-): Promise<InitPoolInstructionAccountsStrict> {
+): Promise<InitPoolInstructionAccounts> {
     const {
         currencyMint,
         collateralMint,

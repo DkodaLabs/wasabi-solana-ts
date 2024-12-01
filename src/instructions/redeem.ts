@@ -6,6 +6,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
+    Level,
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
@@ -13,7 +14,6 @@ import {
     RedeemArgs,
     RedeemAccounts,
     TokenInstructionAccounts,
-    TokenInstructionAccountsStrict,
     getTokenInstructionAccounts,
 } from './tokenAccounts';
 import { handleMint } from '../utils';
@@ -22,7 +22,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 export const redeemConfig: BaseMethodConfig<
     RedeemArgs,
     RedeemAccounts,
-    TokenInstructionAccounts | TokenInstructionAccountsStrict
+    TokenInstructionAccounts
 > = {
     process: async (config: ConfigArgs<RedeemArgs, RedeemAccounts>) => {
         const {
@@ -37,21 +37,12 @@ export const redeemConfig: BaseMethodConfig<
             'unwrap',
         );
 
-        const allAccounts = await getTokenInstructionAccounts(
-            config.program,
-            mint,
-            tokenProgram
-        );
-
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    owner: config.program.provider.publicKey,
-                    lpVault: allAccounts.lpVault,
-                    assetMint: mint,
-                    assetTokenProgram: tokenProgram
-                },
+            accounts: await getTokenInstructionAccounts(
+                config.program,
+                mint,
+                tokenProgram
+            ),
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
             cleanup: cleanupIx,
@@ -64,8 +55,7 @@ export async function createRedeemInstruction(
     program: Program<WasabiSolana>,
     args: RedeemArgs,
     accounts: RedeemAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -73,8 +63,10 @@ export async function createRedeemInstruction(
             accounts,
             redeemConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -84,8 +76,7 @@ export async function redeem(
     program: Program<WasabiSolana>,
     args: RedeemArgs,
     accounts: RedeemAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -93,8 +84,10 @@ export async function redeem(
             accounts,
             redeemConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'VAULT',
+            },
             args
         )
     ) as Promise<TransactionSignature>;

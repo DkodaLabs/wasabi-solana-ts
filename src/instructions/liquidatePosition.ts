@@ -1,14 +1,18 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionInstruction } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import {
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
     ClosePositionSetupInstructionAccounts,
-    ClosePositionSetupInstructionAccountsStrict,
     ClosePositionCleanupInstructionAccounts,
-    ClosePositionCleanupInstructionAccountsStrict,
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
     transformArgs
@@ -19,22 +23,14 @@ type LiquidatePositionSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts,
 };
 
-type LiquidatePositionSetupInstructionAccountsStrict = {
-    closePositionSetup: ClosePositionSetupInstructionAccountsStrict,
-};
-
 type LiquidatePositionCleanupInstructionAccounts = {
     closePositionCleanup: ClosePositionCleanupInstructionAccounts,
-}
-
-type LiquidatePositionCleanupInstructionAccountsStrict = {
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict,
 }
 
 const liquidatePositionSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
-    LiquidatePositionSetupInstructionAccounts | LiquidatePositionSetupInstructionAccountsStrict
+    LiquidatePositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
@@ -44,22 +40,11 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict
-                ? {
-                    closePositionSetup: {
-                        ...accounts
-                    }
+            accounts: {
+                closePositionSetup: {
+                    ...accounts
                 }
-                : {
-                    closePositionSetup: {
-                        owner: accounts.owner,
-                        position: accounts.position,
-                        pool: accounts.pool,
-                        collateral: accounts.collateral,
-                        permission: accounts.permission,
-                        tokenProgram: accounts.tokenProgram
-                    }
-                },
+            },
             args: transformArgs(config.args),
             setup: ixes.setupIx,
         };
@@ -76,7 +61,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
 const liquidatePositionCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    LiquidatePositionCleanupInstructionAccounts | LiquidatePositionCleanupInstructionAccountsStrict
+    LiquidatePositionCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
@@ -84,25 +69,11 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
             config.accounts,
         );
         return {
-            accounts: config.strict
-                ? {
-                    closePositionCleanup: {
-                        ...accounts
-                    }
+            accounts: {
+                closePositionCleanup: {
+                    ...accounts
                 }
-                : {
-                    closePositionCleanup: {
-                        owner: accounts.owner,
-                        authority: accounts.authority,
-                        collateral: accounts.collateral,
-                        currency: accounts.currency,
-                        position: accounts.position,
-                        feeWallet: accounts.feeWallet,
-                        liquidationWallet: accounts.liquidationWallet,
-                        collateralTokenProgram: accounts.collateralTokenProgram,
-                        currencyTokenProgram: accounts.currencyTokenProgram
-                    }
-                },
+            },
             setup: ixes.setupIx,
             cleanup: ixes.cleanupIx,
         };
@@ -114,8 +85,7 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -123,8 +93,10 @@ export async function createLiquidatePositionSetupInstruction(
             accounts,
             liquidatePositionSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -133,8 +105,6 @@ export async function createLiquidatePositionSetupInstruction(
 export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -142,8 +112,6 @@ export async function createLiquidatePositionCleanupInstruction(
             accounts,
             liquidatePositionCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

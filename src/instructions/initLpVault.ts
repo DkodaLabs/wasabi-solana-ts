@@ -23,25 +23,22 @@ export type InitLpVaultAccounts = {
 
 type InitLpVaultInstructionAccounts = {
     payer: PublicKey;
-    permission: PublicKey;
-    assetMint: PublicKey;
-    assetTokenProgram: PublicKey;
-};
-
-type InitLpVaultInstructionAccountsStrict = {
     authority: PublicKey;
+    permission: PublicKey;
     lpVault: PublicKey;
     vault: PublicKey;
+    assetMint: PublicKey;
     sharesMint: PublicKey;
+    assetTokenProgram: PublicKey;
     sharesTokenProgram: PublicKey;
     associatedTokenProgram: PublicKey;
     systemProgram: PublicKey;
-} & InitLpVaultInstructionAccounts;
+};
 
 export const initLpVaultConfig: BaseMethodConfig<
     InitLpVaultArgs,
     InitLpVaultAccounts,
-    InitLpVaultInstructionAccounts | InitLpVaultInstructionAccountsStrict
+    InitLpVaultInstructionAccounts
 > = {
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
         const { mint, tokenProgram } = await handleMint(
@@ -56,39 +53,30 @@ export const initLpVaultConfig: BaseMethodConfig<
             tokenProgram,
         );
 
-        const createVaultIx = createAssociatedTokenAccountIdempotentInstruction(
-            config.program.provider.publicKey,
-            vault,
-            lpVault,
-            mint,
-            tokenProgram
-        );
-
-        const allAccounts = {
-            payer: config.program.provider.publicKey,
-            authority: config.program.provider.publicKey,
-            permission: await getPermission(config.program, config.accounts.admin),
-            lpVault,
-            assetMint: config.accounts.assetMint,
-            vault,
-            sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
-            assetTokenProgram: tokenProgram,
-            sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId
-        };
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    payer: allAccounts.payer,
-                    permission: allAccounts.permission,
-                    assetMint: allAccounts.assetMint,
-                    assetTokenProgram: tokenProgram,
-                },
+            accounts: {
+                payer: config.program.provider.publicKey,
+                authority: config.program.provider.publicKey,
+                permission: await getPermission(config.program, config.accounts.admin),
+                lpVault,
+                assetMint: config.accounts.assetMint,
+                vault,
+                sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
+                assetTokenProgram: tokenProgram,
+                sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            },
             args: config.args,
-            setup: [createVaultIx],
+            setup: [
+                createAssociatedTokenAccountIdempotentInstruction(
+                    config.program.provider.publicKey,
+                    vault,
+                    lpVault,
+                    mint,
+                    tokenProgram
+                )],
         };
     },
     getMethod: (program) => (args) => program.methods.initLpVault(args)
@@ -98,8 +86,6 @@ export async function createInitLpVaultInstruction(
     program: Program<WasabiSolana>,
     args: InitLpVaultArgs,
     accounts: InitLpVaultAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -107,8 +93,7 @@ export async function createInitLpVaultInstruction(
             accounts,
             initLpVaultConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            null,
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -118,8 +103,6 @@ export async function initLpVault(
     program: Program<WasabiSolana>,
     args: InitLpVaultArgs,
     accounts: InitLpVaultAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -127,8 +110,7 @@ export async function initLpVault(
             accounts,
             initLpVaultConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute,
+            null,
             args
         )
     ) as Promise<TransactionInstruction[]>;

@@ -4,15 +4,19 @@ import {
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
     ClosePositionSetupInstructionAccounts,
-    ClosePositionSetupInstructionAccountsStrict,
     ClosePositionCleanupAccounts,
     ClosePositionCleanupInstructionAccounts,
-    ClosePositionCleanupInstructionAccountsStrict,
     getClosePositionSetupInstructionAccounts,
     getClosePositionCleanupInstructionAccounts,
     transformArgs
 } from './closePosition';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type CloseLongPositionSetupInstructionAccounts = {
@@ -20,25 +24,15 @@ type CloseLongPositionSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts;
 };
 
-type CloseLongPositionSetupInstructionAccountsStrict = {
-    owner: PublicKey;
-    closePositionSetup: ClosePositionSetupInstructionAccountsStrict;
-};
-
 type CloseLongPositionCleanupInstructionAccounts = {
     owner: PublicKey;
     closePositionCleanup: ClosePositionCleanupInstructionAccounts;
 };
 
-type CloseLongPositionCleanupInstructionAccountsStrict = {
-    owner: PublicKey;
-    closePositionCleanup: ClosePositionCleanupInstructionAccountsStrict;
-};
-
 const closeLongPositionSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
-    CloseLongPositionSetupInstructionAccounts | CloseLongPositionSetupInstructionAccountsStrict
+    CloseLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
@@ -48,25 +42,12 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts: config.strict
-                ? {
-                    owner: accounts.owner,
-                    closePositionSetup: {
-                        ...accounts
-                    }
+            accounts: {
+                owner: accounts.owner,
+                closePositionSetup: {
+                    ...accounts
                 }
-                : {
-                    owner: accounts.owner,
-                    closePositionSetup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        collateral: accounts.collateral,
-                        position: accounts.position,
-                        permission: accounts.permission,
-                        authority: accounts.authority,
-                        tokenProgram: accounts.tokenProgram
-                    }
-                },
+            },
             args: transformArgs(config.args),
             setup: ixes.setupIx,
         };
@@ -83,7 +64,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
 const closeLongPositionCleanupConfig: BaseMethodConfig<
     void,
     ClosePositionCleanupAccounts,
-    CloseLongPositionCleanupInstructionAccounts | CloseLongPositionCleanupInstructionAccountsStrict
+    CloseLongPositionCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
@@ -91,28 +72,12 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
             config.accounts,
         );
         return {
-            accounts: config.strict
-                ? {
-                    owner: accounts.owner,
-                    closePositionCleanup: {
-                        ...accounts
-                    }
+            accounts: {
+                owner: accounts.owner,
+                closePositionCleanup: {
+                    ...accounts
                 }
-                : {
-                    owner: accounts.owner,
-                    closePositionCleanup: {
-                        owner: accounts.owner,
-                        pool: accounts.pool,
-                        position: accounts.position,
-                        currency: accounts.currency,
-                        collateral: accounts.collateral,
-                        authority: accounts.authority,
-                        feeWallet: accounts.feeWallet,
-                        liquidationWallet: accounts.liquidationWallet,
-                        collateralTokenProgram: accounts.collateralTokenProgram,
-                        currencyTokenProgram: accounts.currencyTokenProgram
-                    }
-                },
+            },
             setup: ixes.setupIx,
             cleanup: ixes.cleanupIx,
         };
@@ -124,8 +89,7 @@ export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -133,8 +97,10 @@ export async function createCloseLongPositionSetupInstruction(
             accounts,
             closeLongPositionSetupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute,
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            },
             args
         )
     ) as Promise<TransactionInstruction[]>;
@@ -143,8 +109,6 @@ export async function createCloseLongPositionSetupInstruction(
 export async function createCloseLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -152,8 +116,6 @@ export async function createCloseLongPositionCleanupInstruction(
             accounts,
             closeLongPositionCleanupConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }

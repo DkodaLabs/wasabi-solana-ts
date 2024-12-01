@@ -1,7 +1,13 @@
 import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    Level,
+    handleMethodCall,
+    constructMethodCallArgs
+} from '../base';
 import {
     getTokenProgram,
     PDA,
@@ -116,7 +122,7 @@ export const claimPositionConfig: BaseMethodConfig<
             collateralTokenProgram
         );
 
-        const allAccounts = {
+        const accounts = {
             trader: config.program.provider.publicKey,
             traderCurrencyAccount,
             traderCollateralAccount,
@@ -135,17 +141,7 @@ export const claimPositionConfig: BaseMethodConfig<
         };
 
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                    position: allAccounts.position,
-                    pool: allAccounts.pool,
-                    collateral: allAccounts.collateral,
-                    currency: allAccounts.currency,
-                    feeWallet: allAccounts.feeWallet,
-                    collateralTokenProgram: allAccounts.collateralTokenProgram,
-                    currencyTokenProgram: allAccounts.currencyTokenProgram
-                }
+            accounts,
         };
     },
     getMethod: (program) => () => program.methods.claimPosition()
@@ -154,8 +150,7 @@ export const claimPositionConfig: BaseMethodConfig<
 export async function createClaimPositionInstruction(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -163,8 +158,10 @@ export async function createClaimPositionInstruction(
             accounts,
             claimPositionConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            }
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -172,8 +169,7 @@ export async function createClaimPositionInstruction(
 export async function claimPosition(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
+    feeLevel: Level = 'NORMAL',
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -181,8 +177,10 @@ export async function claimPosition(
             accounts,
             claimPositionConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute
+            {
+                level: feeLevel,
+                ixType: 'TRADE',
+            }
         )
     ) as Promise<TransactionSignature>;
 }

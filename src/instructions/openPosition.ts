@@ -50,34 +50,28 @@ export type OpenPositionCleanupInstructionAccounts = {
     owner: PublicKey;
     pool: PublicKey;
     position: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    openPositionRequest: PublicKey;
     tokenProgram: PublicKey;
 }
 
 export type OpenPositionSetupInstructionBaseAccounts = {
     owner: PublicKey;
+    ownerCurrencyAccount: PublicKey;
     lpVault: PublicKey;
+    vault: PublicKey;
     pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    position: PublicKey;
     collateral: PublicKey;
     currency: PublicKey;
     authority: PublicKey;
     permission: PublicKey;
     feeWallet: PublicKey;
-}
-
-export type OpenPositionSetupInstructionBaseStrictAccounts = {
-    ownerCurrencyAccount: PublicKey;
-    vault: PublicKey;
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    position: PublicKey;
     feeWalletAta: PublicKey;
     globalSettings: PublicKey;
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
-}
-
-export type OpenPositionCleanupInstructionBaseStrictAccounts = {
-    collateralVault: PublicKey;
-    currencyVault: PublicKey;
-    openPositionRequest: PublicKey;
 }

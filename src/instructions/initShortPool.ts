@@ -4,7 +4,6 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs
 import {
     InitPoolAccounts,
     InitPoolInstructionAccounts,
-    InitPoolInstructionAccountsStrict,
     getInitPoolInstructionAccounts
 } from './initPool';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -12,26 +11,15 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 const initShortPoolConfig: BaseMethodConfig<
     void,
     InitPoolAccounts,
-    InitPoolInstructionAccounts | InitPoolInstructionAccountsStrict
+    InitPoolInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, InitPoolAccounts>) => {
-        const allAccounts = await getInitPoolInstructionAccounts(
-            config.program,
-            config.accounts,
-            'short'
-        );
-
         return {
-            accounts: config.strict
-                ? allAccounts
-                : {
-                      payer: allAccounts.payer,
-                      permission: allAccounts.permission,
-                      collateral: allAccounts.collateral,
-                      currency: allAccounts.currency,
-                      collateralTokenProgram: allAccounts.collateralTokenProgram,
-                      currencyTokenProgram: allAccounts.currencyTokenProgram
-                  }
+            accounts: await getInitPoolInstructionAccounts(
+                config.program,
+                config.accounts,
+                'short'
+            ),
         };
     },
     getMethod: (program) => () => program.methods.initShortPool()
@@ -40,8 +28,6 @@ const initShortPoolConfig: BaseMethodConfig<
 export async function createInitShortPoolInstruction(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
-    strict: boolean = true,
-    increaseCompute = false
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -49,8 +35,6 @@ export async function createInitShortPoolInstruction(
             accounts,
             initShortPoolConfig,
             'INSTRUCTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionInstruction[]>;
 }
@@ -58,8 +42,6 @@ export async function createInitShortPoolInstruction(
 export async function initShortPool(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
-    strict: boolean = true,
-    increaseCompute: boolean = false
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -67,8 +49,6 @@ export async function initShortPool(
             accounts,
             initShortPoolConfig,
             'TRANSACTION',
-            strict,
-            increaseCompute
         )
     ) as Promise<TransactionSignature>;
 }

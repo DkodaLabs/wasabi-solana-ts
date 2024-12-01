@@ -17,21 +17,18 @@ type TokenAccounts = {
 
 export type TokenInstructionAccounts = {
     owner: PublicKey;
-    lpVault: PublicKey;
-    assetMint: PublicKey;
-    assetTokenProgram: PublicKey;
-};
-
-export type TokenInstructionAccountsStrict = {
     ownerAssetAccount: PublicKey;
     ownerSharesAccount: PublicKey;
+    lpVault: PublicKey;
     vault: PublicKey;
+    assetMint: PublicKey;
     sharesMint: PublicKey;
     globalSettings: PublicKey;
+    assetTokenProgram: PublicKey;
     sharesTokenProgram: PublicKey;
     eventAuthority: PublicKey;
     program: PublicKey;
-} & TokenInstructionAccounts;
+};
 
 export type DepositArgs = TokenArgs;
 export type WithdrawArgs = TokenArgs;
@@ -46,7 +43,7 @@ export async function getTokenInstructionAccounts(
     program: Program<WasabiSolana>,
     assetMint: PublicKey,
     assetTokenProgram: PublicKey
-): Promise<TokenInstructionAccountsStrict> {
+): Promise<TokenInstructionAccounts> {
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(assetMint, lpVault, true, assetTokenProgram);
     const sharesMint = PDA.getSharesMint(lpVault, assetMint);
