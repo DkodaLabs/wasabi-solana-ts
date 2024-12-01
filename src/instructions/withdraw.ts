@@ -1,8 +1,5 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import {
-    TransactionSignature,
-    TransactionInstruction
-} from '@solana/web3.js';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
@@ -14,7 +11,7 @@ import {
     WithdrawArgs,
     WithdrawAccounts,
     TokenInstructionAccounts,
-    getTokenInstructionAccounts,
+    getTokenInstructionAccounts
 } from './tokenAccounts';
 import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -25,27 +22,18 @@ export const withdrawConfig: BaseMethodConfig<
     TokenInstructionAccounts
 > = {
     process: async (config: ConfigArgs<WithdrawArgs, WithdrawAccounts>) => {
-        const {
-            mint,
-            tokenProgram,
-            setupIx,
-            cleanupIx,
-        } = await handleMint(
+        const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
             config.program.provider.publicKey,
-            'unwrap',
+            'unwrap'
         );
 
         return {
-            accounts: await getTokenInstructionAccounts(
-                config.program,
-                mint,
-                tokenProgram
-            ),
+            accounts: await getTokenInstructionAccounts(config.program, mint, tokenProgram),
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
-            cleanup: cleanupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) => program.methods.withdraw(args)
@@ -65,7 +53,7 @@ export async function createWithdrawInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )
@@ -86,7 +74,7 @@ export async function withdraw(
             'TRANSACTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )

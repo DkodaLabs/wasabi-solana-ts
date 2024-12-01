@@ -20,12 +20,12 @@ import {
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type LiquidatePositionSetupInstructionAccounts = {
-    closePositionSetup: ClosePositionSetupInstructionAccounts,
+    closePositionSetup: ClosePositionSetupInstructionAccounts;
 };
 
 type LiquidatePositionCleanupInstructionAccounts = {
-    closePositionCleanup: ClosePositionCleanupInstructionAccounts,
-}
+    closePositionCleanup: ClosePositionCleanupInstructionAccounts;
+};
 
 const liquidatePositionSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
@@ -36,7 +36,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'LIQUIDATION',
+            'LIQUIDATION'
         );
 
         return {
@@ -46,7 +46,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx,
+            setup: ixes.setupIx
         };
     },
     getMethod: (program) => (args) =>
@@ -66,7 +66,7 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts,
+            config.accounts
         );
         return {
             accounts: {
@@ -75,7 +75,7 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
                 }
             },
             setup: ixes.setupIx,
-            cleanup: ixes.cleanupIx,
+            cleanup: ixes.cleanupIx
         };
     },
     getMethod: (program) => () => program.methods.liquidatePositionCleanup()
@@ -85,7 +85,7 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -95,7 +95,7 @@ export async function createLiquidatePositionSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -104,14 +104,9 @@ export async function createLiquidatePositionSetupInstruction(
 
 export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts,
+    accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            liquidatePositionCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, liquidatePositionCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }

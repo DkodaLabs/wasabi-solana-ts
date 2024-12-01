@@ -1,8 +1,5 @@
 import { Program } from '@coral-xyz/anchor';
-import {
-    PublicKey,
-    TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
@@ -18,7 +15,7 @@ import {
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
     ClosePositionCleanupInstructionAccounts,
-    ExitOrderSetupInstructionAccounts,
+    ExitOrderSetupInstructionAccounts
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -26,7 +23,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 type TakeProfitCleanupInstructionAccounts = {
     takeProfitOrder: PublicKey;
     closePositionCleanup: ClosePositionCleanupInstructionAccounts;
-}
+};
 
 const takeProfitSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
@@ -45,15 +42,16 @@ const takeProfitSetupConfig: BaseMethodConfig<
                 closePositionSetup: accounts
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx,
+            setup: ixes.setupIx
         };
     },
-    getMethod: (program) => (args) => program.methods.takeProfitSetup(
-        args.minTargetAmount,
-        args.interest,
-        args.executionFee,
-        args.expiration,
-    )
+    getMethod: (program) => (args) =>
+        program.methods.takeProfitSetup(
+            args.minTargetAmount,
+            args.interest,
+            args.executionFee,
+            args.expiration
+        )
 };
 
 const takeProfitCleanupConfig: BaseMethodConfig<
@@ -64,18 +62,18 @@ const takeProfitCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts,
+            config.accounts
         );
 
         return {
             accounts: {
                 takeProfitOrder: PDA.getTakeProfitOrder(accounts.position),
                 closePositionCleanup: {
-                    ...accounts,
-                },
+                    ...accounts
+                }
             },
             setup: ixes.setupIx,
-            cleanup: ixes.cleanupIx,
+            cleanup: ixes.cleanupIx
         };
     },
     getMethod: (program) => () => program.methods.takeProfitCleanup()
@@ -85,7 +83,7 @@ export async function createTakeProfitSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -95,7 +93,7 @@ export async function createTakeProfitSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -104,14 +102,9 @@ export async function createTakeProfitSetupInstruction(
 
 export async function createTakeProfitCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts,
+    accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            takeProfitCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, takeProfitCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }

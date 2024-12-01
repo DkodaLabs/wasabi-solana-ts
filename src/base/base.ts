@@ -10,20 +10,20 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 const COMPUTE_VALUES = {
     LIMIT: {
         TOKEN: 200_000,
-        TRADE: 500_000,
+        TRADE: 500_000
     },
     PRICE: {
         NORMAL: 50_000,
         FAST: 100_000,
-        TURBO: 1_000_000,
-    },
+        TURBO: 1_000_000
+    }
 };
 
 export type IxAccountsStrictness = 'NO_STRICT' | 'PARTIAL' | 'STRICT';
 export type BuildMode = 'TRANSACTION' | 'INSTRUCTION';
 export type Level = 'NORMAL' | 'FAST' | 'TURBO';
 type FeeLevel = {
-    level: Level,
+    level: Level;
     ixType: 'VAULT' | 'TRADE';
 };
 
@@ -43,7 +43,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>;
-    mode: BuildMode,
+    mode: BuildMode;
 } & ConfigArgs<TArgs, TAccounts>;
 
 export type BaseMethodConfig<
@@ -70,21 +70,14 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
 
     builder.preInstructions([
         args.feeLevel ? getComputeIxes(args.feeLevel) : [],
-        ...(processed.setup || []),
+        ...(processed.setup || [])
     ]);
 
     return args.mode === 'INSTRUCTION'
-        ? builder
-            .instruction()
-            .then((ix: TransactionInstruction) => {
-                const ixes =
-                    [
-                        ...(processed.setup || []),
-                        ix,
-                        ...(processed.cleanup || [])
-                    ];
-                return ixes;
-            })
+        ? builder.instruction().then((ix: TransactionInstruction) => {
+              const ixes = [...(processed.setup || []), ix, ...(processed.cleanup || [])];
+              return ixes;
+          })
         : builder.rpc();
 }
 
@@ -113,6 +106,6 @@ function getComputeIxes(feeLevel: FeeLevel): TransactionInstruction[] {
         }),
         ComputeBudgetProgram.setComputeUnitPrice({
             microLamports: COMPUTE_VALUES.PRICE[feeLevel.ixType]
-        }),
+        })
     ];
 }

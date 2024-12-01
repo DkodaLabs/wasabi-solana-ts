@@ -10,7 +10,7 @@ import {
     PDA,
     handleMintsAndTokenProgram,
     handleMintsAndTokenProgramWithSetupAndCleanup,
-    getPermission,
+    getPermission
 } from '../utils';
 import {
     BaseMethodConfig,
@@ -24,7 +24,7 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
     OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -38,23 +38,21 @@ const openLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupAccounts,
     OpenLongPositionSetupInstructionAccounts
 > = {
-    process: async (
-        config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
-    ) => {
+    process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const {
             currencyMint,
             collateralMint,
             currencyTokenProgram,
             collateralTokenProgram,
             setupIx,
-            cleanupIx,
+            cleanupIx
         } = await handleMintsAndTokenProgramWithSetupAndCleanup(
             config.program.provider.connection,
             config.accounts.owner,
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            config.args.downPayment,
+            config.args.downPayment
         );
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getLongPool(collateralMint, currencyMint);
@@ -97,12 +95,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: PDA.getPosition(
-                    config.accounts.owner,
-                    pool,
-                    lpVault,
-                    config.args.nonce
-                ),
+                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,
@@ -127,7 +120,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 expiration: new BN(config.args.expiration)
             },
             setup: setupIx,
-            cleanup: cleanupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) =>
@@ -147,16 +140,12 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
     OpenPositionCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const {
-            currencyMint,
-            collateralMint,
-            currencyTokenProgram,
-            collateralTokenProgram,
-        } = await handleMintsAndTokenProgram(
-            config.program.provider.connection,
-            config.accounts.currency,
-            config.accounts.collateral,
-        );
+        const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
+            await handleMintsAndTokenProgram(
+                config.program.provider.connection,
+                config.accounts.currency,
+                config.accounts.collateral
+            );
 
         return {
             accounts: {
@@ -177,9 +166,8 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 position: config.accounts.position,
                 tokenProgram: currencyTokenProgram
-            },
+            }
         };
-
     },
     getMethod: (program) => () => program.methods.openLongPositionCleanup()
 };
@@ -198,7 +186,7 @@ export async function createOpenLongPositionSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -207,14 +195,9 @@ export async function createOpenLongPositionSetupInstruction(
 
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts,
+    accounts: OpenPositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            openLongPositionCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, openLongPositionCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }

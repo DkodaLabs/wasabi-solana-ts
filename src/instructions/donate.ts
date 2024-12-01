@@ -37,12 +37,7 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const {
-            mint,
-            tokenProgram,
-            setupIx,
-            cleanupIx,
-        } = await handleMint(
+        const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.currency,
             config.program.provider.publicKey,
@@ -62,19 +57,14 @@ const donateConfig: BaseMethodConfig<
                     tokenProgram
                 ),
                 lpVault,
-                vault: getAssociatedTokenAddressSync(
-                    mint,
-                    lpVault,
-                    true,
-                    tokenProgram
-                ),
+                vault: getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram),
                 currency: config.accounts.currency,
                 globalSettings: PDA.getGlobalSettings(),
                 tokenProgram
             },
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
-            cleanup: cleanupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) => program.methods.donate(args)
@@ -84,7 +74,7 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -94,7 +84,7 @@ export async function createDonateInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )
@@ -105,7 +95,7 @@ export async function donate(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -115,7 +105,7 @@ export async function donate(
             'TRANSACTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )

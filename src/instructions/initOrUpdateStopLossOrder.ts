@@ -5,12 +5,12 @@ import {
     PublicKey,
     SystemProgram
 } from '@solana/web3.js';
-import { 
-    BaseMethodConfig, 
-    ConfigArgs, 
+import {
+    BaseMethodConfig,
+    ConfigArgs,
     Level,
-    handleMethodCall, 
-    constructMethodCallArgs 
+    handleMethodCall,
+    constructMethodCallArgs
 } from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -61,7 +61,7 @@ export function createInitOrUpdateStopLossInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdateStopLossArgs,
     accounts: InitOrUpdateStopLossAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -71,7 +71,7 @@ export function createInitOrUpdateStopLossInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )
@@ -82,7 +82,7 @@ export function initOrUpdateStopLoss(
     program: Program<WasabiSolana>,
     args: InitOrUpdateStopLossArgs,
     accounts: InitOrUpdateStopLossAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -92,7 +92,7 @@ export function initOrUpdateStopLoss(
             'TRANSACTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )

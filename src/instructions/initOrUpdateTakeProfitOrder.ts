@@ -36,7 +36,9 @@ const initOrUpdateTakeProfitConfig: BaseMethodConfig<
     InitOrUpdateTakeProfitAccounts,
     InitOrUpdateTakeProfitInstructionAccounts
 > = {
-    process: async (config: ConfigArgs<InitOrUpdateTakeProfitArgs, InitOrUpdateTakeProfitAccounts>) => {
+    process: async (
+        config: ConfigArgs<InitOrUpdateTakeProfitArgs, InitOrUpdateTakeProfitAccounts>
+    ) => {
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
@@ -72,7 +74,7 @@ export function createInitOrUpdateTakeProfitInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )
@@ -83,7 +85,7 @@ export function initOrUpdateTakeProfit(
     program: Program<WasabiSolana>,
     args: InitOrUpdateTakeProfitArgs,
     accounts: InitOrUpdateTakeProfitAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -93,7 +95,7 @@ export function initOrUpdateTakeProfit(
             'TRANSACTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )

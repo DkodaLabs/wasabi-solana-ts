@@ -31,7 +31,7 @@ const closeStopLossOrderConfig: BaseMethodConfig<
             config.program.account.position
                 .fetch(config.accounts.position)
                 .then((pos) => pos.trader),
-            config.program.account.permission.fetch(permission).catch(() => null),
+            config.program.account.permission.fetch(permission).catch(() => null)
         ]);
 
         return {
@@ -41,7 +41,7 @@ const closeStopLossOrderConfig: BaseMethodConfig<
                 permission: permissionAccount ? PDA.getSuperAdmin() : permission,
                 position: config.accounts.position,
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
-            },
+            }
         };
     },
     getMethod: (program) => () => program.methods.closeStopLossOrder()
@@ -50,37 +50,25 @@ const closeStopLossOrderConfig: BaseMethodConfig<
 export async function createCloseStopLossOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeStopLossOrderConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-        )
+        constructMethodCallArgs(program, accounts, closeStopLossOrderConfig, 'INSTRUCTION', {
+            level: feeLevel,
+            ixType: 'VAULT'
+        })
     ) as Promise<TransactionInstruction[]>;
 }
 
 export async function closeStopLossOrder(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeStopLossOrderConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT',
-            },
-        )
+        constructMethodCallArgs(program, accounts, closeStopLossOrderConfig, 'TRANSACTION', {
+            level: feeLevel,
+            ixType: 'VAULT'
+        })
     ) as Promise<TransactionSignature>;
 }

@@ -1,55 +1,36 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import {
-    TransactionSignature,
-    TransactionInstruction
-} from '@solana/web3.js';
-import {
-    TOKEN_2022_PROGRAM_ID,
-    createAssociatedTokenAccountInstruction
-} from '@solana/spl-token';
+import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
     Level,
     handleMethodCall,
-    constructMethodCallArgs,
+    constructMethodCallArgs
 } from '../base';
 import {
     DepositAccounts,
     DepositArgs,
     TokenInstructionAccounts,
-    getTokenInstructionAccounts,
+    getTokenInstructionAccounts
 } from './tokenAccounts';
 import { handleMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-const depositConfig: BaseMethodConfig<
-    DepositArgs,
-    DepositAccounts,
-    TokenInstructionAccounts
-> = {
+const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstructionAccounts> = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const setup: TransactionInstruction[] = [];
-        const {
-            mint,
-            tokenProgram,
-            setupIx,
-            cleanupIx,
-        } = await handleMint(
+        const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
             config.program.provider.publicKey,
             'wrap',
-            config.args.amount,
+            config.args.amount
         );
 
         setup.push(...setupIx);
 
-        const accounts = await getTokenInstructionAccounts(
-            config.program,
-            mint,
-            tokenProgram
-        );
+        const accounts = await getTokenInstructionAccounts(config.program, mint, tokenProgram);
 
         const ownerShares = await config.program.provider.connection.getAccountInfo(
             accounts.ownerSharesAccount
@@ -71,7 +52,7 @@ const depositConfig: BaseMethodConfig<
             accounts,
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup,
-            cleanup: cleanupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) => program.methods.deposit(args)
@@ -91,7 +72,7 @@ export async function createDepositInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )
@@ -102,7 +83,7 @@ export async function deposit(
     program: Program<WasabiSolana>,
     args: DepositArgs,
     accounts: DepositAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -112,7 +93,7 @@ export async function deposit(
             'TRANSACTION',
             {
                 level: feeLevel,
-                ixType: 'VAULT',
+                ixType: 'VAULT'
             },
             args
         )

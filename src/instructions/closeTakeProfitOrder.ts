@@ -34,7 +34,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             config.program.account.position
                 .fetch(config.accounts.position)
                 .then((pos) => pos.trader),
-            config.program.account.permission.fetch(permission).catch(() => null),
+            config.program.account.permission.fetch(permission).catch(() => null)
         ]);
 
         if (!permissionAccount) {
@@ -58,37 +58,25 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
 export async function createCloseTakeProfitOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseTakeProfitOrderAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeTakeProfitOrderConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT',
-            }
-        )
+        constructMethodCallArgs(program, accounts, closeTakeProfitOrderConfig, 'INSTRUCTION', {
+            level: feeLevel,
+            ixType: 'VAULT'
+        })
     ) as Promise<TransactionInstruction[]>;
 }
 
 export async function closeTakeProfitOrder(
     program: Program<WasabiSolana>,
     accounts: CloseTakeProfitOrderAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeTakeProfitOrderConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT',
-            }
-        )
+        constructMethodCallArgs(program, accounts, closeTakeProfitOrderConfig, 'TRANSACTION', {
+            level: feeLevel,
+            ixType: 'VAULT'
+        })
     ) as Promise<TransactionSignature>;
 }

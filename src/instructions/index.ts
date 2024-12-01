@@ -12,7 +12,7 @@ export * from './initLpVault.js';
 export * from './initShortPool.js';
 export * from './initOrUpdateStopLossOrder.js';
 export * from './initOrUpdateTakeProfitOrder.js';
-export * from './liquidatePosition.js'
+export * from './liquidatePosition.js';
 export * from './openPosition.js';
 export * from './openLongPosition.js';
 export * from './openShortPosition.js';

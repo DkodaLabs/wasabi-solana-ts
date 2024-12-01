@@ -8,18 +8,10 @@ import {
 } from './initPool';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
-const initShortPoolConfig: BaseMethodConfig<
-    void,
-    InitPoolAccounts,
-    InitPoolInstructionAccounts
-> = {
+const initShortPoolConfig: BaseMethodConfig<void, InitPoolAccounts, InitPoolInstructionAccounts> = {
     process: async (config: ConfigArgs<void, InitPoolAccounts>) => {
         return {
-            accounts: await getInitPoolInstructionAccounts(
-                config.program,
-                config.accounts,
-                'short'
-            ),
+            accounts: await getInitPoolInstructionAccounts(config.program, config.accounts, 'short')
         };
     },
     getMethod: (program) => () => program.methods.initShortPool()
@@ -27,28 +19,18 @@ const initShortPoolConfig: BaseMethodConfig<
 
 export async function createInitShortPoolInstruction(
     program: Program<WasabiSolana>,
-    accounts: InitPoolAccounts,
+    accounts: InitPoolAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initShortPoolConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, initShortPoolConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }
 
 export async function initShortPool(
     program: Program<WasabiSolana>,
-    accounts: InitPoolAccounts,
+    accounts: InitPoolAccounts
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initShortPoolConfig,
-            'TRANSACTION',
-        )
+        constructMethodCallArgs(program, accounts, initShortPoolConfig, 'TRANSACTION')
     ) as Promise<TransactionSignature>;
 }

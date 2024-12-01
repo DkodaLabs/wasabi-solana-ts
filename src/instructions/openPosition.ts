@@ -2,9 +2,9 @@ import { PublicKey } from '@solana/web3.js';
 
 // `owner` == `userPubkey` passed in via request
 export type OpenPositionParams = {
-    currency: PublicKey,
-    collateral: PublicKey,
-    feeWallet: PublicKey,
+    currency: PublicKey;
+    collateral: PublicKey;
+    feeWallet: PublicKey;
 } & OpenPositionSetupArgs;
 
 export type OpenPositionSetupArgs = {
@@ -22,7 +22,7 @@ export type OpenPositionSetupArgs = {
     fee: number; // u64
     /// The timestamp when this position request expires as a unixtimestamp
     expiration: number; // i64
-}
+};
 
 export type OpenPositionSetupAccounts = {
     /// Needs to be passed in as we construct the instruction for the user
@@ -36,7 +36,7 @@ export type OpenPositionSetupAccounts = {
     /// BASE
     collateral: PublicKey;
     feeWallet: PublicKey; // required
-}
+};
 
 export type OpenPositionCleanupAccounts = {
     owner: PublicKey; // required
@@ -44,7 +44,7 @@ export type OpenPositionCleanupAccounts = {
     collateral: PublicKey; // required
     pool: PublicKey; // derived
     position: PublicKey; // derived
-}
+};
 
 export type OpenPositionCleanupInstructionAccounts = {
     owner: PublicKey;
@@ -54,7 +54,7 @@ export type OpenPositionCleanupInstructionAccounts = {
     currencyVault: PublicKey;
     openPositionRequest: PublicKey;
     tokenProgram: PublicKey;
-}
+};
 
 export type OpenPositionSetupInstructionBaseAccounts = {
     owner: PublicKey;
@@ -74,4 +74,4 @@ export type OpenPositionSetupInstructionBaseAccounts = {
     globalSettings: PublicKey;
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
-}
+};

@@ -30,16 +30,12 @@ export async function getInitPoolInstructionAccounts(
     accounts: InitPoolAccounts,
     pool_type: 'long' | 'short'
 ): Promise<InitPoolInstructionAccounts> {
-    const {
-        currencyMint,
-        collateralMint,
-        currencyTokenProgram,
-        collateralTokenProgram,
-    } = await handleMintsAndTokenProgram(
-        program.provider.connection,
-        accounts.currency,
-        accounts.collateral
-    );
+    const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
+        await handleMintsAndTokenProgram(
+            program.provider.connection,
+            accounts.currency,
+            accounts.collateral
+        );
 
     const pool =
         pool_type === 'long'

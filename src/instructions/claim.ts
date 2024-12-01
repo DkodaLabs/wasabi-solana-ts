@@ -8,12 +8,7 @@ import {
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
-import {
-    getTokenProgram,
-    PDA,
-    isSOL,
-    handleSOL,
-} from '../utils';
+import { getTokenProgram, PDA, isSOL, handleSOL } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type ClaimPositionAccounts = {
@@ -25,30 +20,27 @@ export type ClaimPositionAccounts = {
 };
 
 type ClaimPositionInstructionAccounts = {
+    trader: PublicKey;
+    traderCurrencyAccount: PublicKey;
+    traderCollateralAccount: PublicKey;
     position: PublicKey;
     pool: PublicKey;
+    collateralVault: PublicKey;
+    lpVault: PublicKey;
+    vault: PublicKey;
     collateral: PublicKey;
     currency: PublicKey;
     feeWallet: PublicKey;
+    debtController: PublicKey;
+    globalSettings: PublicKey;
     collateralTokenProgram: PublicKey;
     currencyTokenProgram: PublicKey;
 };
 
-type ClaimPositionInstructionAccountsStrict = {
-    trader: PublicKey;
-    traderCurrencyAccount: PublicKey;
-    traderCollateralAccount: PublicKey;
-    collateralVault: PublicKey;
-    lpVault: PublicKey;
-    vault: PublicKey;
-    debtController: PublicKey;
-    globalSettings: PublicKey;
-} & ClaimPositionInstructionAccounts;
-
 export const claimPositionConfig: BaseMethodConfig<
     void,
     ClaimPositionAccounts,
-    ClaimPositionInstructionAccounts | ClaimPositionInstructionAccountsStrict
+    ClaimPositionInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, ClaimPositionAccounts>) => {
         const setup: TransactionInstruction[] = [];
@@ -141,7 +133,7 @@ export const claimPositionConfig: BaseMethodConfig<
         };
 
         return {
-            accounts,
+            accounts
         };
     },
     getMethod: (program) => () => program.methods.claimPosition()
@@ -150,37 +142,25 @@ export const claimPositionConfig: BaseMethodConfig<
 export async function createClaimPositionInstruction(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            claimPositionConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE',
-            }
-        )
+        constructMethodCallArgs(program, accounts, claimPositionConfig, 'INSTRUCTION', {
+            level: feeLevel,
+            ixType: 'TRADE'
+        })
     ) as Promise<TransactionInstruction[]>;
 }
 
 export async function claimPosition(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionSignature> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            claimPositionConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE',
-            }
-        )
+        constructMethodCallArgs(program, accounts, claimPositionConfig, 'TRANSACTION', {
+            level: feeLevel,
+            ixType: 'TRADE'
+        })
     ) as Promise<TransactionSignature>;
 }

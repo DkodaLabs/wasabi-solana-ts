@@ -38,7 +38,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'MARKET',
+            'MARKET'
         );
 
         return {
@@ -49,7 +49,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx,
+            setup: ixes.setupIx
         };
     },
     getMethod: (program) => (args) =>
@@ -69,7 +69,7 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts,
+            config.accounts
         );
         return {
             accounts: {
@@ -79,7 +79,7 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
                 }
             },
             setup: ixes.setupIx,
-            cleanup: ixes.cleanupIx,
+            cleanup: ixes.cleanupIx
         };
     },
     getMethod: (program) => () => program.methods.closeLongPositionCleanup()
@@ -89,7 +89,7 @@ export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -99,7 +99,7 @@ export async function createCloseLongPositionSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -108,14 +108,9 @@ export async function createCloseLongPositionSetupInstruction(
 
 export async function createCloseLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts,
+    accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeLongPositionCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, closeLongPositionCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }

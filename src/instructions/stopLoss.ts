@@ -1,8 +1,5 @@
 import { Program } from '@coral-xyz/anchor';
-import {
-    PublicKey,
-    TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
@@ -18,7 +15,7 @@ import {
     ClosePositionSetupAccounts,
     ClosePositionCleanupAccounts,
     ClosePositionCleanupInstructionAccounts,
-    ExitOrderSetupInstructionAccounts,
+    ExitOrderSetupInstructionAccounts
 } from './closePosition';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -26,7 +23,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 type StopLossCleanupInstructionAccounts = {
     stopLossOrder: PublicKey;
     closePositionCleanup: ClosePositionCleanupInstructionAccounts;
-}
+};
 
 const stopLossSetupConfig: BaseMethodConfig<
     ClosePositionSetupArgs,
@@ -37,7 +34,7 @@ const stopLossSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'STOP_LOSS',
+            'STOP_LOSS'
         );
 
         return {
@@ -45,15 +42,16 @@ const stopLossSetupConfig: BaseMethodConfig<
                 closePositionSetup: accounts
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx,
+            setup: ixes.setupIx
         };
     },
-    getMethod: (program) => (args) => program.methods.stopLossSetup(
-        args.minTargetAmount,
-        args.interest,
-        args.executionFee,
-        args.expiration,
-    )
+    getMethod: (program) => (args) =>
+        program.methods.stopLossSetup(
+            args.minTargetAmount,
+            args.interest,
+            args.executionFee,
+            args.expiration
+        )
 };
 
 const stopLossCleanupConfig: BaseMethodConfig<
@@ -64,7 +62,7 @@ const stopLossCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts,
+            config.accounts
         );
 
         const stopLossPubkey = PDA.getStopLossOrder(accounts.position);
@@ -74,7 +72,7 @@ const stopLossCleanupConfig: BaseMethodConfig<
                 closePositionCleanup: accounts
             },
             setup: ixes.setupIx,
-            cleanup: ixes.cleanupIx,
+            cleanup: ixes.cleanupIx
         };
     },
     getMethod: (program) => () => program.methods.stopLossCleanup()
@@ -84,7 +82,7 @@ export async function createStopLossSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL',
+    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
         constructMethodCallArgs(
@@ -94,7 +92,7 @@ export async function createStopLossSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -103,15 +101,9 @@ export async function createStopLossSetupInstruction(
 
 export async function createStopLossCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts,
+    accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            stopLossCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, stopLossCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }
-

@@ -4,7 +4,7 @@ import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
     getAssociatedTokenAddressSync,
-    createAssociatedTokenAccountIdempotentInstruction,
+    createAssociatedTokenAccountIdempotentInstruction
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -46,13 +46,7 @@ export const initLpVaultConfig: BaseMethodConfig<
             config.accounts.assetMint
         );
         const lpVault = PDA.getLpVault(mint);
-        const vault = getAssociatedTokenAddressSync(
-            mint,
-            lpVault,
-            true,
-            tokenProgram,
-        );
-
+        const vault = getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram);
 
         return {
             accounts: {
@@ -76,7 +70,8 @@ export const initLpVaultConfig: BaseMethodConfig<
                     lpVault,
                     mint,
                     tokenProgram
-                )],
+                )
+            ]
         };
     },
     getMethod: (program) => (args) => program.methods.initLpVault(args)
@@ -85,33 +80,19 @@ export const initLpVaultConfig: BaseMethodConfig<
 export async function createInitLpVaultInstruction(
     program: Program<WasabiSolana>,
     args: InitLpVaultArgs,
-    accounts: InitLpVaultAccounts,
+    accounts: InitLpVaultAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initLpVaultConfig,
-            'INSTRUCTION',
-            null,
-            args
-        )
+        constructMethodCallArgs(program, accounts, initLpVaultConfig, 'INSTRUCTION', null, args)
     ) as Promise<TransactionInstruction[]>;
 }
 
 export async function initLpVault(
     program: Program<WasabiSolana>,
     args: InitLpVaultArgs,
-    accounts: InitLpVaultAccounts,
+    accounts: InitLpVaultAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initLpVaultConfig,
-            'TRANSACTION',
-            null,
-            args
-        )
+        constructMethodCallArgs(program, accounts, initLpVaultConfig, 'TRANSACTION', null, args)
     ) as Promise<TransactionInstruction[]>;
 }

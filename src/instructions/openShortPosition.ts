@@ -18,14 +18,9 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
     OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
-import {
-    PDA,
-    getPermission,
-    handleMint,
-    handleMintsAndTokenProgram,
-} from '../utils';
+import { PDA, getPermission, handleMint, handleMintsAndTokenProgram } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type OpenShortPositionSetupInstructionAccounts = {
@@ -43,17 +38,10 @@ const openShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupAccounts,
     OpenShortPositionSetupInstructionAccounts
 > = {
-    process: async (
-        config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>
-    ) => {
+    process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const [
             { mint: currencyMint, tokenProgram: currencyTokenProgram },
-            {
-                mint: collateralMint,
-                tokenProgram: collateralTokenProgram,
-                setupIx,
-                cleanupIx
-            }
+            { mint: collateralMint, tokenProgram: collateralTokenProgram, setupIx, cleanupIx }
         ] = await Promise.all([
             handleMint(config.program.provider.connection, config.accounts.currency),
             handleMint(
@@ -61,12 +49,11 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 config.accounts.collateral,
                 config.program.provider.publicKey,
                 'wrap',
-                config.args.downPayment,
+                config.args.downPayment
             )
         ]);
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
-
 
         return {
             accounts: {
@@ -75,7 +62,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                     currencyMint,
                     config.accounts.owner,
                     false,
-                    currencyTokenProgram,
+                    currencyTokenProgram
                 ),
                 ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
                     collateralMint,
@@ -88,7 +75,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                     currencyMint,
                     lpVault,
                     true,
-                    currencyTokenProgram,
+                    currencyTokenProgram
                 ),
                 pool,
                 collateralVault: getAssociatedTokenAddressSync(
@@ -120,7 +107,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 currencyTokenProgram,
                 collateralTokenProgram,
                 systemProgram: SystemProgram.programId,
-                sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
+                sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
                 nonce: config.args.nonce,
@@ -131,7 +118,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 expiration: new BN(config.args.expiration)
             },
             setup: setupIx,
-            cleanup: cleanupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) =>
@@ -151,16 +138,12 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
     OpenShortPositionCleanupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const {
-            currencyMint,
-            collateralMint,
-            currencyTokenProgram,
-            collateralTokenProgram,
-        } = await handleMintsAndTokenProgram(
-            config.program.provider.connection,
-            config.accounts.currency,
-            config.accounts.collateral,
-        );
+        const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
+            await handleMintsAndTokenProgram(
+                config.program.provider.connection,
+                config.accounts.currency,
+                config.accounts.collateral
+            );
         const lpVault = PDA.getLpVault(config.accounts.currency);
 
         return {
@@ -185,14 +168,14 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
                     currencyMint,
                     lpVault,
                     true,
-                    currencyTokenProgram,
+                    currencyTokenProgram
                 ),
                 collateral: collateralMint,
                 currency: currencyMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 debtController: PDA.getDebtController(),
                 tokenProgram: currencyTokenProgram
-            },
+            }
         };
     },
     getMethod: (program) => () => program.methods.openShortPositionCleanup()
@@ -212,7 +195,7 @@ export async function createOpenShortPositionSetupInstruction(
             'INSTRUCTION',
             {
                 level: feeLevel,
-                ixType: 'TRADE',
+                ixType: 'TRADE'
             },
             args
         )
@@ -221,14 +204,9 @@ export async function createOpenShortPositionSetupInstruction(
 
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts,
+    accounts: OpenPositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            openShortPositionCleanupConfig,
-            'INSTRUCTION',
-        )
+        constructMethodCallArgs(program, accounts, openShortPositionCleanupConfig, 'INSTRUCTION')
     ) as Promise<TransactionInstruction[]>;
 }

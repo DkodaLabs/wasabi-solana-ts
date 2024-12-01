@@ -7,7 +7,7 @@ import {
     VersionedTransaction,
     TransactionInstruction,
     TransactionSignature,
-    LAMPORTS_PER_SOL,
+    LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -22,11 +22,11 @@ import {
     getAssociatedTokenAddressSync,
     createSyncNativeInstruction,
     createCloseAccountInstruction,
-    createAssociatedTokenAccountIdempotentInstruction,
+    createAssociatedTokenAccountIdempotentInstruction
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 
-export const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111111");
+export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 
 export const WASABI_PROGRAM_ID = new PublicKey('spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c');
 
@@ -213,7 +213,7 @@ export const PDA = {
             [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
             WASABI_PROGRAM_ID
         );
-    },
+    }
 };
 
 type TokenData = {
@@ -488,7 +488,7 @@ export async function createAtaIfNeeded(
     mint: PublicKey,
     ata: PublicKey,
     tokenProgram: PublicKey,
-    payer?: PublicKey,
+    payer?: PublicKey
 ): Promise<TransactionInstruction | null> {
     if (isNativeMint(mint)) return null;
 
@@ -510,8 +510,8 @@ export async function createWrapSolInstruction(
     amount: number | bigint,
     useToken2022: boolean = false
 ): Promise<{
-    setupIx: TransactionInstruction[],
-    cleanupIx: TransactionInstruction[],
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
 }> {
     const setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
@@ -539,13 +539,7 @@ export async function createWrapSolInstruction(
             )
         );
         cleanupIx.push(
-            createCloseAccountInstruction(
-                ownerWrappedSolAta,
-                owner,
-                owner,
-                [],
-                tokenProgram
-            )
+            createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
         );
     }
 
@@ -553,13 +547,11 @@ export async function createWrapSolInstruction(
         SystemProgram.transfer({
             fromPubkey: owner,
             toPubkey: ownerWrappedSolAta,
-            lamports: amount,
+            lamports: amount
         })
     );
 
-    setupIx.push(
-        createSyncNativeInstruction(ownerWrappedSolAta, tokenProgram)
-    );
+    setupIx.push(createSyncNativeInstruction(ownerWrappedSolAta, tokenProgram));
 
     return { setupIx, cleanupIx };
 }
@@ -567,10 +559,10 @@ export async function createWrapSolInstruction(
 export async function createUnwrapSolInstruction(
     connection: Connection,
     owner: PublicKey,
-    useToken2022: boolean = false,
+    useToken2022: boolean = false
 ): Promise<{
-    setupIx: TransactionInstruction[],
-    cleanupIx: TransactionInstruction[]
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
 }> {
     const setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
@@ -582,7 +574,7 @@ export async function createUnwrapSolInstruction(
         nativeMint,
         owner,
         false,
-        tokenProgram,
+        tokenProgram
     );
 
     const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
@@ -594,31 +586,25 @@ export async function createUnwrapSolInstruction(
                 ownerWrappedSolAta,
                 owner,
                 nativeMint,
-                tokenProgram,
+                tokenProgram
             )
         );
     }
 
     cleanupIx.push(
-        createCloseAccountInstruction(
-            ownerWrappedSolAta,
-            owner,
-            owner,
-            [],
-            tokenProgram
-        )
+        createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
     );
     return { setupIx, cleanupIx };
 }
 
 export function handleSOL(useToken2022: boolean = false): {
-    tokenProgram: PublicKey,
-    nativeMint: PublicKey
+    tokenProgram: PublicKey;
+    nativeMint: PublicKey;
 } {
     return {
         tokenProgram: useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
         nativeMint: useToken2022 ? NATIVE_MINT_2022 : NATIVE_MINT
-    }
+    };
 }
 
 type MintResult = {
@@ -626,21 +612,21 @@ type MintResult = {
     tokenProgram: PublicKey;
     setupIx?: TransactionInstruction[];
     cleanupIx?: TransactionInstruction[];
-}
+};
 
 type TokenProgramsResult = {
     currencyMint: PublicKey;
     collateralMint: PublicKey;
     currencyTokenProgram: PublicKey;
     collateralTokenProgram: PublicKey;
-}
+};
 
 type TokenProgramsWithSetupResult = TokenProgramsResult & {
     setupIx: TransactionInstruction[];
     cleanupIx: TransactionInstruction[];
-}
+};
 
-type WrapMode = "wrap" | "unwrap" | undefined;
+type WrapMode = 'wrap' | 'unwrap' | undefined;
 
 export async function handleMint(
     connection: Connection,
@@ -654,9 +640,10 @@ export async function handleMint(
         const { tokenProgram, nativeMint } = handleSOL();
 
         if (owner && wrapMode) {
-            instructions = wrapMode === "wrap"
-                ? await createWrapSolInstruction(connection, owner, amount!)
-                : await createUnwrapSolInstruction(connection, owner);
+            instructions =
+                wrapMode === 'wrap'
+                    ? await createWrapSolInstruction(connection, owner, amount!)
+                    : await createUnwrapSolInstruction(connection, owner);
         }
 
         return {
@@ -676,7 +663,7 @@ export async function handleMint(
 export async function handleMintsAndTokenProgram(
     connection: Connection,
     currency: PublicKey,
-    collateral: PublicKey,
+    collateral: PublicKey
 ): Promise<TokenProgramsResult> {
     if (currency.equals(collateral)) {
         throw new Error('Mints cannot be the same');
@@ -691,7 +678,7 @@ export async function handleMintsAndTokenProgram(
         currencyMint: currencyResult.mint,
         collateralMint: collateralResult.mint,
         currencyTokenProgram: currencyResult.tokenProgram,
-        collateralTokenProgram: collateralResult.tokenProgram,
+        collateralTokenProgram: collateralResult.tokenProgram
     };
 }
 
