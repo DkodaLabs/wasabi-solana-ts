@@ -9,8 +9,7 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PDA,
     handleMintsAndTokenProgram,
-    handleMintsAndTokenProgramWithSetupAndCleanup,
-    getPermission
+    getPermission, handlePaymentTokenMint
 } from '../utils';
 import {
     BaseMethodConfig,
@@ -39,6 +38,15 @@ const openLongPositionSetupConfig: BaseMethodConfig<
     OpenLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
+        const result = await handlePaymentTokenMint(
+            config.program.provider.connection,
+            config.accounts.owner,
+            config.accounts.currency, // payment token mint
+            config.accounts.currency,
+            config.accounts.collateral,
+            'wrap',
+          Number(config.args.downPayment) + Number(config.args.fee)
+        );
         const {
             currencyMint,
             collateralMint,
@@ -46,14 +54,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             collateralTokenProgram,
             setupIx,
             cleanupIx
-        } = await handleMintsAndTokenProgramWithSetupAndCleanup(
-            config.program.provider.connection,
-            config.accounts.owner,
-            config.accounts.currency,
-            config.accounts.collateral,
-            'wrap',
-            config.args.downPayment
-        );
+        } = result;
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getLongPool(collateralMint, currencyMint);
 

@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 
 const COMPUTE_VALUES = {
     LIMIT: {
-        TOKEN: 200_000,
+        VAULT: 200_000,
         TRADE: 500_000
     },
     PRICE: {
@@ -102,10 +102,10 @@ export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramA
 function getComputeIxes(feeLevel: FeeLevel): TransactionInstruction[] {
     return [
         ComputeBudgetProgram.setComputeUnitLimit({
-            units: COMPUTE_VALUES.LIMIT[feeLevel.level]
+            units: COMPUTE_VALUES.LIMIT[feeLevel.ixType]
         }),
         ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: COMPUTE_VALUES.PRICE[feeLevel.ixType]
+            microLamports: COMPUTE_VALUES.PRICE[feeLevel.level]
         })
     ];
 }

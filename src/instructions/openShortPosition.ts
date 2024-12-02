@@ -20,7 +20,13 @@ import {
     OpenPositionCleanupInstructionAccounts,
     OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
-import { PDA, getPermission, handleMint, handleMintsAndTokenProgram } from '../utils';
+import {
+    PDA,
+    getPermission,
+    handleMint,
+    handleMintsAndTokenProgram,
+    handlePaymentTokenMint
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type OpenShortPositionSetupInstructionAccounts = {
@@ -39,19 +45,22 @@ const openShortPositionSetupConfig: BaseMethodConfig<
     OpenShortPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
-        const [
-            { mint: currencyMint, tokenProgram: currencyTokenProgram },
-            { mint: collateralMint, tokenProgram: collateralTokenProgram, setupIx, cleanupIx }
-        ] = await Promise.all([
-            handleMint(config.program.provider.connection, config.accounts.currency),
-            handleMint(
-                config.program.provider.connection,
-                config.accounts.collateral,
-                config.program.provider.publicKey,
-                'wrap',
-                config.args.downPayment
-            )
-        ]);
+        const {
+            currencyMint,
+            collateralMint,
+            currencyTokenProgram,
+            collateralTokenProgram,
+            setupIx,
+            cleanupIx
+        } = await handlePaymentTokenMint(
+          config.program.provider.connection,
+          config.accounts.owner,
+          config.accounts.collateral, // payment token mint
+          config.accounts.currency,
+          config.accounts.collateral,
+          'wrap',
+          Number(config.args.downPayment) + Number(config.args.fee)
+        );
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 

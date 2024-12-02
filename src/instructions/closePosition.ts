@@ -12,7 +12,7 @@ import {
     getPermission,
     createAtaIfNeeded,
     handleMintsAndTokenProgram,
-    handleMintsAndTokenProgramWithSetupAndCleanup
+    handlePaymentTokenMint
 } from '../utils';
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
@@ -287,9 +287,10 @@ async function setupTokenAccounts(
         collateralTokenProgram,
         setupIx,
         cleanupIx
-    } = await handleMintsAndTokenProgramWithSetupAndCleanup(
+    } = await handlePaymentTokenMint(
         connection,
         owner,
+        isLong ? currency : collateral, // payment token mint
         currency,
         collateral,
         'unwrap'

@@ -708,3 +708,35 @@ export async function handleMintsAndTokenProgramWithSetupAndCleanup(
         cleanupIx: [...(currencyResult.cleanupIx || []), ...(collateralResult.cleanupIx || [])]
     };
 }
+
+export async function handlePaymentTokenMint(
+    connection: Connection,
+    owner: PublicKey,
+    paymentToken: PublicKey,
+    currency: PublicKey,
+    collateral: PublicKey,
+    wrapMode: WrapMode,
+    amount?: number | bigint
+): Promise<TokenProgramsWithSetupResult> {
+
+    let instructions = { setupIx: [], cleanupIx: [] };
+
+    if (paymentToken.equals(NATIVE_MINT)) {
+        instructions =
+          wrapMode === 'wrap'
+            ? await createWrapSolInstruction(connection, owner, amount!)
+            : await createUnwrapSolInstruction(connection, owner);
+    }
+
+    const currencyTokenProgram = await getTokenProgram(connection, currency);
+    const collateralTokenProgram = await getTokenProgram(connection, collateral);
+
+    return {
+        currencyMint: currency,
+        collateralMint: collateral,
+        currencyTokenProgram,
+        collateralTokenProgram: collateralTokenProgram,
+        setupIx: instructions.setupIx,
+        cleanupIx: instructions.cleanupIx
+    };
+}
