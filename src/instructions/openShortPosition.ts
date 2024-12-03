@@ -23,7 +23,6 @@ import {
 import {
     PDA,
     getPermission,
-    handleMint,
     handleMintsAndTokenProgram,
     handlePaymentTokenMint
 } from '../utils';

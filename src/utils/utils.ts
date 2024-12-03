@@ -508,6 +508,7 @@ export async function createWrapSolInstruction(
     connection: Connection,
     owner: PublicKey,
     amount: number | bigint,
+    includeCleanupIx: boolean = true,
     useToken2022: boolean = false
 ): Promise<{
     setupIx: TransactionInstruction[];
@@ -538,9 +539,11 @@ export async function createWrapSolInstruction(
                 tokenProgram
             )
         );
-        cleanupIx.push(
-            createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
-        );
+        if (includeCleanupIx) {
+            cleanupIx.push(
+              createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
+            );
+        }
     }
 
     setupIx.push(
@@ -761,7 +764,7 @@ export async function handlePaymentTokenMintWithAuthority(
     if (paymentToken.equals(NATIVE_MINT)) {
         instructions =
           wrapMode === 'wrap'
-            ? await createWrapSolInstruction(connection, owner, amount!)
+            ? await createWrapSolInstruction(connection, owner, amount!, false)
             : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
