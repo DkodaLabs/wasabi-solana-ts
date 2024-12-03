@@ -15,18 +15,15 @@ export type CloseTakeProfitOrderAccounts = {
 };
 
 type CloseTakeProfitOrderInstructionAccounts = {
-    position: PublicKey;
-};
-
-type CloseTakeProfitOrderInstructionAccountsStrict = {
     trader: PublicKey;
+    position: PublicKey;
     takeProfitOrder: PublicKey;
-} & CloseTakeProfitOrderInstructionAccounts;
+};
 
 const closeTakeProfitOrderConfig: BaseMethodConfig<
     void,
     CloseTakeProfitOrderAccounts,
-    CloseTakeProfitOrderInstructionAccounts | CloseTakeProfitOrderInstructionAccountsStrict
+    CloseTakeProfitOrderInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, CloseTakeProfitOrderAccounts>) => {
         let permission = PDA.getAdmin(config.program.provider.publicKey);
@@ -37,14 +34,10 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
             config.program.account.permission.fetch(permission).catch(() => null)
         ]);
 
-        if (!permissionAccount) {
-            permission = PDA.getSuperAdmin();
-        }
-
         const accounts = {
             closer: config.program.provider.publicKey,
             trader,
-            permission,
+            permission: permissionAccount ? permission : PDA.getSuperAdmin(),
             position: config.accounts.position,
             takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position)
         };

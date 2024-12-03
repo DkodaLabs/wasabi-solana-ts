@@ -38,7 +38,7 @@ const closeStopLossOrderConfig: BaseMethodConfig<
             accounts: {
                 closer: config.program.provider.publicKey,
                 trader,
-                permission: permissionAccount ? PDA.getSuperAdmin() : permission,
+                permission: permissionAccount ? permission : PDA.getSuperAdmin(),
                 position: config.accounts.position,
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position)
             }
