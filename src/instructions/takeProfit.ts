@@ -62,7 +62,8 @@ const takeProfitCleanupConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<void, ClosePositionCleanupAccounts>) => {
         const { accounts, ixes } = await getClosePositionCleanupInstructionAccounts(
             config.program,
-            config.accounts
+            config.accounts,
+            true
         );
 
         return {

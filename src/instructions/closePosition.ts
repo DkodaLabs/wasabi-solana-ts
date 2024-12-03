@@ -12,7 +12,7 @@ import {
     getPermission,
     createAtaIfNeeded,
     handleMintsAndTokenProgram,
-    handlePaymentTokenMint
+    handlePaymentTokenMint, handlePaymentTokenMintWithAuthority
 } from '../utils';
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
@@ -278,7 +278,8 @@ async function setupTokenAccounts(
     currency: PublicKey,
     collateral: PublicKey,
     payer: PublicKey,
-    isLong: boolean
+    isLong: boolean,
+    isTriggeredByAuthority: boolean = false
 ): Promise<TokenSetupResult> {
     const {
         currencyMint,
@@ -287,8 +288,9 @@ async function setupTokenAccounts(
         collateralTokenProgram,
         setupIx,
         cleanupIx
-    } = await handlePaymentTokenMint(
+    } = await handlePaymentTokenMintWithAuthority(
         connection,
+        isTriggeredByAuthority ? payer : owner,
         owner,
         isLong ? currency : collateral, // payment token mint
         currency,
@@ -319,7 +321,8 @@ async function setupTokenAccounts(
 
 export async function getClosePositionCleanupInstructionAccounts(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts
+    accounts: ClosePositionCleanupAccounts,
+    isTriggeredByAuthority: boolean = false
 ): Promise<CpcuAndIx> {
     const { owner, lpVault } = await fetchPositionData(program, accounts.position);
 
@@ -331,7 +334,8 @@ export async function getClosePositionCleanupInstructionAccounts(
             accounts.currency,
             accounts.collateral,
             program.provider.publicKey,
-            await program.account.basePool.fetch(accounts.pool).then((pool) => pool.isLongPool)
+            await program.account.basePool.fetch(accounts.pool).then((pool) => pool.isLongPool),
+            isTriggeredByAuthority
         )
     ]);
 

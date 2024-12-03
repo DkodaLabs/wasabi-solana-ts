@@ -564,6 +564,18 @@ export async function createUnwrapSolInstruction(
     setupIx: TransactionInstruction[];
     cleanupIx: TransactionInstruction[];
 }> {
+    return await createUnwrapSolInstructionWithPayer(connection, owner, owner, useToken2022);
+}
+
+export async function createUnwrapSolInstructionWithPayer(
+    connection: Connection,
+    payer: PublicKey,
+    owner: PublicKey,
+    useToken2022: boolean = false
+): Promise<{
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
+}> {
     const setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
     const [nativeMint, tokenProgram] = useToken2022
@@ -582,7 +594,7 @@ export async function createUnwrapSolInstruction(
     if (!ownerWrappedSolAccount) {
         setupIx.push(
             createAssociatedTokenAccountIdempotentInstruction(
-                owner,
+                payer,
                 ownerWrappedSolAta,
                 owner,
                 nativeMint,
@@ -591,9 +603,12 @@ export async function createUnwrapSolInstruction(
         );
     }
 
-    cleanupIx.push(
-        createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
-    );
+    if (owner.equals(payer)) {
+        cleanupIx.push(
+          createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
+        );
+    }
+
     return { setupIx, cleanupIx };
 }
 
@@ -718,6 +733,28 @@ export async function handlePaymentTokenMint(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
+    return await handlePaymentTokenMintWithAuthority(
+        connection,
+        owner, // authority
+        owner,
+        paymentToken,
+        currency,
+        collateral,
+        wrapMode,
+        amount
+    );
+}
+
+export async function handlePaymentTokenMintWithAuthority(
+    connection: Connection,
+    authority: PublicKey,
+    owner: PublicKey,
+    paymentToken: PublicKey,
+    currency: PublicKey,
+    collateral: PublicKey,
+    wrapMode: WrapMode,
+    amount?: number | bigint
+): Promise<TokenProgramsWithSetupResult> {
 
     let instructions = { setupIx: [], cleanupIx: [] };
 
@@ -725,7 +762,7 @@ export async function handlePaymentTokenMint(
         instructions =
           wrapMode === 'wrap'
             ? await createWrapSolInstruction(connection, owner, amount!)
-            : await createUnwrapSolInstruction(connection, owner);
+            : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
     const currencyTokenProgram = await getTokenProgram(connection, currency);
