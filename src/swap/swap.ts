@@ -17,7 +17,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 import { Level } from '../base';
 import { SOL_MINT } from '../utils';
 
-export type SwapType = 'SWAP' | 'SWAP_INTO' | 'SWAP_BETWEEN';
+export type SwapType = 'SWAP' | 'SWAP_INTO' | 'SWAP_OUT' | 'SWAP_BETWEEN';
 export type SwapMode = 'EXACT_IN' | 'EXACT_OUT';
 export type SwapProvider = 'jupiter' | 'raydium';
 
@@ -51,6 +51,17 @@ export async function swap(
       );
     case 'SWAP_INTO':
       return createSwapIntoTransaction(
+        inputMint,
+        outputMint,
+        amount,
+        slippageBps,
+        userPublicKey,
+        swapMode,
+        program,
+        feeLevel,
+      );
+    case 'SWAP_OUT':
+      return createSwapOutTransaction(
         inputMint,
         outputMint,
         amount,
@@ -176,16 +187,17 @@ export async function createSwapBetweenTransaction(
   if (inputMint.equals(SOL_MINT)) {
     ixes.push(
       // when the mint is SOL we need to create the ATA and then withdraw into it
-      ...withdrawIxes.slice(2, 3),
+      // but we don't need to sync
+      withdrawIxes[2], // create ATA
+      withdrawIxes[3], // withdraw
       swapIxes.swapInstruction,
-      // after the swap we can close the account
-      withdrawIxes[4],
+      swapIxes.cleanupInstruction, // should be the close
     )
   } else {
     ixes.push(
-      ...withdrawIxes.slice(2),
+      ...withdrawIxes.slice(2), // withdraw
       // we need the setupInstructions in case the output mint is SOL
-      ...swapIxes.setupInstructions,
+      ...(swapIxes.setupInstructions || []), // i.e. create ATA / transfer & sync
       swapIxes.swapInstruction,
     );
   }
@@ -196,7 +208,69 @@ export async function createSwapBetweenTransaction(
     ixes.push(...depositIxes.slice(5));
   } else {
     // just the deposit
-    ixes.push(...depositIxes.slice(2));
+    ixes.push(depositIxes[2]); // just the deposit ix
+  }
+
+  return createVersionedTransaction(
+    userPublicKey,
+    ixes,
+    program.provider.connection,
+    swapIxes.addressLookupTableAddresses
+  );
+}
+
+async function createSwapOutTransaction(
+  inputMint: PublicKey, // The mint of the token we are withdrawing from the vault
+  outputMint: PublicKey, // The mint of the token the user wants to swap to
+  amount: number,
+  slippageBps: number,
+  userPublicKey: PublicKey,
+  swapMode: SwapMode,
+  program: Program<WasabiSolana>,
+  feeLevel: Level,
+): Promise<VersionedTransaction> {
+  const quoteResponse = await getJupiterQuote(
+    inputMint,
+    outputMint,
+    amount,
+    slippageBps,
+    swapMode,
+  );
+
+  const [withdrawIxes, swapIxes] = await Promise.all([
+    createWithdrawInstruction(
+      program,
+      { amount },
+      { assetMint: inputMint },
+      feeLevel,
+    ),
+    createJupiterSwapInstructions({
+      quoteResponse,
+      userPublicKey,
+      wrapAndUnwrapSol: outputMint.equals(SOL_MINT) ? true : false,
+    }),
+  ]);
+
+  const ixes = [];
+
+  // Compute budget ixes
+  ixes.push(withdrawIxes[0], withdrawIxes[1]);
+  if (inputMint.equals(SOL_MINT)) {
+    ixes.push(
+      withdrawIxes[2], // ATA
+      withdrawIxes[3], // Withdraw 
+      swapIxes.swapInstruction,
+      swapIxes.cleanupInstruction, // Close ATA
+    );
+  } else {
+    // we don't need to handle the case of SOL being the output since
+    // the returned jupiter instructions will handle that
+    ixes.push(
+      withdrawIxes[2], // withdraw
+      ...(swapIxes.setupInstructions || []), // ATA if needed
+      swapIxes.swapInstruction,
+      swapIxes.cleanupInstruction, // close ATA
+    );
   }
 
   return createVersionedTransaction(
