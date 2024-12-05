@@ -10,7 +10,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 const COMPUTE_VALUES = {
     LIMIT: {
         VAULT: 200_000,
-        TRADE: 500_000
+        TRADE: 750_000
     },
     PRICE: {
         NORMAL: 50_000,
