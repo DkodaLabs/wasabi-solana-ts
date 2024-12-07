@@ -8,7 +8,7 @@ import {
     handleMethodCall,
     constructMethodCallArgs
 } from '../base';
-import { PDA, handleMint } from '../utils';
+import { PDA, handleMint, getPermission } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -37,13 +37,15 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
+        const [{ mint, tokenProgram, setupIx, cleanupIx }, permission] = await Promise.all([handleMint(
             config.program.provider.connection,
             config.accounts.currency,
             config.program.provider.publicKey,
             'wrap',
             config.args.amount
-        );
+        ),
+            getPermission(config.program, config.program.provider.publicKey),
+        ]);
 
         const lpVault = PDA.getLpVault(mint);
 
@@ -59,6 +61,7 @@ const donateConfig: BaseMethodConfig<
                 lpVault,
                 vault: getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram),
                 currency: config.accounts.currency,
+                permission,
                 globalSettings: PDA.getGlobalSettings(),
                 tokenProgram
             },
