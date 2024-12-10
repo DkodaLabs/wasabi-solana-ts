@@ -14,7 +14,6 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import {
@@ -176,16 +175,11 @@ export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionSetupConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'TRADE'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

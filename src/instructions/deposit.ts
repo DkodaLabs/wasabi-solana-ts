@@ -4,7 +4,6 @@ import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from '
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import {
@@ -61,16 +60,11 @@ export async function createDepositInstruction(
     program: Program<WasabiSolana>,
     args: DepositArgs,
     accounts: DepositAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: depositConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'VAULT'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

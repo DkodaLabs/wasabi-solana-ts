@@ -9,7 +9,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import {
@@ -192,16 +191,11 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openShortPositionSetupConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'TRADE'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

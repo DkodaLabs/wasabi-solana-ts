@@ -3,7 +3,6 @@ import { TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import {
@@ -42,16 +41,11 @@ export async function createWithdrawInstruction(
     program: Program<WasabiSolana>,
     args: WithdrawArgs,
     accounts: WithdrawAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: withdrawConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'VAULT'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

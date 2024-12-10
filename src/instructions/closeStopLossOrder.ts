@@ -3,7 +3,6 @@ import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import { PDA } from '../utils';
@@ -49,15 +48,10 @@ const closeStopLossOrderConfig: BaseMethodConfig<
 export async function createCloseStopLossOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeStopLossOrderConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'VAULT'
-        }
     }) as Promise<TransactionInstruction[]>;
 }

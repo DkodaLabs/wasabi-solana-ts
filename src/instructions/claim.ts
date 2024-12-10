@@ -4,7 +4,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import { getTokenProgram, PDA, isSOL, handleSOL } from '../utils';
@@ -141,15 +140,10 @@ export const claimPositionConfig: BaseMethodConfig<
 export async function createClaimPositionInstruction(
     program: Program<WasabiSolana>,
     accounts: ClaimPositionAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: claimPositionConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'TRADE'
-        }
-    }) as Promise<TransactionInstruction[]>;
+      }) as Promise<TransactionInstruction[]>;
 }

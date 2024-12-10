@@ -3,7 +3,6 @@ import { TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import {
@@ -85,16 +84,11 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionSetupConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'TRADE'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

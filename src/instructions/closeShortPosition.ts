@@ -15,7 +15,6 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -101,16 +100,11 @@ export async function createCloseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeShortPositionSetupConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'TRADE'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

@@ -7,7 +7,6 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import { PDA } from '../utils';
@@ -62,16 +61,11 @@ export function createInitOrUpdateTakeProfitInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdateTakeProfitArgs,
     accounts: InitOrUpdateTakeProfitAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: initOrUpdateTakeProfitConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'VAULT'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }

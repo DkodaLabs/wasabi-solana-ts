@@ -4,7 +4,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
 } from '../base';
 import { PDA, handleMint, getPermission } from '../utils';
@@ -76,16 +75,11 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: donateConfig,
-        feeLevel: {
-            level: feeLevel,
-            ixType: 'VAULT'
-        },
         args
     }) as Promise<TransactionInstruction[]>;
 }
