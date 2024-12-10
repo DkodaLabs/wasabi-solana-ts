@@ -1,12 +1,11 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionInstruction, TransactionSignature, PublicKey } from '@solana/web3.js';
+import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
     Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { getTokenProgram, PDA, isSOL, handleSOL } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -144,23 +143,13 @@ export async function createClaimPositionInstruction(
     accounts: ClaimPositionAccounts,
     feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, claimPositionConfig, 'INSTRUCTION', {
+    return handleMethodCall({
+        program,
+        accounts,
+        config: claimPositionConfig,
+        feeLevel: {
             level: feeLevel,
             ixType: 'TRADE'
-        })
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function claimPosition(
-    program: Program<WasabiSolana>,
-    accounts: ClaimPositionAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, claimPositionConfig, 'TRANSACTION', {
-            level: feeLevel,
-            ixType: 'TRADE'
-        })
-    ) as Promise<TransactionSignature>;
+        }
+    }) as Promise<TransactionInstruction[]>;
 }

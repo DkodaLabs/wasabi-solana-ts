@@ -1,11 +1,10 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
     Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -53,23 +52,13 @@ export async function createCloseTakeProfitOrderInstruction(
     accounts: CloseTakeProfitOrderAccounts,
     feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, closeTakeProfitOrderConfig, 'INSTRUCTION', {
+    return handleMethodCall({
+        program,
+        accounts,
+        config: closeTakeProfitOrderConfig,
+        feeLevel: {
             level: feeLevel,
             ixType: 'VAULT'
-        })
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function closeTakeProfitOrder(
-    program: Program<WasabiSolana>,
-    accounts: CloseTakeProfitOrderAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, closeTakeProfitOrderConfig, 'TRANSACTION', {
-            level: feeLevel,
-            ixType: 'VAULT'
-        })
-    ) as Promise<TransactionSignature>;
+        }
+    }) as Promise<TransactionInstruction[]>;
 }
