@@ -6,7 +6,7 @@ import {
     getAssociatedTokenAddressSync,
     createAssociatedTokenAccountIdempotentInstruction
 } from '@solana/spl-token';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { PDA, getPermission, handleMint } from '../utils';
 
@@ -82,17 +82,10 @@ export async function createInitLpVaultInstruction(
     args: InitLpVaultArgs,
     accounts: InitLpVaultAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, initLpVaultConfig, 'INSTRUCTION', null, args)
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function initLpVault(
-    program: Program<WasabiSolana>,
-    args: InitLpVaultArgs,
-    accounts: InitLpVaultAccounts
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, initLpVaultConfig, 'TRANSACTION', null, args)
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: initLpVaultConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }

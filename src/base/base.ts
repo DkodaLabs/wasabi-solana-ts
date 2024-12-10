@@ -19,8 +19,6 @@ const COMPUTE_VALUES = {
     }
 };
 
-export type IxAccountsStrictness = 'NO_STRICT' | 'PARTIAL' | 'STRICT';
-export type BuildMode = 'TRANSACTION' | 'INSTRUCTION';
 export type Level = 'NORMAL' | 'FAST' | 'TURBO';
 type FeeLevel = {
     level: Level;
@@ -43,7 +41,6 @@ export type ConfigArgs<TArgs, TAccounts> = {
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
     config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>;
-    mode: BuildMode;
 } & ConfigArgs<TArgs, TAccounts>;
 
 export type BaseMethodConfig<
@@ -68,35 +65,15 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
 
     const builder = methodBuilder.accountsStrict(processed.accounts);
 
-    builder.preInstructions([
-        args.feeLevel ? getComputeIxes(args.feeLevel) : [],
-        ...(processed.setup || [])
-    ]);
-
-    return args.mode === 'INSTRUCTION'
-        ? builder.instruction().then((ix: TransactionInstruction) => {
-              const ixes = [...(processed.setup || []), ix, ...(processed.cleanup || [])];
-              return ixes;
-          })
-        : builder.rpc();
-}
-
-export function constructMethodCallArgs<TArgs = void, TAccounts = any, TProgramAccounts = any>(
-    program: Program<WasabiSolana>,
-    accounts: TAccounts,
-    config: BaseMethodConfig<TArgs, TAccounts, TProgramAccounts>,
-    mode: BuildMode,
-    feeLevel?: FeeLevel,
-    args?: TArgs
-): MethodCallArgs<TArgs, TAccounts, TProgramAccounts> {
-    return {
-        program,
-        accounts,
-        config,
-        mode,
-        feeLevel,
-        args
-    };
+    return builder.instruction().then((ix: TransactionInstruction) => {
+        const ixes = [
+            ...(args.feeLevel ? getComputeIxes(args.feeLevel) : []),
+            ...(processed.setup || []),
+            ix,
+            ...(processed.cleanup || [])
+        ];
+        return ixes;
+    })
 }
 
 function getComputeIxes(feeLevel: FeeLevel): TransactionInstruction[] {

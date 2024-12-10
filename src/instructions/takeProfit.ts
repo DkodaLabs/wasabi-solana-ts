@@ -5,7 +5,6 @@ import {
     ConfigArgs,
     Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     transformArgs,
@@ -86,26 +85,25 @@ export async function createTakeProfitSetupInstruction(
     accounts: ClosePositionSetupAccounts,
     feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            takeProfitSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: takeProfitSetupConfig,
+        feeLevel: {
+            level: feeLevel,
+            ixType: 'TRADE'
+        },
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createTakeProfitCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, takeProfitCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: takeProfitCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }
