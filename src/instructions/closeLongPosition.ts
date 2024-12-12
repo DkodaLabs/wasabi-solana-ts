@@ -13,9 +13,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -89,28 +87,22 @@ export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            closeLongPositionSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: closeLongPositionSetupConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createCloseLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, closeLongPositionCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: closeLongPositionCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

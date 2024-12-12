@@ -9,9 +9,7 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     OpenPositionSetupArgs,
@@ -52,13 +50,13 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             setupIx,
             cleanupIx
         } = await handlePaymentTokenMint(
-          config.program.provider.connection,
-          config.accounts.owner,
-          config.accounts.collateral, // payment token mint
-          config.accounts.currency,
-          config.accounts.collateral,
-          'wrap',
-          Number(config.args.downPayment) + Number(config.args.fee)
+            config.program.provider.connection,
+            config.accounts.owner,
+            config.accounts.collateral, // payment token mint
+            config.accounts.currency,
+            config.accounts.collateral,
+            'wrap',
+            Number(config.args.downPayment) + Number(config.args.fee)
         );
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
@@ -193,28 +191,22 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            openShortPositionSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: openShortPositionSetupConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, openShortPositionCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: openShortPositionCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

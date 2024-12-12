@@ -1,12 +1,10 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     DepositAccounts,
@@ -62,40 +60,11 @@ export async function createDepositInstruction(
     program: Program<WasabiSolana>,
     args: DepositArgs,
     accounts: DepositAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            depositConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function deposit(
-    program: Program<WasabiSolana>,
-    args: DepositArgs,
-    accounts: DepositAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            depositConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: depositConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }

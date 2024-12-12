@@ -3,9 +3,7 @@ import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     transformArgs,
@@ -83,28 +81,22 @@ export async function createStopLossSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            stopLossSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: stopLossSetupConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createStopLossCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, stopLossCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: stopLossCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

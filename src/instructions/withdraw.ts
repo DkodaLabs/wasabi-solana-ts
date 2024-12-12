@@ -1,11 +1,9 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
+import { TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     WithdrawArgs,
@@ -43,40 +41,11 @@ export async function createWithdrawInstruction(
     program: Program<WasabiSolana>,
     args: WithdrawArgs,
     accounts: WithdrawAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            withdrawConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function withdraw(
-    program: Program<WasabiSolana>,
-    args: WithdrawArgs,
-    accounts: WithdrawAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            withdrawConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: withdrawConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }

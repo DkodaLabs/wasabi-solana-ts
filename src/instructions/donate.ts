@@ -1,12 +1,10 @@
 import { Program, BN } from '@coral-xyz/anchor';
-import { TransactionInstruction, PublicKey, TransactionSignature } from '@solana/web3.js';
+import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { PDA, handleMint, getPermission } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -44,7 +42,7 @@ const donateConfig: BaseMethodConfig<
             'wrap',
             config.args.amount
         ),
-            getPermission(config.program, config.program.provider.publicKey),
+        getPermission(config.program, config.program.provider.publicKey),
         ]);
 
         const lpVault = PDA.getLpVault(mint);
@@ -77,40 +75,11 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            donateConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function donate(
-    program: Program<WasabiSolana>,
-    args: DonateArgs,
-    accounts: DonateAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            donateConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: donateConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }

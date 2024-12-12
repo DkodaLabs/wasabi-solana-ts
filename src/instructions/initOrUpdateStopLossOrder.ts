@@ -1,6 +1,5 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import {
-    TransactionSignature,
     TransactionInstruction,
     PublicKey,
     SystemProgram
@@ -8,9 +7,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -61,40 +58,11 @@ export function createInitOrUpdateStopLossInstruction(
     program: Program<WasabiSolana>,
     args: InitOrUpdateStopLossArgs,
     accounts: InitOrUpdateStopLossAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initOrUpdateStopLossConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export function initOrUpdateStopLoss(
-    program: Program<WasabiSolana>,
-    args: InitOrUpdateStopLossArgs,
-    accounts: InitOrUpdateStopLossAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            initOrUpdateStopLossConfig,
-            'TRANSACTION',
-            {
-                level: feeLevel,
-                ixType: 'VAULT'
-            },
-            args
-        )
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: initOrUpdateStopLossConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }

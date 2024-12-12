@@ -3,9 +3,7 @@ import { TransactionInstruction } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     ClosePositionSetupArgs,
@@ -86,28 +84,22 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            liquidatePositionSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: liquidatePositionSetupConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, liquidatePositionCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: liquidatePositionCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

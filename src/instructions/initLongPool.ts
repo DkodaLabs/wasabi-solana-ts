@@ -1,6 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction } from '@solana/web3.js';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall, constructMethodCallArgs } from '../base';
+import { TransactionInstruction } from '@solana/web3.js';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     InitPoolAccounts,
     InitPoolInstructionAccounts,
@@ -21,16 +21,9 @@ export async function createInitLongPoolInstruction(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, initLongPoolConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function initLongPool(
-    program: Program<WasabiSolana>,
-    accounts: InitPoolAccounts
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, initLongPoolConfig, 'TRANSACTION')
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: initLongPoolConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

@@ -1,11 +1,9 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionSignature, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -50,25 +48,10 @@ const closeStopLossOrderConfig: BaseMethodConfig<
 export async function createCloseStopLossOrderInstruction(
     program: Program<WasabiSolana>,
     accounts: CloseStopLossOrderAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, closeStopLossOrderConfig, 'INSTRUCTION', {
-            level: feeLevel,
-            ixType: 'VAULT'
-        })
-    ) as Promise<TransactionInstruction[]>;
-}
-
-export async function closeStopLossOrder(
-    program: Program<WasabiSolana>,
-    accounts: CloseStopLossOrderAccounts,
-    feeLevel: Level = 'NORMAL'
-): Promise<TransactionSignature> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, closeStopLossOrderConfig, 'TRANSACTION', {
-            level: feeLevel,
-            ixType: 'VAULT'
-        })
-    ) as Promise<TransactionSignature>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: closeStopLossOrderConfig,
+    }) as Promise<TransactionInstruction[]>;
 }

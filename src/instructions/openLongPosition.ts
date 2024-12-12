@@ -14,9 +14,7 @@ import {
 import {
     BaseMethodConfig,
     ConfigArgs,
-    Level,
     handleMethodCall,
-    constructMethodCallArgs
 } from '../base';
 import {
     OpenPositionSetupArgs,
@@ -45,7 +43,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-          Number(config.args.downPayment) + Number(config.args.fee)
+            Number(config.args.downPayment) + Number(config.args.fee)
         );
         const {
             currencyMint,
@@ -177,28 +175,22 @@ export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    feeLevel: Level = 'NORMAL'
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(
-            program,
-            accounts,
-            openLongPositionSetupConfig,
-            'INSTRUCTION',
-            {
-                level: feeLevel,
-                ixType: 'TRADE'
-            },
-            args
-        )
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: openLongPositionSetupConfig,
+        args
+    }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts
 ): Promise<TransactionInstruction[]> {
-    return handleMethodCall(
-        constructMethodCallArgs(program, accounts, openLongPositionCleanupConfig, 'INSTRUCTION')
-    ) as Promise<TransactionInstruction[]>;
+    return handleMethodCall({
+        program,
+        accounts,
+        config: openLongPositionCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
 }
