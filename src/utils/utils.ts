@@ -541,7 +541,7 @@ export async function createWrapSolInstruction(
         );
         if (includeCleanupIx) {
             cleanupIx.push(
-              createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
+                createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
             );
         }
     }
@@ -608,7 +608,7 @@ export async function createUnwrapSolInstructionWithPayer(
 
     if (owner.equals(payer)) {
         cleanupIx.push(
-          createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
+            createCloseAccountInstruction(ownerWrappedSolAta, owner, owner, [], tokenProgram)
         );
     }
 
@@ -671,9 +671,23 @@ export async function handleMint(
         };
     }
 
+    const tokenProgram = await getTokenProgram(connection, mint);
+    const userAta = getAssociatedTokenAddressSync(mint, owner, false, tokenProgram);
+    const userTokenAccount = await connection.getAccountInfo(userAta);
+
+    if (!userTokenAccount) {
+        instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
+            owner,
+            userAta,
+            owner,
+            mint,
+            tokenProgram
+        ));
+    }
+
     return {
         mint,
-        tokenProgram: await getTokenProgram(connection, mint),
+        tokenProgram,
         ...instructions
     };
 }
@@ -763,9 +777,9 @@ export async function handlePaymentTokenMintWithAuthority(
 
     if (paymentToken.equals(NATIVE_MINT)) {
         instructions =
-          wrapMode === 'wrap'
-            ? await createWrapSolInstruction(connection, owner, amount!, false)
-            : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
+            wrapMode === 'wrap'
+                ? await createWrapSolInstruction(connection, owner, amount!, false)
+                : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
     const currencyTokenProgram = await getTokenProgram(connection, currency);
