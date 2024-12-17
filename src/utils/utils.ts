@@ -298,15 +298,21 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
     const sharesMint = MintLayout.decode(sharesMintInfo.data);
     const userShares = AccountLayout.decode(userSharesInfo.data);
 
-    const totalAssets = new BN(lpVault.totalAssets);
-    const totalShares = new BN(sharesMint.supply.toString());
-    const userSharesAmount = new BN(userShares.amount.toString());
+    const totalAssets = BigInt(lpVault.totalAssets);
+    const totalShares = BigInt(sharesMint.supply.toString());
+    const userSharesAmount = BigInt(userShares.amount.toString());
 
-    if (totalShares.isZero()) return new BN(0);
+    if (totalShares === 0n) return totalShares;
 
-    const maxWithdrawRaw = userSharesAmount.mul(totalAssets).div(totalShares);
+    return calculateAssetsFromShares(userSharesAmount, totalShares, totalAssets);
+}
 
-    return maxWithdrawRaw;
+export function calculateAssetsFromShares(
+    shares: bigint,
+    totalShares: bigint,
+    totalAssets: bigint,
+): bigint {
+    return (shares * totalAssets) / totalShares;
 }
 
 export async function getNativeBalance(
