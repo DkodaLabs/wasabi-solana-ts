@@ -278,7 +278,7 @@ export async function getMetaplexMetadata(
 }
 
 // Mint is the mint of the token in the vault
-export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<BN> {
+export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<bigint> {
     const lpVaultAddress = PDA.getLpVault(mint);
     const sharesMintAddress = PDA.getSharesMint(lpVaultAddress, mint);
     const userSharesAddress = getAssociatedTokenAddressSync(
@@ -293,16 +293,20 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
         program.provider.connection.getAccountInfo(sharesMintAddress)
     ]);
 
-    if (!lpVault || !userSharesInfo || !sharesMintInfo) return null;
+    if (!lpVault || !userSharesInfo || !sharesMintInfo) {
+        return 0n;
+    }
 
     const sharesMint = MintLayout.decode(sharesMintInfo.data);
     const userShares = AccountLayout.decode(userSharesInfo.data);
 
-    const totalAssets = BigInt(lpVault.totalAssets);
+    const totalAssets = BigInt(lpVault.totalAssets.toString());
     const totalShares = BigInt(sharesMint.supply.toString());
     const userSharesAmount = BigInt(userShares.amount.toString());
 
-    if (totalShares === 0n) return totalShares;
+    if (totalShares === 0n) {
+        return totalShares;
+    }
 
     return calculateAssetsFromShares(userSharesAmount, totalShares, totalAssets);
 }
