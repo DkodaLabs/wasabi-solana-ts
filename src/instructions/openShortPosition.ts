@@ -148,7 +148,8 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
             await handleMintsAndTokenProgram(
                 config.program.provider.connection,
                 config.accounts.currency,
-                config.accounts.collateral
+                config.accounts.collateral,
+                config.accounts.pool,
             );
         const lpVault = PDA.getLpVault(config.accounts.currency);
 
