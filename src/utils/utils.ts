@@ -96,7 +96,7 @@ export async function getTokenProgramAndDecimals(
     const mintInfo = await connection.getAccountInfo(mint);
 
     if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-        let mintDecimals = MintLayout.decode(mintInfo.data).decimals;
+        const mintDecimals = MintLayout.decode(mintInfo.data).decimals;
         return [mintInfo.owner, mintDecimals];
     } else {
         return null;
@@ -682,7 +682,7 @@ export async function handleMint(
     }
 
     const tokenProgram = await getTokenProgram(connection, mint);
-    const userAta = getAssociatedTokenAddressSync(mint, owner, false, tokenProgram);
+    const userAta = getAssociatedTokenAddressSync(mint, owner, true, tokenProgram);
     const userTokenAccount = await connection.getAccountInfo(userAta);
 
     if (!userTokenAccount) {
@@ -705,15 +705,16 @@ export async function handleMint(
 export async function handleMintsAndTokenProgram(
     connection: Connection,
     currency: PublicKey,
-    collateral: PublicKey
+    collateral: PublicKey,
+    owner?: PublicKey,
 ): Promise<TokenProgramsResult> {
     if (currency.equals(collateral)) {
         throw new Error('Mints cannot be the same');
     }
 
     const [currencyResult, collateralResult] = await Promise.all([
-        handleMint(connection, currency),
-        handleMint(connection, collateral)
+        handleMint(connection, currency, owner),
+        handleMint(connection, collateral, owner)
     ]);
 
     return {

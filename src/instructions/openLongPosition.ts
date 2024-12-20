@@ -143,7 +143,8 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
             await handleMintsAndTokenProgram(
                 config.program.provider.connection,
                 config.accounts.currency,
-                config.accounts.collateral
+                config.accounts.collateral,
+                config.accounts.pool,
             );
 
         return {
