@@ -682,17 +682,19 @@ export async function handleMint(
     }
 
     const tokenProgram = await getTokenProgram(connection, mint);
-    const userAta = getAssociatedTokenAddressSync(mint, owner, true, tokenProgram);
-    const userTokenAccount = await connection.getAccountInfo(userAta);
+    if (owner) {
+        const userAta = getAssociatedTokenAddressSync(mint, owner, true, tokenProgram);
+        const userTokenAccount = await connection.getAccountInfo(userAta);
 
-    if (!userTokenAccount) {
-        instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
-            owner,
-            userAta,
-            owner,
-            mint,
-            tokenProgram
-        ));
+        if (!userTokenAccount) {
+            instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
+              owner,
+              userAta,
+              owner,
+              mint,
+              tokenProgram
+            ));
+        }
     }
 
     return {
