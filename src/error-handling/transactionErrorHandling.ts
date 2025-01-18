@@ -1,7 +1,9 @@
 
 import { IDL as JupiterIDL } from './jupiter';
 import { SendTransactionError, VersionedTransaction } from '@solana/web3.js';
-import {idl} from "../index";
+import * as idl from '../idl/wasabi_solana.json';
+import {WasabiSolana} from "../index";
+const WasabiIDL = idl as WasabiSolana;
 
 type ErrorObject = {
     code: number;
@@ -23,7 +25,7 @@ const jupiterExpectedErrors = [
 ];
 
 // Index errors by code for quick lookup
-const wasabiErrorIndex: Record<number, ErrorObject> = idl.errors.reduce((acc: Record<number, ErrorObject>, error) => {
+const wasabiErrorIndex: Record<number, ErrorObject> = WasabiIDL.errors.reduce((acc: Record<number, ErrorObject>, error) => {
     const expected = wasabiExpectedErrors.includes(error.code);
     acc[error.code] = {
         ...error,
