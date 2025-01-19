@@ -38,6 +38,9 @@ async function getDynamicPriorityFee(
     });
     recentFees = recentFees.filter(r => r.prioritizationFee > 0);
 
+    console.log('writableAccounts', writableAccounts);
+    console.log('recentFees', recentFees);
+
     if (!recentFees.length) {
         return DEFAULT_UNIT_PRICE * SPEED_BUFFERS[speed];
     }
@@ -46,12 +49,22 @@ async function getDynamicPriorityFee(
         .map(fee => fee.prioritizationFee)
         .sort((a, b) => a - b);
 
-    const midPoint = Math.floor(sortedFees.length / 2);
-    const medianFee = sortedFees.length % 2 === 0
-        ? (sortedFees[midPoint - 1] + sortedFees[midPoint]) / 2
-        : sortedFees[midPoint];
+    // Calculate the 75th percentile
+    const position = 0.75 * (sortedFees.length - 1); // 75th percentile index
+    const lowerIndex = Math.floor(position);
+    const upperIndex = Math.ceil(position);
 
-    return Math.ceil(medianFee * SPEED_BUFFERS[speed]);
+    if (upperIndex >= sortedFees.length) {
+        return DEFAULT_UNIT_PRICE * SPEED_BUFFERS[speed];
+    }
+
+    const percentileFee = lowerIndex === upperIndex
+      ? sortedFees[lowerIndex]
+      : sortedFees[lowerIndex] + (position - lowerIndex) * (sortedFees[upperIndex] - sortedFees[lowerIndex]);
+
+    console.log('percentileFee', percentileFee);
+
+    return Math.ceil(percentileFee * SPEED_BUFFERS[speed]);
 }
 
 function getWritableAccounts(instructions: TransactionInstruction[]): PublicKey[] {
