@@ -4,6 +4,7 @@ import {
     PublicKey,
     TransactionInstruction
 } from '@solana/web3.js';
+import {getPriorityFeeEstimate} from "./getPriorityFees";
 
 export type ComputeBudgetConfig = {
     // Fee type, default is DYNAMIC
@@ -33,6 +34,19 @@ async function getDynamicPriorityFee(
     writableAccounts: PublicKey[],
     speed: 'NORMAL' | 'FAST' | 'TURBO'
 ): Promise<number> {
+    try {
+        const heliusFeeEstimates = await getPriorityFeeEstimate(writableAccounts.map(a => a.toBase58()));
+        if (speed === "NORMAL") {
+            return heliusFeeEstimates.result.priorityFeeLevels.medium;
+        } else if (speed === "FAST") {
+            return heliusFeeEstimates.result.priorityFeeLevels.high;
+        } else if (speed === "TURBO") {
+            return heliusFeeEstimates.result.priorityFeeLevels.veryHigh;
+        }
+    } catch (e: any) {
+        console.error('Failed to get dynamic priority fee', e);
+    }
+
     let recentFees = await connection.getRecentPrioritizationFees({
         lockedWritableAccounts: writableAccounts
     });
