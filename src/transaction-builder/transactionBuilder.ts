@@ -13,7 +13,7 @@ import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
 export class TransactionBuilder {
     private payerKey!: PublicKey;
     private connection!: Connection;
-    private instructions: TransactionInstruction[];
+    private instructions: TransactionInstruction[] = [];
     private lookupTables?: AddressLookupTableAccount[];
     private computeBudgetConfig?: ComputeBudgetConfig;
     private commitment: Commitment = 'confirmed';
@@ -60,13 +60,11 @@ export class TransactionBuilder {
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
-        const bufferMultiplier = 1.2;
-
         if (
-            currentComputeLimit > actualUnitsConsumed * 1.5 ||
+            currentComputeLimit > actualUnitsConsumed * 1.1 ||
             currentComputeLimit < actualUnitsConsumed
         ) {
-            const adjustedLimit = Math.ceil(bufferMultiplier * actualUnitsConsumed);
+            const adjustedLimit = Math.ceil(actualUnitsConsumed * 1.1);
             console.log('Adjusting compute limit to:', adjustedLimit);
 
             computeBudgetIx[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
@@ -76,6 +74,10 @@ export class TransactionBuilder {
     async build(): Promise<VersionedTransaction> {
         if (!this.payerKey || !this.connection) {
             throw new Error('Payer and connection must be set before building a transaction.');
+        }
+
+        if (!this.instructions || this.instructions.length === 0) {
+            throw new Error('No instructions to build transaction with.');
         }
 
         const computeBudgetInstructions = await this.createComputeBudgetInstructions();
@@ -91,10 +93,12 @@ export class TransactionBuilder {
             }).compileToV0Message(this.lookupTables)
         );
 
+        console.log(transaction);
+
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
             console.error('Transaction simulation failed:', simResult.value.err);
-            return transaction;
+            throw new Error("Transaction simulation failed: " + simResult.value.err + "");
         }
 
         if (simResult.value.unitsConsumed && this.computeBudgetConfig.type === 'DYNAMIC') {
@@ -102,11 +106,13 @@ export class TransactionBuilder {
 
             if (computeBudgetInstructions.length > 0) {
                 const currentComputeLimit = computeBudgetInstructions[0].data.readUint32LE(1);
+                console.log('Current compute limit:', currentComputeLimit);
                 this.adjustComputeLimit(
                     computeBudgetInstructions,
                     currentComputeLimit,
                     actualUnitsConsumed
                 );
+                console.log('Adjusted compute limit:', computeBudgetInstructions[0].data.readUint32LE(1));
 
                 transaction = new VersionedTransaction(
                     new TransactionMessage({
