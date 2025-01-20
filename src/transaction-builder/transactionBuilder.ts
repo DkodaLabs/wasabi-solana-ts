@@ -60,11 +60,13 @@ export class TransactionBuilder {
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
+        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * 1.2;
         if (
-            currentComputeLimit > actualUnitsConsumed * 1.1 ||
+            currentComputeLimit > actualUnitsConsumedWithBuffer ||
             currentComputeLimit < actualUnitsConsumed
         ) {
-            const adjustedLimit = Math.ceil(actualUnitsConsumed * 1.1);
+            console.log("Actual units consumed:", actualUnitsConsumed);
+            const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
             console.log('Adjusting compute limit to:', adjustedLimit);
 
             computeBudgetIx[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
@@ -101,7 +103,7 @@ export class TransactionBuilder {
             throw new Error("Transaction simulation failed: " + simResult.value.err + "");
         }
 
-        if (simResult.value.unitsConsumed && this.computeBudgetConfig.type === 'DYNAMIC') {
+        if (simResult.value.unitsConsumed) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
 
             if (computeBudgetInstructions.length > 0) {

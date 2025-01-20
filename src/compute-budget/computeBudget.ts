@@ -67,6 +67,7 @@ export async function createComputeBudgetIx(
     instructions: TransactionInstruction[]
 ): Promise<TransactionInstruction[]> {
     if (request.type === 'FIXED') {
+        console.log("Compute unit price:", request.price);
         return [
             ComputeBudgetProgram.setComputeUnitLimit({
                 units: request.limit || DEFAULT_COMPUTE_LIMIT
@@ -83,6 +84,7 @@ export async function createComputeBudgetIx(
         request.speed || 'NORMAL'
     );
     price = Math.min(price, request.price);
+    console.log("Compute unit price:", price);
 
     return [
         ComputeBudgetProgram.setComputeUnitLimit({ units: request.limit || DEFAULT_COMPUTE_LIMIT }),
