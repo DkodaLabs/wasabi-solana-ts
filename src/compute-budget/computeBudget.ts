@@ -2,7 +2,7 @@ import {
     ComputeBudgetProgram,
     Connection,
     PublicKey,
-    TransactionInstruction
+    TransactionInstruction,
 } from '@solana/web3.js';
 import {getPriorityFeeEstimate} from "./getPriorityFees";
 
@@ -50,7 +50,7 @@ async function getDynamicPriorityFee(
     let recentFees = await connection.getRecentPrioritizationFees({
         lockedWritableAccounts: writableAccounts
     });
-    recentFees = recentFees.filter(r => r.prioritizationFee > 0);
+    recentFees = recentFees.filter((r) => r.prioritizationFee > 0);
 
     console.log('writableAccounts', writableAccounts);
     console.log('recentFees', recentFees);
@@ -59,9 +59,7 @@ async function getDynamicPriorityFee(
         return DEFAULT_UNIT_PRICE * SPEED_BUFFERS[speed];
     }
 
-    const sortedFees = recentFees
-        .map(fee => fee.prioritizationFee)
-        .sort((a, b) => a - b);
+    const sortedFees = recentFees.map((fee) => fee.prioritizationFee).sort((a, b) => a - b);
 
     // Calculate the 75th percentile
     const position = 0.75 * (sortedFees.length - 1); // 75th percentile index
@@ -83,10 +81,10 @@ async function getDynamicPriorityFee(
 
 function getWritableAccounts(instructions: TransactionInstruction[]): PublicKey[] {
     return instructions
-        .flatMap(ix => ix.keys)
-        .filter(meta => meta.isWritable)
-        .map(meta => meta.pubkey)
-        .filter((v, i, a) => a.findIndex(t => t.equals(v)) === i);
+        .flatMap((ix) => ix.keys)
+        .filter((meta) => meta.isWritable)
+        .map((meta) => meta.pubkey)
+        .filter((v, i, a) => a.findIndex((t) => t.equals(v)) === i);
 }
 
 export async function createComputeBudgetIx(
@@ -95,16 +93,24 @@ export async function createComputeBudgetIx(
     instructions: TransactionInstruction[]
 ): Promise<TransactionInstruction[]> {
     if (request.type === 'FIXED') {
+        console.log("Compute unit price:", request.price);
         return [
-            ComputeBudgetProgram.setComputeUnitLimit({ units: request.limit || DEFAULT_COMPUTE_LIMIT }),
+            ComputeBudgetProgram.setComputeUnitLimit({
+                units: request.limit || DEFAULT_COMPUTE_LIMIT
+            }),
             ComputeBudgetProgram.setComputeUnitPrice({ microLamports: request.price })
         ];
     }
 
     const writableAccounts = getWritableAccounts(instructions);
 
-    let price = await getDynamicPriorityFee(connection, writableAccounts, request.speed || "NORMAL");
+    let price = await getDynamicPriorityFee(
+        connection,
+        writableAccounts,
+        request.speed || 'NORMAL'
+    );
     price = Math.min(price, request.price);
+    console.log("Compute unit price:", price);
 
     return [
         ComputeBudgetProgram.setComputeUnitLimit({ units: request.limit || DEFAULT_COMPUTE_LIMIT }),
