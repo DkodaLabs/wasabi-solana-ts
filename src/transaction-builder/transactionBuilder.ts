@@ -60,7 +60,7 @@ export class TransactionBuilder {
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
-        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * 1.2;
+        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * 1.1;
         if (
             currentComputeLimit > actualUnitsConsumedWithBuffer ||
             currentComputeLimit < actualUnitsConsumed
