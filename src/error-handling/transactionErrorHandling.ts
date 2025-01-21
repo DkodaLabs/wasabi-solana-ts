@@ -1,7 +1,7 @@
 import { IDL as JupiterIDL } from './jupiter';
 import { SendTransactionError, VersionedTransaction } from '@solana/web3.js';
 import * as idl from '../idl/wasabi_solana.json';
-import { WasabiSolana } from "../index";
+import {WasabiSolana} from "../index";
 const WasabiIDL = idl as WasabiSolana;
 
 export class SimulationError extends Error {
