@@ -83,7 +83,7 @@ export class TransactionBuilder {
         }
 
         const computeBudgetInstructions = await this.createComputeBudgetInstructions();
-        this.instructions.unshift(...computeBudgetInstructions);
+        this.instructions = [...computeBudgetInstructions, ...this.instructions];
 
         const blockhash = (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
 
@@ -95,26 +95,21 @@ export class TransactionBuilder {
             }).compileToV0Message(this.lookupTables)
         );
 
-        console.log(transaction);
-
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
-            console.error('Transaction simulation failed:', simResult.value.err);
             throw new Error("Transaction simulation failed: " + simResult.value.err + "");
         }
 
-        if (simResult.value.unitsConsumed) {
+        if (simResult.value.unitsConsumed && !!this.computeBudgetConfig.limit) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
 
             if (computeBudgetInstructions.length > 0) {
                 const currentComputeLimit = computeBudgetInstructions[0].data.readUint32LE(1);
-                console.log('Current compute limit:', currentComputeLimit);
                 this.adjustComputeLimit(
                     computeBudgetInstructions,
                     currentComputeLimit,
                     actualUnitsConsumed
                 );
-                console.log('Adjusted compute limit:', computeBudgetInstructions[0].data.readUint32LE(1));
 
                 transaction = new VersionedTransaction(
                     new TransactionMessage({
