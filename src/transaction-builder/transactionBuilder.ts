@@ -100,7 +100,7 @@ export class TransactionBuilder {
             throw new Error("Transaction simulation failed: " + simResult.value.err + "");
         }
 
-        if (simResult.value.unitsConsumed && !!this.computeBudgetConfig.limit) {
+        if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
 
             if (computeBudgetInstructions.length > 0) {
