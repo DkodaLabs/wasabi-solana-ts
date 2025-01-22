@@ -18,6 +18,8 @@ export type ComputeBudgetConfig = {
 
     // Compute unit limit
     limit?: number;
+    
+    jitoTip?: number;
 };
 
 const DEFAULT_COMPUTE_LIMIT = 400_000;

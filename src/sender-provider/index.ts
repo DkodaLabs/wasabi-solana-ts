@@ -1,3 +1,3 @@
-export * from './abstractSenderProvider.js';
+export * from './baseSenderProvider.js';
 export * from './jitoSenderProvider.js';
-export * from './agaveSenderProvider.js';
+export * from './baseSenderProvider.js';
