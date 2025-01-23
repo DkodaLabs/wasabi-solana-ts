@@ -40,11 +40,8 @@ export const jitoSender =
             transactions,
             send: async (): Promise<string> => {
                 try {
-                    if (transactions.length > 1) {
-                        return sendBundle();
-                    }
-
-                    return sendTx();
+                    return sendBundle();
+                    // return sendTx();
                 } catch (e: any) {
                     throw new Error('Failed to send transaction(s)');
                 }
