@@ -1,20 +1,24 @@
 import { Connection, VersionedTransaction, Keypair, PublicKey } from '@solana/web3.js';
-import { searcher } from 'jito-ts';
-import { createTipTransaction, jitoSender } from './jitoSenderProvider';
+import { getTipAmountFromPriorityFee, jitoSender } from './jitoSenderProvider';
+import { JitoClient } from './jitoTypes';
 
 export interface Sender {
+    transactions: VersionedTransaction[];
     send: () => Promise<string>;
 }
 
 export interface ProviderOptions {
-    searcherClient?: searcher.SearcherClient;
-    tipAmount?: bigint;
+    searcherClient?: JitoClient;
+    tipAmount?: number;
     transactionLimit?: number;
 }
 
-export type TransactionSigner = {
-    signTransaction?: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
-} | Keypair;
+export type TransactionSigner =
+    | {
+          signTransaction?: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
+          signAllTransactions?: (transactions: VersionedTransaction[]) => Promise<VersionedTransaction[]>;
+      }
+    | Keypair;
 
 export const baseSender =
     (connection: Connection) =>
@@ -28,6 +32,7 @@ export const baseSender =
         };
 
         return {
+            transactions,
             send: async (): Promise<string> => {
                 return await sendTx(transactions);
             }
@@ -39,12 +44,18 @@ export class ProviderBuilder {
     private payer: PublicKey;
     private simulateTransaction: boolean;
     private confirmTransaction: boolean;
+    private providerClient?: JitoClient;
     private options: ProviderOptions;
 
     private transactions: VersionedTransaction[] = [];
 
     setConnection(connection: Connection): this {
         this.connection = connection;
+        return this;
+    }
+
+    setPayer(payer: PublicKey): this {
+        this.payer = payer;
         return this;
     }
 
@@ -55,6 +66,11 @@ export class ProviderBuilder {
 
     setConfirmTransaction(confirmTransaction: boolean): this {
         this.confirmTransaction = confirmTransaction;
+        return this;
+    }
+    
+    setProviderClient(providerClient: JitoClient): this {
+        this.providerClient = providerClient;
         return this;
     }
 
@@ -94,29 +110,38 @@ export class ProviderBuilder {
         return this;
     }
 
-    async getSender(): Promise<Sender> {
-        if (this.options) {
-            return jitoSender(this.connection)(this.transactions);
+    getTransactions(): VersionedTransaction[] {
+        return this.transactions;
+    }
+
+    private async getSender(): Promise<Sender> {
+        if (this.providerClient) {
+            return jitoSender(this.connection, this.providerClient)(this.transactions);
         }
 
         return baseSender(this.connection)(this.transactions);
     }
 
     async sign(transactions: VersionedTransaction[], signer: TransactionSigner): Promise<this> {
-        for (const transaction of transactions) {
-            if ('signTransaction' in signer && signer.signTransaction) {
-                await signer.signTransaction(transaction);
-            } else if (signer instanceof Keypair) {
-                transaction.sign([signer]);
-            } else {
-                throw new Error('Invalid signer');
+        if ('signAllTransactions' in signer && signer.signAllTransactions) {
+            this.transactions = await signer.signAllTransactions(transactions);
+        } else {
+            for (const transaction of transactions) {
+                if ('signTransaction' in signer && signer.signTransaction) {
+                    const txPromises= transactions.map(tx => signer.signTransaction(tx));
+                    this.transactions = await Promise.all([...txPromises]);
+                } else if (signer instanceof Keypair) {
+                    transaction.sign([signer]);
+                } else {
+                    throw new Error('Invalid signer');
+                }
             }
         }
 
         return this;
     }
 
-    protected async simulate(transactions: Array<VersionedTransaction>): Promise<void> {
+    private async simulate(transactions: VersionedTransaction[]): Promise<void> {
         const simPromises = transactions.map((tx) => {
             return this.connection.simulateTransaction(tx, { commitment: 'confirmed' });
         });
@@ -149,17 +174,6 @@ export class ProviderBuilder {
         return;
     }
 
-    async prepare(): Promise<this> {
-        this.validateSignatures();
-        this.simulateTransaction && (await this.simulate(this.transactions));
-        if (this.options?.searcherClient) {
-            this.transactions.push(
-                await createTipTransaction(this.connection, this.payer, this.options)
-            );
-        }
-        return this;
-    }
-
     private validateSignedTransactions(): void {
         for (const transaction of this.transactions) {
             const message = transaction.message;
@@ -177,8 +191,24 @@ export class ProviderBuilder {
         return;
     }
 
-    async build(): Promise<Sender> {
+    async build(signer: TransactionSigner): Promise<Sender> {
+        this.validateSignatures();
+        this.simulateTransaction && (await this.simulate(this.transactions));
+        if (this.providerClient && this.options?.tipAmount) {
+            console.log(this.providerClient);
+            
+            const tipAmount = getTipAmountFromPriorityFee(this.transactions[0])
+            console.log(tipAmount);
+
+            this.transactions.push(
+                await this.providerClient.createTipTransaction(this.connection, this.payer, tipAmount)
+            );
+        }
+
+        await this.sign(this.transactions, signer);
+
         this.validateSignedTransactions();
+
         return this.getSender();
     }
 }

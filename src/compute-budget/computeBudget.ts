@@ -18,7 +18,12 @@ export type ComputeBudgetConfig = {
 
     // Compute unit limit
     limit?: number;
-    
+
+    // If `undefined`, then send via base sender else send via Jito 
+    // Minimum tip must be atleast 1000 lamports
+    // If set to less than 1000 lamports, we assume that the user wants to use Jito
+    // If set to < 1000 lamports, check if transaction + tip instruction will fit into
+    // one transaction, if not, use bundle
     jitoTip?: number;
 };
 

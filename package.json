@@ -34,6 +34,7 @@
     "@solana/web3.js": "^1.95.8",
     "bn.js": "5.2.1",
     "decimal.js": "10.4.3",
+    "jito-js-rpc": "^0.1.0",
     "jito-ts": "4.2.0"
   },
   "devDependencies": {
