@@ -1,6 +1,28 @@
-import { VersionedTransaction, TransactionInstruction, ComputeBudgetProgram } from '@solana/web3.js';
+import {
+  VersionedTransaction,
+  TransactionInstruction,
+  ComputeBudgetProgram,
+  PublicKey,
+  SystemProgram
+} from '@solana/web3.js';
 import { LatestTips } from './jitoTypes';
 import axios from 'axios';
+
+// NOTE: These remain fairly constant - probably worth using this over rpc call to get the tip accounts
+const JITO_TIP_ACCOUNTS = [
+  '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
+  'HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe',
+  'Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY',
+  'ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49',
+  'DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh',
+  'ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt',
+  'DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL',
+  '3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT'
+];
+
+export const getRandomTipAccount = (): PublicKey => {
+  return new PublicKey(JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]);
+}
 
 export type Percentile = 25 | 50 | 75 | 95 | 99;
 const V0_TX_LIMIT = 1644;
@@ -55,4 +77,20 @@ export const needBundle = (transaction: VersionedTransaction): boolean => {
 export const stripComputeLimit = (instructions: TransactionInstruction[]): TransactionInstruction[] => {
   instructions[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: 0 });
   return instructions;
+};
+
+// NOTE: Probably want to use the transaction builder to build this
+// to so we aren't passing the connection into this function
+//
+// A tip transaction is ~220 bytes (rough estimation 64 bytes for signature + 1 for length prefix)
+// A tip instruction is ~150 bytes (exactly 152 bytes)
+export const createTipInstruction = async (
+  payer: PublicKey,
+  tipAmount: number
+): Promise<TransactionInstruction> => {
+  return SystemProgram.transfer({
+    fromPubkey: payer,
+    toPubkey: getRandomTipAccount(),
+    lamports: tipAmount
+  });
 };

@@ -1,7 +1,7 @@
 import {
-  Connection,
   PublicKey,
-  VersionedTransaction
+  VersionedTransaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
 
 export const DEFAULT_JITO_URL = 'https://ny.mainnet.block-engine.jito.wtf/api/v1'
@@ -20,14 +20,8 @@ export interface LeaderInfo {
 
 export interface JitoClient {
   sendBundle(transactions: VersionedTransaction[]): Promise<string>;
-  
-  confirmBundle(bundleId: string): Promise<void>;
 
-  createTipTransaction(
-    connection: Connection,
-    payer: PublicKey,
-    tipAmount: number
-  ): Promise<VersionedTransaction>;
+  confirmBundle(bundleId: string): Promise<void>;
 }
 
 export interface LatestTips {

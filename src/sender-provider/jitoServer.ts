@@ -2,8 +2,8 @@ import {
   Connection,
   PublicKey,
   SystemProgram,
-  TransactionMessage,
-  VersionedTransaction
+  VersionedTransaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
 import { JitoClient } from './jitoTypes';
 import { getRandomTipAccount } from './jitoTipAccounts';
@@ -54,26 +54,15 @@ export const createServerClient = async (url: string): Promise<JitoClient> => {
 
     // A tip transaction is ~212 bytes
     // A tip instruction is ~108 bytes
-    createTipTransaction: async (
-      connection: Connection,
+    createTipInstruction: async (
       payer: PublicKey,
       tipAmount: number
-    ): Promise<VersionedTransaction> => {
-      const { blockhash } = await connection.getLatestBlockhash();
-
-      const tipIx = SystemProgram.transfer({
+    ): Promise<TransactionInstruction> => {
+      return SystemProgram.transfer({
         fromPubkey: payer,
         toPubkey: getRandomTipAccount(),
         lamports: tipAmount
       });
-
-      const messageV0 = new TransactionMessage({
-        payerKey: payer,
-        recentBlockhash: blockhash,
-        instructions: [tipIx]
-      }).compileToV0Message();
-
-      return new VersionedTransaction(messageV0);
     }
   };
 };
