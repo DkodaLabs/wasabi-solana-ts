@@ -76,11 +76,7 @@ export const getLatestTipsFromRpc = async (): Promise<LatestTips> => {
 };
 
 export const needBundle = (transaction: VersionedTransaction): boolean => {
-    const transactionSize = transaction.message.serialize().length + transaction.signatures.length * 64;
-    if (transactionSize > V0_TX_LIMIT) {
-        return true;
-    }
-    return false;
+    return (transaction.message.serialize().length + transaction.signatures.length * 64) > V0_TX_LIMIT;
 };
 
 export const stripComputePrice = (instruction: TransactionInstruction): TransactionInstruction => {
