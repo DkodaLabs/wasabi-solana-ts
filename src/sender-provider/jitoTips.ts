@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 import axios from 'axios';
 
-// NOTE: These remain fairly constant - probably worth using this over rpc call to get the tip accounts
+// NOTE: These remain fairly constant
 const JITO_TIP_ACCOUNTS = [
     '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
     'HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe',
@@ -87,9 +87,6 @@ export const stripComputePrice = (instruction: TransactionInstruction): Transact
     return ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
 };
 
-// NOTE: Probably want to use the transaction builder to build this
-// to so we aren't passing the connection into this function
-//
 // A tip transaction is ~220 bytes (rough estimation 64 bytes for signature + 1 for length prefix)
 // A tip instruction is ~150 bytes (exactly 152 bytes)
 export const createTipInstruction = (

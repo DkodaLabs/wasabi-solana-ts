@@ -807,12 +807,3 @@ export async function handlePaymentTokenMintWithAuthority(
         cleanupIx: instructions.cleanupIx
     };
 }
-
-export const checkTransactionSize = (transaction: VersionedTransaction): boolean => {
-    const msgSize = computeTransactionSize(transaction);
-    return msgSize <= 1232;
-}
-
-export const computeTransactionSize = (transaction: VersionedTransaction): number => {
-    return transaction.message.serialize().length + transaction.signatures.length * 64;
-}

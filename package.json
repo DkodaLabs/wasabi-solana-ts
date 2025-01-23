@@ -31,7 +31,7 @@
     "@metaplex-foundation/js": "0.20.1",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.23",
-    "@solana/web3.js": "^1.95.8",
+    "@solana/web3.js": "1.95.8",
     "bn.js": "5.2.1",
     "decimal.js": "10.4.3",
     "jito-js-rpc": "^0.1.0",
