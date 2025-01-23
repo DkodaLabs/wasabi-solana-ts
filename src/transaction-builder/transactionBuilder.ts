@@ -62,10 +62,7 @@ export class TransactionBuilder {
                 price: 0,
                 limit: 0,
             };
-            const computeIxs = await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
-            const computePrice = ComputeBudgetProgram.setComputeUnitPrice({microLamports: 0});
-            const newIxs = [computeIxs[0], computePrice];
-            return newIxs;
+            return  await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
         }
         return createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
     }
