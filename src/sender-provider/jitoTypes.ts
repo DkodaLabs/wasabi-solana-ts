@@ -1,7 +1,7 @@
 import { VersionedTransaction } from '@solana/web3.js';
 
 export const DEFAULT_JITO_URL = 'https://ny.mainnet.block-engine.jito.wtf/api/v1'
-export const UUID = '79d9c200-d906-11ef-90fb-bf41cb39c257';
+export const UUID = process.env.JITO_UUID
 
 export interface Bundle {
     transactions: Uint8Array[];
