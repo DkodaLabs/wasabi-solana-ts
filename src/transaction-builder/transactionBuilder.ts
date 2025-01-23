@@ -97,7 +97,7 @@ export class TransactionBuilder {
 
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
-            throw new Error("Transaction simulation failed: " + simResult.value.err + "");
+            throw new Error("Transaction simulation failed: " + JSON.stringify(simResult.value.err));
         }
 
         if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
