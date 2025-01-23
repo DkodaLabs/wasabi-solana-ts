@@ -1,6 +1,14 @@
-import { Connection, VersionedTransaction, Keypair, PublicKey } from '@solana/web3.js';
-import { getTipAmountFromPriorityFee, jitoSender } from './jitoSenderProvider';
+import {
+    Connection,
+    VersionedTransaction,
+    Keypair,
+    PublicKey,
+    TransactionConfirmationStrategy,
+} from '@solana/web3.js';
+import { jitoSender } from './jitoSenderProvider';
 import { JitoClient } from './jitoTypes';
+import { createTipInstruction } from './jitoTips';
+import { TransactionBuilder } from '../transaction-builder';
 
 export interface Sender {
     transactions: VersionedTransaction[];
@@ -15,20 +23,33 @@ export interface ProviderOptions {
 
 export type TransactionSigner =
     | {
-          signTransaction?: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
-          signAllTransactions?: (transactions: VersionedTransaction[]) => Promise<VersionedTransaction[]>;
-      }
+        signTransaction?: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
+        signAllTransactions?: (transactions: VersionedTransaction[]) => Promise<VersionedTransaction[]>;
+    }
     | Keypair;
 
-export const baseSender =
-    (connection: Connection) =>
+export const baseSender = (connection: Connection, confirm: boolean = false) =>
     async (transactions: VersionedTransaction[]): Promise<Sender> => {
         const sendTx = async (transactions: VersionedTransaction[]): Promise<string> => {
             if (transactions.length > 1) {
                 throw new Error('Base sender only supports one transaction');
             }
 
-            return await connection.sendTransaction(transactions[0]);
+            const signature = await connection.sendTransaction(transactions[0], { skipPreflight: true });
+
+            if (confirm) {
+                const confirmStrategy: TransactionConfirmationStrategy = {
+                    signature,
+                    blockhash: transactions[0].message.recentBlockhash,
+                    lastValidBlockHeight: await connection.getBlockHeight()
+                };
+                const status = await connection.confirmTransaction(confirmStrategy);
+                if (status.value.err) {
+                    throw new Error('Transaction failed: ' + status.value.err.toString());
+                }
+            }
+
+            return signature;
         };
 
         return {
@@ -68,7 +89,7 @@ export class ProviderBuilder {
         this.confirmTransaction = confirmTransaction;
         return this;
     }
-    
+
     setProviderClient(providerClient: JitoClient): this {
         this.providerClient = providerClient;
         return this;
@@ -116,10 +137,10 @@ export class ProviderBuilder {
 
     private async getSender(): Promise<Sender> {
         if (this.providerClient) {
-            return jitoSender(this.connection, this.providerClient)(this.transactions);
+            return jitoSender(this.connection, this.providerClient, this.confirmTransaction)(this.transactions);
         }
 
-        return baseSender(this.connection)(this.transactions);
+        return baseSender(this.connection, this.confirmTransaction)(this.transactions);
     }
 
     async sign(transactions: VersionedTransaction[], signer: TransactionSigner): Promise<this> {
@@ -128,7 +149,7 @@ export class ProviderBuilder {
         } else {
             for (const transaction of transactions) {
                 if ('signTransaction' in signer && signer.signTransaction) {
-                    const txPromises= transactions.map(tx => signer.signTransaction(tx));
+                    const txPromises = transactions.map(tx => signer.signTransaction(tx));
                     this.transactions = await Promise.all([...txPromises]);
                 } else if (signer instanceof Keypair) {
                     transaction.sign([signer]);
@@ -192,17 +213,24 @@ export class ProviderBuilder {
     }
 
     async build(signer: TransactionSigner): Promise<Sender> {
+        // Validate signature length
         this.validateSignatures();
-        this.simulateTransaction && (await this.simulate(this.transactions));
-        if (this.providerClient && this.options?.tipAmount) {
-            console.log(this.providerClient);
-            
-            const tipAmount = getTipAmountFromPriorityFee(this.transactions[0])
-            console.log(tipAmount);
 
-            this.transactions.push(
-                await this.providerClient.createTipTransaction(this.connection, this.payer, tipAmount)
-            );
+        // Simulate
+        this.simulateTransaction && (await this.simulate(this.transactions));
+
+        // Add the tip instruction
+        if (this.providerClient && this.options?.tipAmount) {
+            const tipIx = createTipInstruction(this.payer, this.options.tipAmount);
+
+            const builder = new TransactionBuilder()
+                .setPayer(this.payer)
+                .setConnection(this.connection)
+                .addInstructions(tipIx);
+
+            const tx = await builder.build();
+
+            this.transactions.push(tx);
         }
 
         await this.sign(this.transactions, signer);

@@ -9,6 +9,7 @@ import {
     AddressLookupTableAccount
 } from '@solana/web3.js';
 import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
+import { needBundle, stripComputePrice } from '../sender-provider';
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -56,13 +57,20 @@ export class TransactionBuilder {
 
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
         if (!this.computeBudgetConfig) {
-            return [];
+            this.computeBudgetConfig = {
+                type: 'FIXED',
+                price: 0,
+                limit: 0,
+            };
+            const computeIxs = await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
+            const computePrice = ComputeBudgetProgram.setComputeUnitPrice({microLamports: 0});
+            const newIxs = [computeIxs[0], computePrice];
+            return newIxs;
         }
         return createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
     }
 
     private adjustComputeLimit(
-        computeBudgetIx: TransactionInstruction[],
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
@@ -75,8 +83,12 @@ export class TransactionBuilder {
             const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
             console.debug('Adjusting compute limit to:', adjustedLimit);
 
-            computeBudgetIx[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
+            this.instructions[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
         }
+    }
+
+    private stripComputePrice(): void {
+        this.instructions[1] = stripComputePrice(this.instructions[1]);
     }
 
     async build(): Promise<VersionedTransaction> {
@@ -106,25 +118,26 @@ export class TransactionBuilder {
             throw new Error("Transaction simulation failed: " + JSON.stringify(simResult.value.err));
         }
 
+        let ixEdited = false;
+        if (needBundle(transaction) || this.computeBudgetConfig.jitoTip) {
+            this.stripComputePrice();
+            ixEdited = true;
+        }
+
         if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
+            this.adjustComputeLimit(this.computeBudgetConfig.limit || 0, actualUnitsConsumed);
+            ixEdited = true;
+        }
 
-            if (computeBudgetInstructions.length > 0) {
-                const currentComputeLimit = computeBudgetInstructions[0].data.readUint32LE(1);
-                this.adjustComputeLimit(
-                    computeBudgetInstructions,
-                    currentComputeLimit,
-                    actualUnitsConsumed
-                );
-
-                transaction = new VersionedTransaction(
-                    new TransactionMessage({
-                        payerKey: this.payerKey,
-                        recentBlockhash: blockhash,
-                        instructions: this.instructions
-                    }).compileToV0Message(this.lookupTables)
-                );
-            }
+        if (ixEdited) {
+            transaction = new VersionedTransaction(
+                new TransactionMessage({
+                    payerKey: this.payerKey,
+                    recentBlockhash: blockhash,
+                    instructions: this.instructions
+                }).compileToV0Message(this.lookupTables)
+            );
         }
 
         return transaction;

@@ -1,12 +1,8 @@
 import { JitoJsonRpcClient } from 'jito-js-rpc';
 import { JitoClient, UUID } from './jitoTypes';
 import {
-  PublicKey,
-  SystemProgram,
   VersionedTransaction,
-  TransactionInstruction,
 } from '@solana/web3.js';
-import { getRandomTipAccount } from './jitoTipAccounts';
 
 export const createBrowserClient = async (url: string): Promise<JitoClient> => {
   const client = new JitoJsonRpcClient(url, UUID);
@@ -33,8 +29,5 @@ export const createBrowserClient = async (url: string): Promise<JitoClient> => {
       const result = await client.confirmInflightBundle(bundleId);
       console.log(result);
     },
-
-
-    }
-  };
+  }
 };
