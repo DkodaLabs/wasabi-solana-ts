@@ -4,6 +4,8 @@ import {
     Keypair,
     PublicKey,
     TransactionConfirmationStrategy,
+    Transaction,
+    Signer,
 } from '@solana/web3.js';
 import { jitoSender } from './jitoSenderProvider';
 import { JitoClient } from './jitoTypes';
@@ -21,12 +23,12 @@ export interface ProviderOptions {
     transactionLimit?: number;
 }
 
-export type TransactionSigner =
-    | {
-        signTransaction?: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
-        signAllTransactions?: (transactions: VersionedTransaction[]) => Promise<VersionedTransaction[]>;
-    }
-    | Keypair;
+export type TransactionSigner = {
+    signTransaction?: ((transaction: VersionedTransaction) => Promise<VersionedTransaction>)
+        | (<T extends Transaction | VersionedTransaction>(transaction: T) => Promise<T>);
+    signAllTransactions?: ((transactions: VersionedTransaction[]) => Promise<VersionedTransaction[]>)
+    | (<T extends Transaction | VersionedTransaction>(transactions: T[]) => Promise<T>);
+} | Keypair | Signer;
 
 export const baseSender = (connection: Connection, confirm: boolean = false) =>
     async (transactions: VersionedTransaction[]): Promise<Sender> => {
@@ -144,16 +146,21 @@ export class ProviderBuilder {
     }
 
     async sign(transactions: VersionedTransaction[], signer: TransactionSigner): Promise<this> {
+        console.log('signer', signer);
         if ('signAllTransactions' in signer && signer.signAllTransactions) {
-            this.transactions = await signer.signAllTransactions(transactions);
+            this.transactions = await signer.signAllTransactions(transactions) as VersionedTransaction[];
         } else {
             for (const transaction of transactions) {
                 if ('signTransaction' in signer && signer.signTransaction) {
                     const txPromises = transactions.map(tx => signer.signTransaction(tx));
-                    this.transactions = await Promise.all([...txPromises]);
+                    this.transactions = await Promise.all([...txPromises]) as VersionedTransaction[];
                 } else if (signer instanceof Keypair) {
                     transaction.sign([signer]);
-                } else {
+                } else if ('secretKey' in signer) {
+                    const keypair = Keypair.fromSecretKey(signer.secretKey);
+                    transaction.sign([keypair]);
+                }else {
+                    console.log('Invalid signer:', signer);
                     throw new Error('Invalid signer');
                 }
             }

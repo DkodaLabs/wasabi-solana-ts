@@ -1,6 +1,7 @@
 import { VersionedTransaction } from '@solana/web3.js';
 
-export const DEFAULT_JITO_URL = 'https://ny.mainnet.block-engine.jito.wtf/api/v1'
+export const JITO_BASE_URL = 'mainnet.block-engine.jito.wtf'
+export const JITO_RPC_URL = 'https://' + JITO_BASE_URL + '/api/v1';
 export const UUID = process.env.JITO_UUID
 
 export interface Bundle {

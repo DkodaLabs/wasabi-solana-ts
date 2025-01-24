@@ -12,6 +12,7 @@ export const createServerClient = async (url: string): Promise<JitoClient> => {
                 const response = await client.sendBundle(
                     new Bundle(transactions, transactions.length)
                 );
+                console.log(response);
                 if (response.ok) {
                     return response.value;
                 }

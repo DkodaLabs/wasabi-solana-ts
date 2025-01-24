@@ -1,15 +1,15 @@
 import { VersionedTransaction, Connection } from '@solana/web3.js';
 import { Sender } from '../index';
-import { DEFAULT_JITO_URL, JitoClient } from './jitoTypes';
+import { JITO_BASE_URL, JITO_RPC_URL, JitoClient, } from './jitoTypes';
 
 
 export const createJitoClient = async (url?: string, uuid?: string): Promise<JitoClient> => {
     if (typeof window === 'undefined') {
         const { createServerClient } = await import('./jitoServer');
-        return createServerClient(url || DEFAULT_JITO_URL);
+        return createServerClient(url || JITO_BASE_URL);
     } else {
         const { createBrowserClient } = await import('./jitoBrowser');
-        return createBrowserClient(url || DEFAULT_JITO_URL);
+        return createBrowserClient(url || JITO_RPC_URL);
     }
 };
 
@@ -19,7 +19,7 @@ export const jitoSender =
         providerClient: JitoClient,
         confirm: boolean = false
     ) => async (transactions: VersionedTransaction[]): Promise<Sender> => {
-        const sendTx = async (): Promise<string> => {
+        const _sendTx = async (): Promise<string> => {
             return connection.sendTransaction(transactions[0], { skipPreflight: true });
         };
 

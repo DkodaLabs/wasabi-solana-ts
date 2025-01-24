@@ -79,9 +79,6 @@ export const needBundle = (transaction: VersionedTransaction): boolean => {
     return (transaction.message.serialize().length + transaction.signatures.length * 64) > V0_TX_LIMIT;
 };
 
-export const stripComputePrice = (instruction: TransactionInstruction): TransactionInstruction => {
-    return ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
-};
 
 // A tip transaction is ~220 bytes (rough estimation 64 bytes for signature + 1 for length prefix)
 // A tip instruction is ~150 bytes (exactly 152 bytes)
