@@ -12,16 +12,20 @@ export const createServerClient = async (url: string): Promise<JitoClient> => {
                 const response = await client.sendBundle(
                     new Bundle(transactions, transactions.length)
                 );
+
                 console.log(response);
+
                 if (response.ok) {
                     return response.value;
                 }
+
                 throw new Error('Failed to send bundle');
             } catch (e: any) {
                 throw e;
             }
         },
 
+        // Not really used in the backend - blocking
         confirmBundle: async (bundleId: string): Promise<void> => {
             return new Promise((resolve, reject) => {
                 const cancelStream = client.onBundleResult(

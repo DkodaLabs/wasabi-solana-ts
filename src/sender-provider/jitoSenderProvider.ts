@@ -15,13 +15,14 @@ export const createJitoClient = async (url?: string, uuid?: string): Promise<Jit
 
 export const jitoSender =
     (
-        connection: Connection,
+        _connection: Connection,
         providerClient: JitoClient,
         confirm: boolean = false
     ) => async (transactions: VersionedTransaction[]): Promise<Sender> => {
-        const _sendTx = async (): Promise<string> => {
-            return connection.sendTransaction(transactions[0], { skipPreflight: true });
-        };
+        // To send transactions only to the Jito block-engine
+        //const sendTx = async (): Promise<string> => {
+        //    return connection.sendTransaction(transactions[0], { skipPreflight: true });
+        //};
 
         const sendBundle = async (): Promise<string> => {
             try {

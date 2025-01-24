@@ -18,7 +18,6 @@ export interface Sender {
 }
 
 export interface ProviderOptions {
-    searcherClient?: JitoClient;
     tipAmount?: number;
     transactionLimit?: number;
 }
@@ -160,7 +159,6 @@ export class ProviderBuilder {
                     const keypair = Keypair.fromSecretKey(signer.secretKey);
                     transaction.sign([keypair]);
                 }else {
-                    console.log('Invalid signer:', signer);
                     throw new Error('Invalid signer');
                 }
             }

@@ -1,7 +1,6 @@
 import {
     VersionedTransaction,
     TransactionInstruction,
-    ComputeBudgetProgram,
     PublicKey,
     SystemProgram
 } from '@solana/web3.js';
