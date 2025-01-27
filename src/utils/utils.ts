@@ -802,7 +802,7 @@ export async function handlePaymentTokenMintWithAuthority(
         currencyMint: currency,
         collateralMint: collateral,
         currencyTokenProgram,
-        collateralTokenProgram: collateralTokenProgram,
+        collateralTokenProgram,
         setupIx: instructions.setupIx,
         cleanupIx: instructions.cleanupIx
     };
