@@ -44,7 +44,7 @@ async function getDynamicPriorityFee(
             return heliusFeeEstimates.result.priorityFeeLevels.veryHigh;
         }
     } catch (e: any) {
-        console.error('Failed to get dynamic priority fee', e);
+        console.error('Failed to get Helius dynamic priority fee', e);
     }
 
     let recentFees = await connection.getRecentPrioritizationFees({
@@ -52,8 +52,8 @@ async function getDynamicPriorityFee(
     });
     recentFees = recentFees.filter((r) => r.prioritizationFee > 0);
 
-    console.log('writableAccounts', writableAccounts);
-    console.log('recentFees', recentFees);
+    console.debug('writableAccounts', writableAccounts);
+    console.debug('recentFees', recentFees);
 
     if (!recentFees.length) {
         return DEFAULT_UNIT_PRICE * SPEED_BUFFERS[speed];
@@ -74,7 +74,7 @@ async function getDynamicPriorityFee(
       ? sortedFees[lowerIndex]
       : sortedFees[lowerIndex] + (position - lowerIndex) * (sortedFees[upperIndex] - sortedFees[lowerIndex]);
 
-    console.log('percentileFee', percentileFee);
+    console.debug('percentileFee', percentileFee);
 
     return Math.ceil(percentileFee * SPEED_BUFFERS[speed]);
 }
@@ -93,7 +93,7 @@ export async function createComputeBudgetIx(
     instructions: TransactionInstruction[]
 ): Promise<TransactionInstruction[]> {
     if (request.type === 'FIXED') {
-        console.log("Compute unit price:", request.price);
+        console.debug("Compute unit price:", request.price);
         return [
             ComputeBudgetProgram.setComputeUnitLimit({
                 units: request.limit || DEFAULT_COMPUTE_LIMIT
@@ -110,7 +110,7 @@ export async function createComputeBudgetIx(
         request.speed || 'NORMAL'
     );
     price = Math.min(price, request.price);
-    console.log("Compute unit price:", price);
+    console.debug("Compute unit price:", price);
 
     return [
         ComputeBudgetProgram.setComputeUnitLimit({ units: request.limit || DEFAULT_COMPUTE_LIMIT }),

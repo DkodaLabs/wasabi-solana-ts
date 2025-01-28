@@ -17,6 +17,7 @@ export class TransactionBuilder {
     private lookupTables?: AddressLookupTableAccount[];
     private computeBudgetConfig?: ComputeBudgetConfig;
     private commitment: Commitment = 'confirmed';
+    private limitBuffer: number = 1.2;
 
     setPayer(payerKey: PublicKey): this {
         this.payerKey = payerKey;
@@ -48,6 +49,11 @@ export class TransactionBuilder {
         return this;
     }
 
+    setLimitBuffer(limitBuffer: number): this {
+        this.limitBuffer = limitBuffer;
+        return this;
+    }
+
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
         if (!this.computeBudgetConfig) {
             return [];
@@ -60,14 +66,14 @@ export class TransactionBuilder {
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
-        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * 1.1;
+        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * this.limitBuffer;
         if (
             currentComputeLimit > actualUnitsConsumedWithBuffer ||
             currentComputeLimit < actualUnitsConsumed
         ) {
-            console.log("Actual units consumed:", actualUnitsConsumed);
+            console.debug("Actual units consumed:", actualUnitsConsumed);
             const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
-            console.log('Adjusting compute limit to:', adjustedLimit);
+            console.debug('Adjusting compute limit to:', adjustedLimit);
 
             computeBudgetIx[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
         }
