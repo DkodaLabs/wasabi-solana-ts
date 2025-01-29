@@ -9,7 +9,6 @@ import {
     AddressLookupTableAccount
 } from '@solana/web3.js';
 import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
-import { needBundle } from '../sender-provider';
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -61,7 +60,7 @@ export class TransactionBuilder {
                 type: 'FIXED',
                 price: 0,
                 limit: 0,
-                jitoTip: 10000,
+                tipAmount: 10000,
             };
             return await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
         }
@@ -113,7 +112,7 @@ export class TransactionBuilder {
         }
 
         let ixEdited = false;
-        if (needBundle(transaction) || this.computeBudgetConfig.jitoTip || true) {
+        if (this.computeBudgetConfig.provider === 'JITO') {
             // removes the priority fee
             this.instructions[1] = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
             ixEdited = true;
