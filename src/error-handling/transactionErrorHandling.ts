@@ -10,7 +10,7 @@ export class SimulationError extends Error {
         public transaction: VersionedTransaction,
         public logs?: string[]
     ) {
-        super('SimulationError');
+        super(`SimulationError: ${error}`);
     }
 }
 
