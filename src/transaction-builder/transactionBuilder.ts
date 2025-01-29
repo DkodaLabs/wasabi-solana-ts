@@ -58,12 +58,7 @@ export class TransactionBuilder {
 
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
         if (!this.computeBudgetConfig) {
-            this.computeBudgetConfig = {
-                type: 'FIXED',
-                price: 0,
-                limit: 0,
-            };
-            return await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
+            return [];
         }
         return createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
     }

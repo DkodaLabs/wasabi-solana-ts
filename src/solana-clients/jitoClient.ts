@@ -64,7 +64,7 @@ export class JitoClient implements SolanaClient {
     }
 
     async sendTransactions(transactions: VersionedTransaction[]): Promise<string> {
-        const signature = transactions[0].signatures[0];
+        const signature = bs58.encode(transactions[0].signatures[0]);
         const base64Txs = [
             ...new Set(
                 transactions.map((tx) => {
@@ -78,7 +78,7 @@ export class JitoClient implements SolanaClient {
             throw new Error(result.error);
         }
 
-        return bs58.encode(signature);
+        return signature;
     }
 
     private async fetchLatestTips(): Promise<LatestTips> {
