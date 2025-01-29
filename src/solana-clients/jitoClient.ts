@@ -190,7 +190,6 @@ export class JitoClient implements SolanaClient {
             }
         }
 
-
         console.debug("Tip amount: ", tipAmount);
 
         const tipInstruction = SystemProgram.transfer({
