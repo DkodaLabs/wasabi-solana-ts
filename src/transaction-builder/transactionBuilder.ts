@@ -9,6 +9,7 @@ import {
     AddressLookupTableAccount
 } from '@solana/web3.js';
 import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
+import {SimulationError} from "../error-handling";
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -103,7 +104,7 @@ export class TransactionBuilder {
 
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
-            throw new Error("Transaction simulation failed: " + JSON.stringify(simResult.value.err));
+            throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
         }
 
         if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
