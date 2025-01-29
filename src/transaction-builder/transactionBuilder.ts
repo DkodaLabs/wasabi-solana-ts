@@ -109,16 +109,26 @@ export class TransactionBuilder {
 
         let ixEdited = false;
 
-        const destination = this.computeBudgetConfig.destination ?? 'PRIORITY_FEE';
+        const destination = this.computeBudgetConfig?.destination ?? 'JITO';
         if (destination === 'JITO') {
             // removes the priority fee
-            this.instructions[1] = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
+            const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
+
+            if (computeBudgetInstructions.length > 0) {
+                this.instructions[1] = cuIx;
+            } else {
+                this.instructions = [cuIx, ...this.instructions];
+            }
+
             ixEdited = true;
         }
 
-        if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
+        if (simResult.value.unitsConsumed
+            && !this.computeBudgetConfig?.limit
+            && computeBudgetInstructions.length > 0
+        ) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
-            this.adjustComputeLimit(this.computeBudgetConfig.limit || 0, actualUnitsConsumed);
+            this.adjustComputeLimit(this.computeBudgetConfig.limit, actualUnitsConsumed);
             ixEdited = true;
         }
 
