@@ -63,7 +63,9 @@ const findJupiterError = (code: number): ErrorObject | undefined => {
 }
 
 export const parseSendTransactionError = (error: SendTransactionError, transaction: VersionedTransaction): ErrorObject | undefined => {
-    const message = error.message;
+    const message = error.transactionError.message;
+
+    // Parse error messages like: "Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1771"
     const match = message.match(/Instruction (\d+):.*(0x[0-9a-fA-F]+)/);
 
     if (match) {

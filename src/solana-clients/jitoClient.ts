@@ -88,7 +88,7 @@ export class JitoClient implements SolanaClient {
             JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]
         );
 
-        let tipAmount = computeBudgetConfig.tipAmount || 0;
+        let tipAmount = computeBudgetConfig.price || 0;
         if (computeBudgetConfig.type !== 'FIXED') {
             const latestTips = await this.fetchLatestTips();
             switch (computeBudgetConfig.speed) {

@@ -60,7 +60,6 @@ export class TransactionBuilder {
                 type: 'FIXED',
                 price: 0,
                 limit: 0,
-                tipAmount: 10000,
             };
             return await createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
         }
@@ -112,7 +111,7 @@ export class TransactionBuilder {
         }
 
         let ixEdited = false;
-        if (this.computeBudgetConfig.provider === 'JITO') {
+        if (this.computeBudgetConfig.destination === 'JITO') {
             // removes the priority fee
             this.instructions[1] = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
             ixEdited = true;

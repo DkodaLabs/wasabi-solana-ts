@@ -7,7 +7,7 @@ import {
 import {getPriorityFeeEstimate} from "./getPriorityFees";
 
 export type ComputeBudgetConfig = {
-    provider?: 'SOLANA' | 'JITO';
+    destination?: 'PRIORITY_FEE' | 'JITO';
 
     // Fee type, default is DYNAMIC
     type?: 'DYNAMIC' | 'FIXED';
@@ -20,8 +20,6 @@ export type ComputeBudgetConfig = {
 
     // Compute unit limit
     limit?: number;
-
-    tipAmount?: number;
 };
 
 const DEFAULT_COMPUTE_LIMIT = 400_000;
