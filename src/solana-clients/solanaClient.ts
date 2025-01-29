@@ -5,7 +5,6 @@ import {
 
 export interface SolanaClient {
     sendTransactions(transactions: VersionedTransaction[]): Promise<string>;
-    confirmTransactions(bundleId: string): Promise<void>;
 }
 
 export class SolanaRpcClient implements SolanaClient {
@@ -18,20 +17,5 @@ export class SolanaRpcClient implements SolanaClient {
         }
 
         return await this.connection.sendTransaction(transactions[0], { skipPreflight: true });
-    }
-
-    async confirmTransactions(signature: string): Promise<void> {
-        const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash('confirmed');
-        const result = await this.connection.confirmTransaction({
-            signature,
-            blockhash,
-            lastValidBlockHeight
-        },
-            'confirmed'
-        );
-        if (result.value.err) {
-            throw result.value.err;
-        }
-        return;
     }
 }

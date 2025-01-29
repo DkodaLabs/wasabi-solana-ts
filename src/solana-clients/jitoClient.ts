@@ -1,18 +1,21 @@
-import axios from 'axios';
+import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
+import fetch from 'cross-fetch';
 import { JitoJsonRpcClient } from 'jito-js-rpc';
 import {
     Connection,
     SystemProgram,
     VersionedTransaction,
     PublicKey,
+    LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { TransactionBuilder } from '../transaction-builder';
 import { SolanaClient } from './solanaClient';
 import { ComputeBudgetConfig } from '../compute-budget';
 
+const JITO_MIN_TIP_AMOUNT = 1000;
+
 export const JITO_BASE_URL = 'mainnet.block-engine.jito.wtf'
 export const JITO_RPC_URL = 'https://' + JITO_BASE_URL + '/api/v1';
-export const UUID = process.env.JITO_UUID
 
 export const JITO_TIP_ACCOUNTS = [
     '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
@@ -42,11 +45,26 @@ export interface Bundle {
 
 export class JitoClient implements SolanaClient {
     private client: JitoJsonRpcClient;
-    constructor(jitoRpcUrl: string = process.env.JITO_RPC_URL, uuid: string = UUID) {
+    private tips: LatestTips;
+    constructor(
+        jitoRpcUrl: string = JITO_RPC_URL,
+        uuid: string = process.env.JITO_UUID ?? ''
+    ) {
         this.client = new JitoJsonRpcClient(jitoRpcUrl, uuid);
+        const minTipFloat = JITO_MIN_TIP_AMOUNT / LAMPORTS_PER_SOL;
+        this.tips = {
+            time: "0",
+            landedTips25thPercentile: minTipFloat,
+            landedTips50thPercentile: minTipFloat,
+            landedTips75thPercentile: minTipFloat,
+            landedTips95thPercentile: minTipFloat,
+            landedTips99thPercentile: minTipFloat,
+            emaLandedTips50thPercentile: minTipFloat
+        };
     }
 
     async sendTransactions(transactions: VersionedTransaction[]): Promise<string> {
+        const signature = transactions[0].signatures[0];
         const base64Txs = [
             ...new Set(
                 transactions.map((tx) => {
@@ -54,28 +72,89 @@ export class JitoClient implements SolanaClient {
                 })
             )
         ];
-        return this.client.sendBundle([base64Txs, { encoding: 'base64' }]);
-    }
 
-    confirmTransactions(bundleId: string): Promise<void> {
-        const result = this.client.confirmInflightBundle(bundleId);
-        if (result.status === 'Failed') {
+        const result = await this.client.sendBundle([base64Txs, { encoding: 'base64' }]);
+        if (result.error) {
             throw new Error(result.error);
         }
 
-        return;
+        return bs58.encode(signature);
     }
 
-    async fetchLatestTips(): Promise<LatestTips> {
-        const client = axios.create({
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+    private async fetchLatestTips(): Promise<LatestTips> {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
 
-        const response = await client.get('https://bundles.jito.wtf/api/v1/bundles/tip_floor');
-        return response.data;
+        try {
+            const response = await fetch('https://bundles.jito.wtf/api/v1/bundles/tip_floor', {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers,
+                redirect: 'follow',
+                referrerPolicy: 'no-referrer',
+            });
+
+            if (!response.ok) {
+                console.log("Failed to fetch latest tips");
+                return this.tips;
+            }
+
+            const data = await response.json();
+            const [tipData] = data;
+
+            this.tips = {
+                time: tipData.time,
+                landedTips25thPercentile: tipData.landed_tips_25th_percentile,
+                landedTips50thPercentile: tipData.landed_tips_50th_percentile,
+                landedTips75thPercentile: tipData.landed_tips_75th_percentile,
+                landedTips95thPercentile: tipData.landed_tips_95th_percentile,
+                landedTips99thPercentile: tipData.landed_tips_99th_percentile,
+                emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
+            };
+
+            return this.tips;
+        } catch (error) {
+            console.error('Error fetching tips:', error);
+            return this.tips;
+        }
     };
+
+    public async getTips(): Promise<LatestTips> {
+        return await this.fetchLatestTips();
+    }
+
+    async fetchLatestTipsFromWs(): Promise<void> {
+        const ws = new WebSocket('wss://bundles.jito.wtf/api/v1/bundles/tip_floor');
+        ws.onopen = () => {
+            console.info('Connected to Jito');
+        };
+
+        ws.onmessage = (data: any) => {
+            const [tipData] = JSON.parse(data.toString());
+            this.tips = {
+                time: tipData.time,
+                landedTips25thPercentile: tipData.landed_tips_25th_percentile,
+                landedTips50thPercentile: tipData.landed_tips_50th_percentile,
+                landedTips75thPercentile: tipData.landed_tips_75th_percentile,
+                landedTips95thPercentile: tipData.landed_tips_95th_percentile,
+                landedTips99thPercentile: tipData.landed_tips_99th_percentile,
+                emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
+            };
+            console.log(this.tips);
+        };
+
+        ws.onclose = () => {
+            console.info('Disconnected from Jito');
+            this.fetchLatestTipsFromWs();
+        };
+
+        ws.onerror = (error) => {
+            console.error('Error: ', error);
+        };
+    }
 
     /// Transaction should be signed after this step and then bundled
     async appendTipTransaction(
@@ -88,39 +167,47 @@ export class JitoClient implements SolanaClient {
             JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]
         );
 
-        let tipAmount = computeBudgetConfig.price || 0;
+        let tipAmount = computeBudgetConfig.price ?? 0;
+
         if (computeBudgetConfig.type !== 'FIXED') {
-            const latestTips = await this.fetchLatestTips();
+            const latestTips = await this.getTips();
             switch (computeBudgetConfig.speed) {
                 case 'NORMAL':
-                    tipAmount = latestTips.emaLandedTips50thPercentile;
+                    tipAmount = Math.ceil(latestTips.emaLandedTips50thPercentile * LAMPORTS_PER_SOL);
                     break;
                 case 'FAST':
-                    tipAmount = latestTips.landedTips75thPercentile;
+                    tipAmount = Math.ceil(latestTips.landedTips75thPercentile * LAMPORTS_PER_SOL);
                     break;
                 case 'TURBO':
-                    tipAmount = latestTips.landedTips95thPercentile;
+                    tipAmount = Math.ceil(latestTips.landedTips95thPercentile * LAMPORTS_PER_SOL);
                     break;
                 default:
                     throw new Error("Invalid speed");
             }
 
-            const tipInstruction = SystemProgram.transfer({
-                fromPubkey: payer,
-                toPubkey: tipAccount,
-                lamports: tipAmount,
-            });
-
-            const builder = new TransactionBuilder()
-                .setPayer(payer)
-                .setConnection(connection)
-                .addInstructions(tipInstruction);
-
-            const tipTransaction = await builder.build();
-
-            transactions.push(tipTransaction);
-
-            return transactions;
+            if (tipAmount > computeBudgetConfig.price) {
+                tipAmount = computeBudgetConfig.price;
+            }
         }
+
+
+        console.debug("Tip amount: ", tipAmount);
+
+        const tipInstruction = SystemProgram.transfer({
+            fromPubkey: payer,
+            toPubkey: tipAccount,
+            lamports: tipAmount,
+        });
+
+        const builder = new TransactionBuilder()
+            .setPayer(payer)
+            .setConnection(connection)
+            .addInstructions(tipInstruction);
+
+        const tipTransaction = await builder.build();
+
+        transactions.push(tipTransaction);
+
+        return transactions;
     }
 }

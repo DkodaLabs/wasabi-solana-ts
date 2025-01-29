@@ -9,6 +9,7 @@ import {
     AddressLookupTableAccount
 } from '@solana/web3.js';
 import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
+import { SimulationError } from '../error-handling';
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -107,11 +108,13 @@ export class TransactionBuilder {
 
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
-            throw new Error("Transaction simulation failed: " + JSON.stringify(simResult.value.err));
+            throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
         }
 
         let ixEdited = false;
-        if (this.computeBudgetConfig.destination === 'JITO') {
+
+        const destination = this.computeBudgetConfig.destination ?? 'PRIORITY_FEE';
+        if (destination === 'JITO') {
             // removes the priority fee
             this.instructions[1] = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
             ixEdited = true;

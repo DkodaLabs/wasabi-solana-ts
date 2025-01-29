@@ -105,7 +105,7 @@ export const parseSimulationError = (error: SimulationError, transaction: Versio
 };
 
 const matchComputeError = (message: string): ErrorObject | undefined => {
-    const match = message.match(/.*"Program failed to complete"/);
+    const match = message.match(/.*"ProgramFailedToComplete"/);
 
     if (match) {
         return {
