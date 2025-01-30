@@ -109,6 +109,8 @@ export class TransactionBuilder {
 
         let ixEdited = false;
 
+        console.log('Compute Budget Config:', this.computeBudgetConfig);
+
         const destination = this.computeBudgetConfig?.destination ?? 'JITO';
         if (destination === 'JITO') {
             // removes the priority fee
