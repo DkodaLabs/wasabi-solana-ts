@@ -6,7 +6,7 @@ import {
     SystemProgram,
     VersionedTransaction,
     PublicKey,
-    LAMPORTS_PER_SOL, TransactionMessage
+    LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import { TransactionBuilder } from '../transaction-builder';
 import { SolanaClient } from './solanaClient';
@@ -190,15 +190,16 @@ export class JitoClient implements SolanaClient {
             lamports: tipAmount,
         });
 
-        const { blockhash } = await connection.getLatestBlockhash();
+        const builder = new TransactionBuilder()
+            .setPayer(payer)
+            .setConnection(connection)
+            .addInstructions(tipInstruction)
+            .setComputeBudgetConfig({
+                destination: "JITO",
+                price: 0
+            });
 
-        const tipTransaction = new VersionedTransaction(
-          new TransactionMessage({
-              payerKey: payer,
-              recentBlockhash: blockhash,
-              instructions: [tipInstruction],
-          }).compileToV0Message()
-        );
+        const tipTransaction = await builder.build();
 
         transactions.push(tipTransaction);
 
