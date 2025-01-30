@@ -81,6 +81,11 @@ export const parseError = (instructionNumber: number, errorCode: number, transac
     const instruction = transaction.message.compiledInstructions[instructionNumber];
     const programId = transaction.message.staticAccountKeys[instruction.programIdIndex].toBase58();
 
+    const systemError = parseSystemError(errorCode, programId);
+    if (systemError) {
+        return systemError;
+    }
+
     if (programId === wasabiProgramId) {
         return findWasabiError(errorCode);
     } else if (programId === jupiterProgramId) {
@@ -117,3 +122,24 @@ const matchComputeError = (message: string): ErrorObject | undefined => {
 
     return undefined;
 };
+
+const parseSystemError = (code: number, programId: string): ErrorObject | undefined => {
+    const program =
+      programId === wasabiProgramId
+        ? 'Wasabi'
+        : programId === jupiterProgramId
+          ? 'Jupiter'
+          : 'System';
+
+    if (code === 1) {
+        return {
+            code,
+            name: 'InsufficientFunds',
+            msg: 'Insufficient Funds',
+            expected: true,
+            program
+        }
+    }
+
+    return undefined;
+}
