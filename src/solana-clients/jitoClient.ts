@@ -87,15 +87,7 @@ export class JitoClient implements SolanaClient {
         };
 
         try {
-            const response = await fetch('https://bundles.jito.wtf/api/v1/bundles/tip_floor', {
-                method: 'GET',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers,
-                redirect: 'follow',
-                referrerPolicy: 'no-referrer',
-            });
+            const response = await fetch('https://solana.wasabi.xyz/api/solana/jito_tips');
 
             if (!response.ok) {
                 console.log("Failed to fetch latest tips");
