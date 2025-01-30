@@ -109,7 +109,7 @@ export class TransactionBuilder {
 
         let ixEdited = false;
 
-        const destination = this.computeBudgetConfig?.destination ?? 'JITO';
+        const destination = this.computeBudgetConfig?.destination ?? 'PRIORITY_FEE';
         if (destination === 'JITO') {
             // removes the priority fee
             const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
