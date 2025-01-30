@@ -4,7 +4,6 @@ import { JitoJsonRpcClient } from 'jito-js-rpc';
 import {
     Connection,
     SystemProgram,
-    TransactionMessage,
     VersionedTransaction,
     PublicKey,
     LAMPORTS_PER_SOL
@@ -183,21 +182,24 @@ export class JitoClient implements SolanaClient {
             }
         }
 
+        console.debug("Tip amount: ", tipAmount);
+
         const tipInstruction = SystemProgram.transfer({
             fromPubkey: payer,
             toPubkey: tipAccount,
             lamports: tipAmount,
         });
 
-        const { blockhash } = await connection.getLatestBlockhash();
+        const builder = new TransactionBuilder()
+            .setPayer(payer)
+            .setConnection(connection)
+            .addInstructions(tipInstruction)
+            .setComputeBudgetConfig({
+                destination: "JITO",
+                price: 0
+            });
 
-        const tipTransaction = new VersionedTransaction(
-            new TransactionMessage({
-                payerKey: payer,
-                recentBlockhash: blockhash,
-                instructions: [tipInstruction],
-            }).compileToV0Message()
-        );
+        const tipTransaction = await builder.build();
 
         transactions.push(tipTransaction);
 
