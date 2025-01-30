@@ -33,20 +33,22 @@
     "@solana/wallet-adapter-base": "0.9.23",
     "@solana/web3.js": "1.95.8",
     "bn.js": "5.2.1",
-    "decimal.js": "10.4.3"
+    "decimal.js": "10.4.3",
+    "jito-js-rpc": "^0.1.0",
+    "jito-ts": "4.2.0"
   },
   "devDependencies": {
     "@types/chai": "4.3.11",
     "@types/mocha": "10.0.6",
-    "chai": "4.3.10",
-    "mocha": "10.2.0",
-    "ts-node": "10.9.2",
     "@typescript-eslint/eslint-plugin": "6.0.0",
     "@typescript-eslint/parser": "6.0.0",
+    "chai": "4.3.10",
     "eslint": "8.0.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-prettier": "4.2.1",
+    "mocha": "10.2.0",
     "prettier": "3.0.0",
+    "ts-node": "10.9.2",
     "typescript": "5.6.3"
   }
 }

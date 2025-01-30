@@ -12,7 +12,7 @@ import {
     getPermission,
     createAtaIfNeeded,
     handleMintsAndTokenProgram,
-    handlePaymentTokenMint, handlePaymentTokenMintWithAuthority
+    handlePaymentTokenMintWithAuthority
 } from '../utils';
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';

@@ -7,6 +7,8 @@ import {
 import {getPriorityFeeEstimate} from "./getPriorityFees";
 
 export type ComputeBudgetConfig = {
+    destination?: 'PRIORITY_FEE' | 'JITO';
+
     // Fee type, default is DYNAMIC
     type?: 'DYNAMIC' | 'FIXED';
 

@@ -9,7 +9,8 @@ import {
     AddressLookupTableAccount
 } from '@solana/web3.js';
 import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
-import {SimulationError} from "../error-handling";
+import { SimulationError } from '../error-handling';
+
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -63,7 +64,6 @@ export class TransactionBuilder {
     }
 
     private adjustComputeLimit(
-        computeBudgetIx: TransactionInstruction[],
         currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
@@ -76,7 +76,7 @@ export class TransactionBuilder {
             const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
             console.debug('Adjusting compute limit to:', adjustedLimit);
 
-            computeBudgetIx[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
+            this.instructions[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
         }
     }
 
@@ -107,25 +107,39 @@ export class TransactionBuilder {
             throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
         }
 
-        if (simResult.value.unitsConsumed && !this.computeBudgetConfig.limit) {
-            const actualUnitsConsumed = simResult.value.unitsConsumed;
+        let ixEdited = false;
+
+        const destination = this.computeBudgetConfig?.destination ?? 'JITO';
+        if (destination === 'JITO') {
+            // removes the priority fee
+            const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
 
             if (computeBudgetInstructions.length > 0) {
-                const currentComputeLimit = computeBudgetInstructions[0].data.readUint32LE(1);
-                this.adjustComputeLimit(
-                    computeBudgetInstructions,
-                    currentComputeLimit,
-                    actualUnitsConsumed
-                );
-
-                transaction = new VersionedTransaction(
-                    new TransactionMessage({
-                        payerKey: this.payerKey,
-                        recentBlockhash: blockhash,
-                        instructions: this.instructions
-                    }).compileToV0Message(this.lookupTables)
-                );
+                this.instructions[1] = cuIx;
+            } else {
+                this.instructions = [cuIx, ...this.instructions];
             }
+
+            ixEdited = true;
+        }
+
+        if (simResult.value.unitsConsumed
+            && !this.computeBudgetConfig?.limit
+            && computeBudgetInstructions.length > 0
+        ) {
+            const actualUnitsConsumed = simResult.value.unitsConsumed;
+            this.adjustComputeLimit(this.computeBudgetConfig.limit, actualUnitsConsumed);
+            ixEdited = true;
+        }
+
+        if (ixEdited) {
+            transaction = new VersionedTransaction(
+                new TransactionMessage({
+                    payerKey: this.payerKey,
+                    recentBlockhash: blockhash,
+                    instructions: this.instructions
+                }).compileToV0Message(this.lookupTables)
+            );
         }
 
         return transaction;

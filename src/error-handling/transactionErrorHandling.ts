@@ -1,7 +1,7 @@
 import { IDL as JupiterIDL } from './jupiter';
 import { SendTransactionError, VersionedTransaction } from '@solana/web3.js';
 import * as idl from '../idl/wasabi_solana.json';
-import { WasabiSolana } from "../index";
+import {WasabiSolana} from "../index";
 const WasabiIDL = idl as WasabiSolana;
 
 export class SimulationError extends Error {
@@ -63,7 +63,9 @@ const findJupiterError = (code: number): ErrorObject | undefined => {
 }
 
 export const parseSendTransactionError = (error: SendTransactionError, transaction: VersionedTransaction): ErrorObject | undefined => {
-    const message = error.message;
+    const message = error.transactionError.message;
+
+    // Parse error messages like: "Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1771"
     const match = message.match(/Instruction (\d+):.*(0x[0-9a-fA-F]+)/);
 
     if (match) {
@@ -108,7 +110,7 @@ export const parseSimulationError = (error: SimulationError, transaction: Versio
 };
 
 const matchComputeError = (message: string): ErrorObject | undefined => {
-    const match = message.match(/.*"Program failed to complete"/);
+    const match = message.match(/.*"ProgramFailedToComplete"/);
 
     if (match) {
         return {
