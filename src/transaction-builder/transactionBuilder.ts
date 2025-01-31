@@ -16,6 +16,7 @@ export class TransactionBuilder {
     private payerKey!: PublicKey;
     private connection!: Connection;
     private instructions: TransactionInstruction[] = [];
+    private simulate: boolean = true;
     private lookupTables?: AddressLookupTableAccount[];
     private computeBudgetConfig?: ComputeBudgetConfig;
     private commitment: Commitment = 'confirmed';
@@ -46,6 +47,11 @@ export class TransactionBuilder {
         return this;
     }
 
+    setSimulate(simulate: boolean): this {
+        this.simulate = simulate;
+        return this;
+    }
+
     setCommitment(commitment: Commitment): this {
         this.commitment = commitment;
         return this;
@@ -64,13 +70,12 @@ export class TransactionBuilder {
     }
 
     private adjustComputeLimit(
-        currentComputeLimit: number,
         actualUnitsConsumed: number
     ): void {
         const actualUnitsConsumedWithBuffer = actualUnitsConsumed * this.limitBuffer;
         if (
-            currentComputeLimit > actualUnitsConsumedWithBuffer ||
-            currentComputeLimit < actualUnitsConsumed
+            this.computeBudgetConfig.limit > actualUnitsConsumedWithBuffer ||
+            this.computeBudgetConfig.limit < actualUnitsConsumed
         ) {
             console.debug("Actual units consumed:", actualUnitsConsumed);
             const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
@@ -78,6 +83,16 @@ export class TransactionBuilder {
 
             this.instructions[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
         }
+    }
+
+    private async constructTransaction(): Promise<VersionedTransaction> {
+        return new VersionedTransaction(
+            new TransactionMessage({
+                payerKey: this.payerKey,
+                recentBlockhash: (await this.connection.getLatestBlockhash(this.commitment)).blockhash,
+                instructions: this.instructions
+            }).compileToV0Message(this.lookupTables)
+        );
     }
 
     async build(): Promise<VersionedTransaction> {
@@ -89,59 +104,33 @@ export class TransactionBuilder {
             throw new Error('No instructions to build transaction with.');
         }
 
-        const computeBudgetInstructions = await this.createComputeBudgetInstructions();
-        this.instructions = [...computeBudgetInstructions, ...this.instructions];
-
-        const blockhash = (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
-
-        let transaction = new VersionedTransaction(
-            new TransactionMessage({
-                payerKey: this.payerKey,
-                recentBlockhash: blockhash,
-                instructions: this.instructions
-            }).compileToV0Message(this.lookupTables)
-        );
-
-        const simResult = await this.connection.simulateTransaction(transaction);
-        if (simResult.value.err) {
-            throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
-        }
-
-        let ixEdited = false;
-
-        const destination = this.computeBudgetConfig?.destination ?? 'PRIORITY_FEE';
-        if (destination === 'JITO' || !this.computeBudgetConfig) {
-            // removes the priority fee
+        if (!this.simulate && !this.computeBudgetConfig) {
             const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
+            this.instructions = [cuIx, ...this.instructions];
+            return await this.constructTransaction();
+        } else {
+            const computeBudgetInstructions = await this.createComputeBudgetInstructions();
+            this.instructions = [...computeBudgetInstructions, ...this.instructions];
 
-            if (computeBudgetInstructions.length > 0) {
+            const destination = this.computeBudgetConfig?.destination ?? 'PRIORITY_FEE';
+            if (destination === 'JITO') {
+                const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
                 this.instructions[1] = cuIx;
-            } else {
-                this.instructions = [cuIx, ...this.instructions];
             }
 
-            ixEdited = true;
-        }
+            const transaction = await this.constructTransaction();
 
-        if (simResult.value.unitsConsumed
-            && !this.computeBudgetConfig?.limit
-            && computeBudgetInstructions.length > 0
-        ) {
-            const actualUnitsConsumed = simResult.value.unitsConsumed;
-            this.adjustComputeLimit(this.computeBudgetConfig.limit, actualUnitsConsumed);
-            ixEdited = true;
-        }
+            if (this.simulate || this.computeBudgetConfig.type !== 'FIXED') {
+                const simResult = await this.connection.simulateTransaction(transaction);
+                if (simResult.value.unitsConsumed) {
+                    this.adjustComputeLimit(simResult.value.unitsConsumed);
+                    return await this.constructTransaction();
+                } else {
+                    throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
+                }
+            }
 
-        if (ixEdited) {
-            transaction = new VersionedTransaction(
-                new TransactionMessage({
-                    payerKey: this.payerKey,
-                    recentBlockhash: blockhash,
-                    instructions: this.instructions
-                }).compileToV0Message(this.lookupTables)
-            );
+            return transaction;
         }
-
-        return transaction;
     }
 }

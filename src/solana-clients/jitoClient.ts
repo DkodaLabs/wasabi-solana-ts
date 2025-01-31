@@ -194,6 +194,7 @@ export class JitoClient implements SolanaClient {
             .setPayer(payer)
             .setConnection(connection)
             .addInstructions(tipInstruction)
+            .setSimulate(false)
             .build();
 
         transactions.push(tipTransaction);
