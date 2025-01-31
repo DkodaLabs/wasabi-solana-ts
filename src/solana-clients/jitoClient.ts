@@ -14,7 +14,7 @@ import { ComputeBudgetConfig } from '../compute-budget';
 
 const JITO_MIN_TIP_AMOUNT = 1000;
 
-export const JITO_BASE_URL = 'mainnet.block-engine.jito.wtf'
+export const JITO_BASE_URL = 'mainnet.block-engine.jito.wtf';
 export const JITO_RPC_URL = 'https://' + JITO_BASE_URL + '/api/v1';
 
 export const JITO_TIP_ACCOUNTS = [
@@ -54,20 +54,17 @@ const mapLatestTips = (tipResponse: any): LatestTips => {
         landedTips99thPercentile: tipData.landed_tips_99th_percentile,
         emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
     };
-}
+};
 
 export class JitoClient implements SolanaClient {
     private client: JitoJsonRpcClient;
     private tips: LatestTips;
 
-    constructor(
-        jitoRpcUrl: string = JITO_RPC_URL,
-        uuid: string = process.env.JITO_UUID ?? ''
-    ) {
+    constructor(jitoRpcUrl: string = JITO_RPC_URL, uuid: string = process.env.JITO_UUID ?? '') {
         this.client = new JitoJsonRpcClient(jitoRpcUrl, uuid);
         const minTipFloat = JITO_MIN_TIP_AMOUNT / LAMPORTS_PER_SOL;
         this.tips = {
-            time: "0",
+            time: '0',
             landedTips25thPercentile: minTipFloat,
             landedTips50thPercentile: minTipFloat,
             landedTips75thPercentile: minTipFloat,
@@ -100,7 +97,7 @@ export class JitoClient implements SolanaClient {
             const response = await fetch('https://solana.wasabi.xyz/api/solana/jito_tips');
 
             if (!response.ok) {
-                console.error("Failed to fetch latest tips");
+                console.error('Failed to fetch latest tips');
                 return this.tips;
             }
 
@@ -112,7 +109,7 @@ export class JitoClient implements SolanaClient {
             console.error('Error fetching tips:', error);
             return this.tips;
         }
-    };
+    }
 
     public async getTips(): Promise<LatestTips> {
         return await this.fetchLatestTips();
@@ -153,11 +150,14 @@ export class JitoClient implements SolanaClient {
         let tipAmount: number;
         if (computeBudgetConfig.type === 'FIXED') {
             tipAmount = computeBudgetConfig.price;
-        } else { // Default is DYNAMIC
+        } else {
+            // Default is DYNAMIC
             const latestTips = await this.getTips();
             switch (computeBudgetConfig.speed) {
                 case 'NORMAL':
-                    tipAmount = Math.ceil(latestTips.emaLandedTips50thPercentile * LAMPORTS_PER_SOL);
+                    tipAmount = Math.ceil(
+                        latestTips.emaLandedTips50thPercentile * LAMPORTS_PER_SOL
+                    );
                     break;
                 case 'FAST':
                     tipAmount = Math.ceil(latestTips.landedTips75thPercentile * LAMPORTS_PER_SOL);
@@ -166,29 +166,31 @@ export class JitoClient implements SolanaClient {
                     tipAmount = Math.ceil(latestTips.landedTips95thPercentile * LAMPORTS_PER_SOL);
                     break;
                 default:
-                    throw new Error("Invalid speed: " + computeBudgetConfig.speed);
+                    throw new Error('Invalid speed: ' + computeBudgetConfig.speed);
             }
             tipAmount = Math.min(tipAmount, computeBudgetConfig.price);
         }
 
-
         const tipInstruction = SystemProgram.transfer({
             fromPubkey: payer,
             toPubkey: tipAccount,
-            lamports: tipAmount,
+            lamports: tipAmount
         });
 
         const tipTransaction = await new TransactionBuilder()
-          .setPayer(payer)
-          .setConnection(connection)
-          .addInstructions(tipInstruction)
-          .setComputeBudgetConfig({
-              destination: "PRIORITY_FEE",
-              type: "FIXED",
-              price: 0
-          })
-          .build();
+            .setPayer(payer)
+            .setConnection(connection)
+            .addInstructions(tipInstruction)
+            .setComputeBudgetConfig({
+                destination: 'PRIORITY_FEE',
+                type: 'FIXED',
+                price: 0
+            })
+            .setStripLimitIx(true)
+            .build();
+
         transactions.push(tipTransaction);
+
         return transactions;
     }
 }

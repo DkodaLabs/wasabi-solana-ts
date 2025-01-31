@@ -16,7 +16,6 @@ import {
 } from '../compute-budget';
 import { SimulationError } from '../error-handling';
 
-
 export class TransactionBuilder {
     private payerKey!: PublicKey;
     private connection!: Connection;
@@ -27,6 +26,9 @@ export class TransactionBuilder {
     private computeBudgetConfig: ComputeBudgetConfig = DEFAULT_CONFIG;
     private commitment: Commitment = 'confirmed';
     private limitBuffer: number = 1.2;
+
+    // Identifies a tip transaction
+    private stripLimit: boolean = false;
 
     setPayer(payerKey: PublicKey): this {
         this.payerKey = payerKey;
@@ -63,6 +65,11 @@ export class TransactionBuilder {
         return this;
     }
 
+    setStripLimitIx(stripLimitIx: boolean): this {
+        this.stripLimit = stripLimitIx;
+        return this;
+    }
+
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
         if (this.computeBudgetConfig.destination === 'JITO') {
             // Create a compute budget instruction with 0 priority fees
@@ -82,7 +89,6 @@ export class TransactionBuilder {
             throw new Error('No instructions to build transaction with.');
         }
 
-
         // Create compute budget instructions
         const computeBudgetInstructions = await this.createComputeBudgetInstructions();
         const ixesWithComputeBudget = [...computeBudgetInstructions, ...this.instructions];
@@ -96,23 +102,43 @@ export class TransactionBuilder {
                 instructions: ixesWithComputeBudget
             }).compileToV0Message(this.lookupTables)
         );
-        const simResult = await this.connection.simulateTransaction(transaction);
-        if (simResult.value.err) {
-            throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
-        }
 
-        // Adjust compute limit unless specified
-        if (this.computeBudgetConfig?.limit === undefined && simResult.value.unitsConsumed) {
-            const actualUnitsConsumed = simResult.value.unitsConsumed;
-            const actualUnitsConsumedWithBuffer = Math.ceil(actualUnitsConsumed * this.limitBuffer);
-            ixesWithComputeBudget[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: actualUnitsConsumedWithBuffer });
+        // Strip limit from tip transactions
+        if (!this.stripLimit) {
+            const simResult = await this.connection.simulateTransaction(transaction);
+            if (simResult.value.err) {
+                throw new SimulationError(
+                    JSON.stringify(simResult.value.err),
+                    transaction,
+                    simResult.value.logs
+                );
+            }
 
+            // Adjust compute limit unless specified
+            if (this.computeBudgetConfig?.limit === undefined && simResult.value.unitsConsumed) {
+                const actualUnitsConsumed = simResult.value.unitsConsumed;
+                const actualUnitsConsumedWithBuffer = Math.ceil(
+                    actualUnitsConsumed * this.limitBuffer
+                );
+                ixesWithComputeBudget[0] = ComputeBudgetProgram.setComputeUnitLimit({
+                    units: actualUnitsConsumedWithBuffer
+                });
+
+                transaction = new VersionedTransaction(
+                    new TransactionMessage({
+                        payerKey: this.payerKey,
+                        recentBlockhash: blockhash,
+                        instructions: ixesWithComputeBudget
+                    }).compileToV0Message(this.lookupTables)
+                );
+            }
+        } else {
             transaction = new VersionedTransaction(
-              new TransactionMessage({
-                  payerKey: this.payerKey,
-                  recentBlockhash: blockhash,
-                  instructions: ixesWithComputeBudget
-              }).compileToV0Message(this.lookupTables)
+                new TransactionMessage({
+                    payerKey: this.payerKey,
+                    recentBlockhash: blockhash,
+                    instructions: ixesWithComputeBudget.slice(1)
+                }).compileToV0Message() // Ensure no lookup tables in tip transaction
             );
         }
 
