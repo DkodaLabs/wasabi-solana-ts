@@ -104,7 +104,9 @@ export class TransactionBuilder {
             throw new Error('No instructions to build transaction with.');
         }
 
+        // If there is no simulation request AND no computeBudgetConfig then the transaction is a tip transaction
         if (!this.simulate && !this.computeBudgetConfig) {
+            // Include a zeroed compute price ix so phantom doesn't add their own
             const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
             this.instructions = [cuIx, ...this.instructions];
             return await this.constructTransaction();
@@ -113,17 +115,19 @@ export class TransactionBuilder {
             this.instructions = [...computeBudgetInstructions, ...this.instructions];
 
             const destination = this.computeBudgetConfig?.destination ?? 'PRIORITY_FEE';
+            // If the destination is JITO we need to zero the compute budget price
             if (destination === 'JITO') {
-                const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
-                this.instructions[1] = cuIx;
+                this.instructions[1] = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
             }
 
             const transaction = await this.constructTransaction();
 
+            // Fixed fees do not need to adjust compute limit
             if (this.simulate || this.computeBudgetConfig.type !== 'FIXED') {
                 const simResult = await this.connection.simulateTransaction(transaction);
                 if (simResult.value.unitsConsumed) {
                     this.adjustComputeLimit(simResult.value.unitsConsumed);
+                    // return new transaction
                     return await this.constructTransaction();
                 } else {
                     throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
