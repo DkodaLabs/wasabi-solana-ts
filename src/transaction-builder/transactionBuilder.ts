@@ -6,7 +6,8 @@ import {
     TransactionInstruction,
     TransactionMessage,
     VersionedTransaction,
-    AddressLookupTableAccount
+    AddressLookupTableAccount,
+    Blockhash
 } from '@solana/web3.js';
 import {
     ComputeBudgetConfig,
@@ -80,6 +81,20 @@ export class TransactionBuilder {
         return createPriorityFeeTxn(this.connection, this.computeBudgetConfig, this.instructions);
     }
 
+    private createVersionedTransaction(
+        recentBlockhash: Blockhash,
+        instructions: TransactionInstruction[],
+        lookupTables?: AddressLookupTableAccount[]
+    ): VersionedTransaction {
+        return new VersionedTransaction(
+            new TransactionMessage({
+                payerKey: this.payerKey,
+                recentBlockhash,
+                instructions
+            }).compileToV0Message(lookupTables || [])
+        );
+    }
+
     async build(): Promise<VersionedTransaction> {
         if (!this.payerKey || !this.connection) {
             throw new Error('Payer and connection must be set before building a transaction.');
@@ -95,12 +110,10 @@ export class TransactionBuilder {
 
         // Simulate transaction to get actual compute units consumed
         const blockhash = (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
-        let transaction = new VersionedTransaction(
-            new TransactionMessage({
-                payerKey: this.payerKey,
-                recentBlockhash: blockhash,
-                instructions: ixesWithComputeBudget
-            }).compileToV0Message(this.lookupTables)
+        let transaction = this.createVersionedTransaction(
+            blockhash,
+            ixesWithComputeBudget,
+            this.lookupTables
         );
 
         // Strip limit from tip transactions
@@ -117,28 +130,21 @@ export class TransactionBuilder {
             // Adjust compute limit unless specified
             if (this.computeBudgetConfig?.limit === undefined && simResult.value.unitsConsumed) {
                 const actualUnitsConsumed = simResult.value.unitsConsumed;
-                const actualUnitsConsumedWithBuffer = Math.ceil(
-                    actualUnitsConsumed * this.limitBuffer
-                );
+                const actualUnitsConsumedWithBuffer = Math.ceil(actualUnitsConsumed * this.limitBuffer);
                 ixesWithComputeBudget[0] = ComputeBudgetProgram.setComputeUnitLimit({
                     units: actualUnitsConsumedWithBuffer
                 });
 
-                transaction = new VersionedTransaction(
-                    new TransactionMessage({
-                        payerKey: this.payerKey,
-                        recentBlockhash: blockhash,
-                        instructions: ixesWithComputeBudget
-                    }).compileToV0Message(this.lookupTables)
+                transaction = this.createVersionedTransaction(
+                    blockhash,
+                    ixesWithComputeBudget,
+                    this.lookupTables
                 );
             }
         } else {
-            transaction = new VersionedTransaction(
-                new TransactionMessage({
-                    payerKey: this.payerKey,
-                    recentBlockhash: blockhash,
-                    instructions: ixesWithComputeBudget.slice(1)
-                }).compileToV0Message() // Ensure no lookup tables in tip transaction
+            transaction = this.createVersionedTransaction(
+                blockhash,
+                ixesWithComputeBudget.slice(1)
             );
         }
 
