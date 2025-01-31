@@ -8,7 +8,12 @@ import {
     VersionedTransaction,
     AddressLookupTableAccount
 } from '@solana/web3.js';
-import { ComputeBudgetConfig, createComputeBudgetIx } from '../compute-budget';
+import {
+    ComputeBudgetConfig,
+    createComputeBudgetIx,
+    createPriorityFeeTxn,
+    DEFAULT_CONFIG
+} from '../compute-budget';
 import { SimulationError } from '../error-handling';
 
 
@@ -17,7 +22,9 @@ export class TransactionBuilder {
     private connection!: Connection;
     private instructions: TransactionInstruction[] = [];
     private lookupTables?: AddressLookupTableAccount[];
-    private computeBudgetConfig?: ComputeBudgetConfig;
+
+    // Default compute budget config
+    private computeBudgetConfig: ComputeBudgetConfig = DEFAULT_CONFIG;
     private commitment: Commitment = 'confirmed';
     private limitBuffer: number = 1.2;
 
@@ -57,27 +64,13 @@ export class TransactionBuilder {
     }
 
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
-        if (!this.computeBudgetConfig) {
-            return [];
+        if (this.computeBudgetConfig.destination === 'JITO') {
+            // Create a compute budget instruction with 0 priority fees
+            return createComputeBudgetIx(this.computeBudgetConfig.limit, 0);
         }
-        return createComputeBudgetIx(this.connection, this.computeBudgetConfig, this.instructions);
-    }
 
-    private adjustComputeLimit(
-        currentComputeLimit: number,
-        actualUnitsConsumed: number
-    ): void {
-        const actualUnitsConsumedWithBuffer = actualUnitsConsumed * this.limitBuffer;
-        if (
-            currentComputeLimit > actualUnitsConsumedWithBuffer ||
-            currentComputeLimit < actualUnitsConsumed
-        ) {
-            console.debug("Actual units consumed:", actualUnitsConsumed);
-            const adjustedLimit = Math.ceil(actualUnitsConsumedWithBuffer);
-            console.debug('Adjusting compute limit to:', adjustedLimit);
-
-            this.instructions[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: adjustedLimit });
-        }
+        // Default is PRIORITY_FEE
+        return createPriorityFeeTxn(this.connection, this.computeBudgetConfig, this.instructions);
     }
 
     async build(): Promise<VersionedTransaction> {
@@ -89,56 +82,37 @@ export class TransactionBuilder {
             throw new Error('No instructions to build transaction with.');
         }
 
+
+        // Create compute budget instructions
         const computeBudgetInstructions = await this.createComputeBudgetInstructions();
-        this.instructions = [...computeBudgetInstructions, ...this.instructions];
+        const ixesWithComputeBudget = [...computeBudgetInstructions, ...this.instructions];
 
+        // Simulate transaction to get actual compute units consumed
         const blockhash = (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
-
         let transaction = new VersionedTransaction(
             new TransactionMessage({
                 payerKey: this.payerKey,
                 recentBlockhash: blockhash,
-                instructions: this.instructions
+                instructions: ixesWithComputeBudget
             }).compileToV0Message(this.lookupTables)
         );
-
         const simResult = await this.connection.simulateTransaction(transaction);
         if (simResult.value.err) {
             throw new SimulationError(JSON.stringify(simResult.value.err), transaction, simResult.value.logs);
         }
 
-        let ixEdited = false;
-
-        const destination = this.computeBudgetConfig?.destination ?? 'PRIORITY_FEE';
-        if (destination === 'JITO') {
-            // removes the priority fee
-            const cuIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 });
-
-            if (computeBudgetInstructions.length > 0) {
-                this.instructions[1] = cuIx;
-            } else {
-                this.instructions = [cuIx, ...this.instructions];
-            }
-
-            ixEdited = true;
-        }
-
-        if (simResult.value.unitsConsumed
-            && !this.computeBudgetConfig?.limit
-            && computeBudgetInstructions.length > 0
-        ) {
+        // Adjust compute limit unless specified
+        if (this.computeBudgetConfig?.limit === undefined && simResult.value.unitsConsumed) {
             const actualUnitsConsumed = simResult.value.unitsConsumed;
-            this.adjustComputeLimit(this.computeBudgetConfig.limit, actualUnitsConsumed);
-            ixEdited = true;
-        }
+            const actualUnitsConsumedWithBuffer = Math.ceil(actualUnitsConsumed * this.limitBuffer);
+            ixesWithComputeBudget[0] = ComputeBudgetProgram.setComputeUnitLimit({ units: actualUnitsConsumedWithBuffer });
 
-        if (ixEdited) {
             transaction = new VersionedTransaction(
-                new TransactionMessage({
-                    payerKey: this.payerKey,
-                    recentBlockhash: blockhash,
-                    instructions: this.instructions
-                }).compileToV0Message(this.lookupTables)
+              new TransactionMessage({
+                  payerKey: this.payerKey,
+                  recentBlockhash: blockhash,
+                  instructions: ixesWithComputeBudget
+              }).compileToV0Message(this.lookupTables)
             );
         }
 

@@ -31,6 +31,14 @@ const SPEED_BUFFERS = {
     TURBO: 4
 } as const;
 
+export const DEFAULT_CONFIG: ComputeBudgetConfig = {
+    destination: 'PRIORITY_FEE',
+    type: 'DYNAMIC',
+    speed: 'NORMAL',
+    price: DEFAULT_UNIT_PRICE,
+    limit: DEFAULT_COMPUTE_LIMIT
+};
+
 async function getDynamicPriorityFee(
     connection: Connection,
     writableAccounts: PublicKey[],
@@ -76,8 +84,6 @@ async function getDynamicPriorityFee(
       ? sortedFees[lowerIndex]
       : sortedFees[lowerIndex] + (position - lowerIndex) * (sortedFees[upperIndex] - sortedFees[lowerIndex]);
 
-    console.debug('percentileFee', percentileFee);
-
     return Math.ceil(percentileFee * SPEED_BUFFERS[speed]);
 }
 
@@ -89,33 +95,29 @@ function getWritableAccounts(instructions: TransactionInstruction[]): PublicKey[
         .filter((v, i, a) => a.findIndex((t) => t.equals(v)) === i);
 }
 
-export async function createComputeBudgetIx(
+export async function createPriorityFeeTxn(
     connection: Connection,
     request: ComputeBudgetConfig,
     instructions: TransactionInstruction[]
 ): Promise<TransactionInstruction[]> {
     if (request.type === 'FIXED') {
-        console.debug("Compute unit price:", request.price);
-        return [
-            ComputeBudgetProgram.setComputeUnitLimit({
-                units: request.limit || DEFAULT_COMPUTE_LIMIT
-            }),
-            ComputeBudgetProgram.setComputeUnitPrice({ microLamports: request.price })
-        ];
+        return createComputeBudgetIx(request.limit, request.price);
     }
 
     const writableAccounts = getWritableAccounts(instructions);
-
     let price = await getDynamicPriorityFee(
         connection,
         writableAccounts,
         request.speed || 'NORMAL'
     );
     price = Math.min(price, request.price);
-    console.debug("Compute unit price:", price);
 
+    return createComputeBudgetIx(request.limit, price);
+}
+
+export const createComputeBudgetIx = (unitLimit: number | undefined, unitPrice: number) => {
     return [
-        ComputeBudgetProgram.setComputeUnitLimit({ units: request.limit || DEFAULT_COMPUTE_LIMIT }),
-        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: price })
+        ComputeBudgetProgram.setComputeUnitLimit({ units: unitLimit || DEFAULT_COMPUTE_LIMIT }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: unitPrice })
     ];
 }

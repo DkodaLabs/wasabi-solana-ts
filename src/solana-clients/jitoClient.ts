@@ -6,7 +6,7 @@ import {
     SystemProgram,
     VersionedTransaction,
     PublicKey,
-    LAMPORTS_PER_SOL, TransactionMessage
+    LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { TransactionBuilder } from '../transaction-builder';
 import { SolanaClient } from './solanaClient';
@@ -43,9 +43,23 @@ export interface Bundle {
     maxTransactionCount: number;
 }
 
+const mapLatestTips = (tipResponse: any): LatestTips => {
+    const [tipData] = tipResponse;
+    return {
+        time: tipData.time,
+        landedTips25thPercentile: tipData.landed_tips_25th_percentile,
+        landedTips50thPercentile: tipData.landed_tips_50th_percentile,
+        landedTips75thPercentile: tipData.landed_tips_75th_percentile,
+        landedTips95thPercentile: tipData.landed_tips_95th_percentile,
+        landedTips99thPercentile: tipData.landed_tips_99th_percentile,
+        emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
+    };
+}
+
 export class JitoClient implements SolanaClient {
     private client: JitoJsonRpcClient;
     private tips: LatestTips;
+
     constructor(
         jitoRpcUrl: string = JITO_RPC_URL,
         uuid: string = process.env.JITO_UUID ?? ''
@@ -82,30 +96,16 @@ export class JitoClient implements SolanaClient {
     }
 
     private async fetchLatestTips(): Promise<LatestTips> {
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
         try {
             const response = await fetch('https://solana.wasabi.xyz/api/solana/jito_tips');
 
             if (!response.ok) {
-                console.log("Failed to fetch latest tips");
+                console.error("Failed to fetch latest tips");
                 return this.tips;
             }
 
-            const data = await response.json();
-            const [tipData] = data;
-
-            this.tips = {
-                time: tipData.time,
-                landedTips25thPercentile: tipData.landed_tips_25th_percentile,
-                landedTips50thPercentile: tipData.landed_tips_50th_percentile,
-                landedTips75thPercentile: tipData.landed_tips_75th_percentile,
-                landedTips95thPercentile: tipData.landed_tips_95th_percentile,
-                landedTips99thPercentile: tipData.landed_tips_99th_percentile,
-                emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
-            };
+            const tipResponse = await response.json();
+            this.tips = mapLatestTips(tipResponse);
 
             return this.tips;
         } catch (error) {
@@ -124,18 +124,9 @@ export class JitoClient implements SolanaClient {
             console.info('Connected to Jito');
         };
 
-        ws.onmessage = (data: any) => {
-            const [tipData] = JSON.parse(data.toString());
-            this.tips = {
-                time: tipData.time,
-                landedTips25thPercentile: tipData.landed_tips_25th_percentile,
-                landedTips50thPercentile: tipData.landed_tips_50th_percentile,
-                landedTips75thPercentile: tipData.landed_tips_75th_percentile,
-                landedTips95thPercentile: tipData.landed_tips_95th_percentile,
-                landedTips99thPercentile: tipData.landed_tips_99th_percentile,
-                emaLandedTips50thPercentile: tipData.ema_landed_tips_50th_percentile
-            };
-            console.log(this.tips);
+        ws.onmessage = (rawData: any) => {
+            const data = JSON.parse(rawData.toString());
+            this.tips = mapLatestTips(data);
         };
 
         ws.onclose = () => {
@@ -159,9 +150,10 @@ export class JitoClient implements SolanaClient {
             JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]
         );
 
-        let tipAmount = computeBudgetConfig.price ?? 0;
-
-        if (computeBudgetConfig.type !== 'FIXED') {
+        let tipAmount: number;
+        if (computeBudgetConfig.type === 'FIXED') {
+            tipAmount = computeBudgetConfig.price;
+        } else { // Default is DYNAMIC
             const latestTips = await this.getTips();
             switch (computeBudgetConfig.speed) {
                 case 'NORMAL':
@@ -174,15 +166,11 @@ export class JitoClient implements SolanaClient {
                     tipAmount = Math.ceil(latestTips.landedTips95thPercentile * LAMPORTS_PER_SOL);
                     break;
                 default:
-                    throw new Error("Invalid speed");
+                    throw new Error("Invalid speed: " + computeBudgetConfig.speed);
             }
-
-            if (tipAmount > computeBudgetConfig.price) {
-                tipAmount = computeBudgetConfig.price;
-            }
+            tipAmount = Math.min(tipAmount, computeBudgetConfig.price);
         }
 
-        console.debug("Tip amount: ", tipAmount);
 
         const tipInstruction = SystemProgram.transfer({
             fromPubkey: payer,
@@ -190,18 +178,17 @@ export class JitoClient implements SolanaClient {
             lamports: tipAmount,
         });
 
-        const { blockhash } = await connection.getLatestBlockhash();
-
-        const tipTransaction = new VersionedTransaction(
-          new TransactionMessage({
-              payerKey: payer,
-              recentBlockhash: blockhash,
-              instructions: [tipInstruction],
-          }).compileToV0Message()
-        );
-
+        const tipTransaction = await new TransactionBuilder()
+          .setPayer(payer)
+          .setConnection(connection)
+          .addInstructions(tipInstruction)
+          .setComputeBudgetConfig({
+              destination: "PRIORITY_FEE",
+              type: "FIXED",
+              price: 0
+          })
+          .build();
         transactions.push(tipTransaction);
-
         return transactions;
     }
 }
