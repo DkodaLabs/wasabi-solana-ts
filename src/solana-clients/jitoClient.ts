@@ -190,16 +190,11 @@ export class JitoClient implements SolanaClient {
             lamports: tipAmount,
         });
 
-        const builder = new TransactionBuilder()
+        const tipTransaction = await new TransactionBuilder()
             .setPayer(payer)
             .setConnection(connection)
             .addInstructions(tipInstruction)
-            .setComputeBudgetConfig({
-                destination: "JITO",
-                price: 0
-            });
-
-        const tipTransaction = await builder.build();
+            .build();
 
         transactions.push(tipTransaction);
 
