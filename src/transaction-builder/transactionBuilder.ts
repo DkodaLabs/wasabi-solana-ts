@@ -84,14 +84,13 @@ export class TransactionBuilder {
     private createVersionedTransaction(
         recentBlockhash: Blockhash,
         instructions: TransactionInstruction[],
-        lookupTables?: AddressLookupTableAccount[]
     ): VersionedTransaction {
         return new VersionedTransaction(
             new TransactionMessage({
                 payerKey: this.payerKey,
                 recentBlockhash,
                 instructions
-            }).compileToV0Message(lookupTables || [])
+            }).compileToV0Message(this.lookupTables)
         );
     }
 
@@ -113,11 +112,15 @@ export class TransactionBuilder {
         let transaction = this.createVersionedTransaction(
             blockhash,
             ixesWithComputeBudget,
-            this.lookupTables
         );
 
         // Strip limit from tip transactions
-        if (!this.stripLimit) {
+        if (this.stripLimit) {
+            transaction = this.createVersionedTransaction(
+                blockhash,
+                ixesWithComputeBudget.slice(1)
+            );
+        } else {
             const simResult = await this.connection.simulateTransaction(transaction);
             if (simResult.value.err) {
                 throw new SimulationError(
@@ -138,15 +141,9 @@ export class TransactionBuilder {
                 transaction = this.createVersionedTransaction(
                     blockhash,
                     ixesWithComputeBudget,
-                    this.lookupTables
                 );
             }
-        } else {
-            transaction = this.createVersionedTransaction(
-                blockhash,
-                ixesWithComputeBudget.slice(1)
-            );
-        }
+        } 
 
         return transaction;
     }
