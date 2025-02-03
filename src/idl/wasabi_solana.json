@@ -3086,7 +3086,7 @@
       "args": [
         {
           "name": "nonce",
-          "type": "u16"
+          "type": "u32"
         },
         {
           "name": "min_target_amount",
@@ -3489,7 +3489,7 @@
       "args": [
         {
           "name": "nonce",
-          "type": "u16"
+          "type": "u32"
         },
         {
           "name": "min_target_amount",
@@ -5792,6 +5792,11 @@
       "code": 6029,
       "name": "MintMismatch",
       "msg": "The payout token account's associated mint does not match"
+    },
+    {
+      "code": 6030,
+      "name": "ZeroAmount",
+      "msg": "Value must be greater than 0"
     }
   ],
   "types": [
