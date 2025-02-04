@@ -152,8 +152,8 @@ export const PDA = {
     },
 
     getPosition(owner: PublicKey, pool: PublicKey, lpVault: PublicKey, nonce: number): PublicKey {
-        const nonceBuffer = Buffer.alloc(2);
-        nonceBuffer.writeUInt16LE(nonce);
+        const nonceBuffer = Buffer.alloc(4);
+        nonceBuffer.writeUInt32LE(nonce);
         return findProgramAddress(
             [
                 utils.bytes.utf8.encode(SEED_PREFIX.POSITION),
