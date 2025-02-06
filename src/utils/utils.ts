@@ -46,6 +46,7 @@ export const SEED_PREFIX = {
     EVENT_AUTHORITY: '__event_authority',
     STRATEGY: 'strategy',
     STRATEGY_REQ: 'strategy_request'
+    BUNDLE_CACHE: 'bundle_cache'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -213,6 +214,17 @@ export const PDA = {
     getGlobalSettings(): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
+            WASABI_PROGRAM_ID
+        );
+    },
+
+    getBundleCache(payer: PublicKey, authority: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.BUNDLE_CACHE),
+                payer.toBuffer(),
+                authority.toBuffer()
+            ],
             WASABI_PROGRAM_ID
         );
     },
@@ -745,6 +757,7 @@ export async function handlePaymentTokenMintWithAuthority(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
+
     let instructions = { setupIx: [], cleanupIx: [] };
 
     if (paymentToken.equals(NATIVE_MINT)) {
