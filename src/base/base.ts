@@ -2,7 +2,6 @@ import { Program } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
     TransactionSignature,
-    ComputeBudgetProgram,
     PublicKey
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';

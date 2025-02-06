@@ -20,3 +20,7 @@ export * from './redeem.js';
 export * from './stopLoss.js';
 export * from './takeProfit.js';
 export * from './withdraw.js';
+export * from './initBundle.js';
+export * from './closeBundle.js';
+export * from './validateBundle.js';
+export * from './bundleCache.js';

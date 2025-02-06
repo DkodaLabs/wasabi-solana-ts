@@ -248,6 +248,91 @@
       "args": []
     },
     {
+      "name": "close_bundle",
+      "discriminator": [
+        102,
+        24,
+        15,
+        14,
+        127,
+        75,
+        214,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "src"
+        },
+        {
+          "name": "dst"
+        },
+        {
+          "name": "bundle_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tip_recipient",
+          "docs": [
+            "CHECK"
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "docs": [
+            "CHECK"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tip_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "close_long_position_cleanup",
       "discriminator": [
         236,
@@ -1407,6 +1492,86 @@
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "init_bundle",
+      "discriminator": [
+        229,
+        53,
+        78,
+        48,
+        215,
+        139,
+        151,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "bundle_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "docs": [
+            "CHECK"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "num_expected_tx",
+          "type": "u8"
+        },
+        {
+          "name": "src_expected_max_delta",
+          "type": "u64"
+        },
+        {
+          "name": "dst_expected_min_delta",
           "type": "u64"
         }
       ]
@@ -5130,6 +5295,63 @@
       ]
     },
     {
+      "name": "validate_bundle",
+      "discriminator": [
+        176,
+        243,
+        172,
+        29,
+        96,
+        111,
+        149,
+        195
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "src"
+        },
+        {
+          "name": "dst"
+        },
+        {
+          "name": "bundle_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdraw",
       "discriminator": [
         183,
@@ -5377,6 +5599,19 @@
         95,
         91,
         32
+      ]
+    },
+    {
+      "name": "BundleCache",
+      "discriminator": [
+        10,
+        93,
+        0,
+        226,
+        122,
+        90,
+        108,
+        220
       ]
     },
     {
@@ -5797,6 +6032,21 @@
       "code": 6030,
       "name": "ZeroAmount",
       "msg": "Value must be greater than 0"
+    },
+    {
+      "code": 6031,
+      "name": "IncorrectTxCount",
+      "msg": "Incorrect number of transactions executed"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidTipRecipient",
+      "msg": "Invalid tip recipient"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidBundleAuthority",
+      "msg": "Invalid bundle authority"
     }
   ],
   "types": [
@@ -5863,6 +6113,50 @@
               "The bump seed for this PDA"
             ],
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BundleCache",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "num_expected_tx",
+            "type": "u8"
+          },
+          {
+            "name": "num_executed_tx",
+            "type": "u8"
+          },
+          {
+            "name": "src_bal_before",
+            "type": "u64"
+          },
+          {
+            "name": "src_bal_after",
+            "type": "u64"
+          },
+          {
+            "name": "src_max_expected_delta",
+            "type": "u64"
+          },
+          {
+            "name": "dst_bal_before",
+            "type": "u64"
+          },
+          {
+            "name": "dst_bal_after",
+            "type": "u64"
+          },
+          {
+            "name": "dst_min_expected_delta",
+            "type": "u64"
           }
         ]
       }

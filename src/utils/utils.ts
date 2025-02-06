@@ -43,7 +43,8 @@ export const SEED_PREFIX = {
     TAKE_PROFIT_ORDER: 'take_profit_order',
     DEBT_CONTROLLER: 'debt_controller',
     GLOBAL_SETTINGS: 'global_settings',
-    EVENT_AUTHORITY: '__event_authority'
+    EVENT_AUTHORITY: '__event_authority',
+    BUNDLE_CACHE: 'bundle_cache'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -213,7 +214,19 @@ export const PDA = {
             [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
             WASABI_PROGRAM_ID
         );
+    },
+
+    getBundleCache(payer: PublicKey, authority: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.BUNDLE_CACHE),
+                payer.toBuffer(),
+                authority.toBuffer()
+            ],
+            WASABI_PROGRAM_ID
+        );
     }
+
 };
 
 type TokenData = {
@@ -688,11 +701,11 @@ export async function handleMint(
 
         if (!userTokenAccount) {
             instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
-              owner,
-              userAta,
-              owner,
-              mint,
-              tokenProgram
+                owner,
+                userAta,
+                owner,
+                mint,
+                tokenProgram
             ));
         }
     }

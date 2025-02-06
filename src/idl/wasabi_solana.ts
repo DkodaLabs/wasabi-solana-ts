@@ -254,6 +254,91 @@ export type WasabiSolana = {
       "args": []
     },
     {
+      "name": "closeBundle",
+      "discriminator": [
+        102,
+        24,
+        15,
+        14,
+        127,
+        75,
+        214,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "src"
+        },
+        {
+          "name": "dst"
+        },
+        {
+          "name": "bundleCache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tipRecipient",
+          "docs": [
+            "CHECK"
+          ],
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvarInfo",
+          "docs": [
+            "CHECK"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tipAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "closeLongPositionCleanup",
       "discriminator": [
         236,
@@ -1413,6 +1498,86 @@ export type WasabiSolana = {
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initBundle",
+      "discriminator": [
+        229,
+        53,
+        78,
+        48,
+        215,
+        139,
+        151,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "bundleCache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvarInfo",
+          "docs": [
+            "CHECK"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "numExpectedTx",
+          "type": "u8"
+        },
+        {
+          "name": "srcExpectedMaxDelta",
+          "type": "u64"
+        },
+        {
+          "name": "dstExpectedMinDelta",
           "type": "u64"
         }
       ]
@@ -5136,6 +5301,63 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "validateBundle",
+      "discriminator": [
+        176,
+        243,
+        172,
+        29,
+        96,
+        111,
+        149,
+        195
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "src"
+        },
+        {
+          "name": "dst"
+        },
+        {
+          "name": "bundleCache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  110,
+                  100,
+                  108,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdraw",
       "discriminator": [
         183,
@@ -5383,6 +5605,19 @@ export type WasabiSolana = {
         95,
         91,
         32
+      ]
+    },
+    {
+      "name": "bundleCache",
+      "discriminator": [
+        10,
+        93,
+        0,
+        226,
+        122,
+        90,
+        108,
+        220
       ]
     },
     {
@@ -5803,6 +6038,21 @@ export type WasabiSolana = {
       "code": 6030,
       "name": "zeroAmount",
       "msg": "Value must be greater than 0"
+    },
+    {
+      "code": 6031,
+      "name": "incorrectTxCount",
+      "msg": "Incorrect number of transactions executed"
+    },
+    {
+      "code": 6032,
+      "name": "invalidTipRecipient",
+      "msg": "Invalid tip recipient"
+    },
+    {
+      "code": 6033,
+      "name": "invalidBundleAuthority",
+      "msg": "Invalid bundle authority"
     }
   ],
   "types": [
@@ -5869,6 +6119,50 @@ export type WasabiSolana = {
               "The bump seed for this PDA"
             ],
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "bundleCache",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "numExpectedTx",
+            "type": "u8"
+          },
+          {
+            "name": "numExecutedTx",
+            "type": "u8"
+          },
+          {
+            "name": "srcBalBefore",
+            "type": "u64"
+          },
+          {
+            "name": "srcBalAfter",
+            "type": "u64"
+          },
+          {
+            "name": "srcMaxExpectedDelta",
+            "type": "u64"
+          },
+          {
+            "name": "dstBalBefore",
+            "type": "u64"
+          },
+          {
+            "name": "dstBalAfter",
+            "type": "u64"
+          },
+          {
+            "name": "dstMinExpectedDelta",
+            "type": "u64"
           }
         ]
       }
