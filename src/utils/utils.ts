@@ -1,6 +1,5 @@
 import { SignerWalletAdapter } from '@solana/wallet-adapter-base';
 import {
-    hash,
     PublicKey,
     Connection,
     SendOptions,
