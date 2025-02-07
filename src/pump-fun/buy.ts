@@ -5,10 +5,7 @@ import {
     SystemProgram,
     SYSVAR_RENT_PUBKEY
 } from '@solana/web3.js';
-import {
-    getAssociatedTokenAddressSync,
-    TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { getDiscriminator } from '../utils';
 import {
     getBondingCurve,

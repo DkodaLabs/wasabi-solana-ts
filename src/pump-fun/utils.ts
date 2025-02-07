@@ -21,4 +21,3 @@ export const getEventAuthority = () => {
         PUMP_FUN_PROGRAM_ID,
     )[0];
 };
-
