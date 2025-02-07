@@ -1,5 +1,6 @@
 import { SignerWalletAdapter } from '@solana/wallet-adapter-base';
 import {
+    hash,
     PublicKey,
     Connection,
     SendOptions,
@@ -278,7 +279,10 @@ export async function getMetaplexMetadata(
 }
 
 // Mint is the mint of the token in the vault
-export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<bigint> {
+export async function getMaxWithdraw(
+    program: Program<WasabiSolana>,
+    mint: PublicKey
+): Promise<bigint> {
     const lpVaultAddress = PDA.getLpVault(mint);
     const sharesMintAddress = PDA.getSharesMint(lpVaultAddress, mint);
     const userSharesAddress = getAssociatedTokenAddressSync(
@@ -314,7 +318,7 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
 export function calculateAssetsFromShares(
     shares: bigint,
     totalShares: bigint,
-    totalAssets: bigint,
+    totalAssets: bigint
 ): bigint {
     return (shares * totalAssets) / totalShares;
 }
@@ -687,13 +691,15 @@ export async function handleMint(
         const userTokenAccount = await connection.getAccountInfo(userAta);
 
         if (!userTokenAccount) {
-            instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
-              owner,
-              userAta,
-              owner,
-              mint,
-              tokenProgram
-            ));
+            instructions.setupIx.push(
+                createAssociatedTokenAccountIdempotentInstruction(
+                    owner,
+                    userAta,
+                    owner,
+                    mint,
+                    tokenProgram
+                )
+            );
         }
     }
 
@@ -708,7 +714,7 @@ export async function handleMintsAndTokenProgram(
     connection: Connection,
     currency: PublicKey,
     collateral: PublicKey,
-    owner?: PublicKey,
+    owner?: PublicKey
 ): Promise<TokenProgramsResult> {
     if (currency.equals(collateral)) {
         throw new Error('Mints cannot be the same');
@@ -785,7 +791,6 @@ export async function handlePaymentTokenMintWithAuthority(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
-
     let instructions = { setupIx: [], cleanupIx: [] };
 
     if (paymentToken.equals(NATIVE_MINT)) {
@@ -807,3 +812,10 @@ export async function handlePaymentTokenMintWithAuthority(
         cleanupIx: instructions.cleanupIx
     };
 }
+
+export const getDiscriminator = (namespace: string, name: string): Buffer => {
+    const preimage = `${namespace}:${name}`;
+    const sighash = utils.sha256.hash(preimage);
+
+    return Buffer.from(sighash.slice(0, 8));
+};
