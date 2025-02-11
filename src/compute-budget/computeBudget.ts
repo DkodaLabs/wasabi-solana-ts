@@ -22,7 +22,7 @@ export type ComputeBudgetConfig = {
     limit?: number;
 };
 
-const DEFAULT_COMPUTE_LIMIT = 400_000;
+const DEFAULT_COMPUTE_LIMIT = 1_000_000;
 const DEFAULT_UNIT_PRICE = 50_000;
 
 const SPEED_BUFFERS = {
