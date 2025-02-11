@@ -141,7 +141,7 @@ export class JitoClient implements SolanaClient {
     /// Create a tip instruction
     async createTipInstruction(
         payer: PublicKey,
-        computeBudgetConfig: ComputeBudgetConfig,
+        computeBudgetConfig: ComputeBudgetConfig
     ): Promise<TransactionInstruction> {
         const tipAccount = new PublicKey(
             JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]
@@ -156,7 +156,9 @@ export class JitoClient implements SolanaClient {
             const latestTips = await this.getTips();
             switch (computeBudgetConfig.speed) {
                 case 'NORMAL':
-                    tipAmount = Math.ceil(latestTips.emaLandedTips50thPercentile * LAMPORTS_PER_SOL);
+                    tipAmount = Math.ceil(
+                        latestTips.emaLandedTips50thPercentile * LAMPORTS_PER_SOL
+                    );
                     break;
                 case 'FAST':
                     tipAmount = Math.ceil(latestTips.landedTips75thPercentile * LAMPORTS_PER_SOL);
@@ -181,11 +183,11 @@ export class JitoClient implements SolanaClient {
         connection: Connection,
         payer: PublicKey,
         computeBudgetConfig: ComputeBudgetConfig,
-        transactions: VersionedTransaction[],
+        transactions: VersionedTransaction[]
     ): Promise<VersionedTransaction[]> {
         const message = transactions[transactions.length - 1].message as MessageV0;
-        const instructions = message.compiledInstructions.map(ix => {
-            const keys = ix.accountKeyIndexes.map(index => ({
+        const instructions = message.compiledInstructions.map((ix) => {
+            const keys = ix.accountKeyIndexes.map((index) => ({
                 pubkey: message.staticAccountKeys[index],
                 isSigner: message.isAccountSigner(index),
                 isWritable: message.isAccountWritable(index)
@@ -196,7 +198,7 @@ export class JitoClient implements SolanaClient {
             return new TransactionInstruction({
                 keys,
                 programId,
-                data: Buffer.from(ix.data),
+                data: Buffer.from(ix.data)
             });
         });
 
@@ -210,7 +212,7 @@ export class JitoClient implements SolanaClient {
             .setComputeBudgetConfig({
                 destination: 'PRIORITY_FEE',
                 type: 'FIXED',
-                price: 0,
+                price: 0
             })
             .setStripLimitIx(true)
             .build();
