@@ -1,6 +1,7 @@
 import { Connection, VersionedTransaction, PublicKey } from '@solana/web3.js';
 import { JitoClient, Bundle } from '../solana-clients';
 import { ComputeBudgetConfig, DEFAULT_CONFIG } from '../compute-budget';
+import { MAX_SERIALIZED_LEN } from '../instructions/deployToken';
 
 export type TipLocation = 'TX' | 'IX' | 'AUTO' | 'NONE';
 
@@ -57,6 +58,10 @@ export class BundleBuilder {
             throw new Error('No transactions to build bundle with');
         }
 
+        if (this.transactions.length > 5) {
+            throw new Error('Bundles may only contain five (5) transactions');
+        }
+
         const maxTransactionCount = this.maxTransactionCount || this.transactions.length;
 
         let transactions: VersionedTransaction[] = this.transactions;
@@ -69,14 +74,31 @@ export class BundleBuilder {
                     this.computeBudgetConfig,
                     this.transactions
                 );
+
                 break;
             case 'IX':
-                transactions = await this.client.appendTipInstruction(
-                    this.connection,
-                    this.payer,
-                    this.computeBudgetConfig,
-                    this.transactions
-                );
+                if (
+                    this.transactions[this.transactions.length - 1]
+                        .serialize()
+                        .length <= MAX_SERIALIZED_LEN - 80 // ~2 addresses + some additional buffer
+                ) {
+                    transactions = await this.client.appendTipInstruction(
+                        this.connection,
+                        this.payer,
+                        this.computeBudgetConfig,
+                        this.transactions
+                    );
+                } else if (this.transactions.length < 5) {
+                    transactions = await this.client.appendTipTransaction(
+                        this.connection,
+                        this.payer,
+                        this.computeBudgetConfig,
+                        this.transactions,
+                    );
+                } else {
+                    throw new Error("No space to append tip instruction or transaction");
+                }
+
                 break;
             default:
                 break;
