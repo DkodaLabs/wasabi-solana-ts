@@ -16,9 +16,9 @@ import {
 } from '@solana/spl-token';
 import { PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { createInitLpVaultInstruction } from './initLpVault';
-import { createInitLongPoolInstruction } from './initLongPool';
-import { createInitShortPoolInstruction } from './initShortPool';
+import { createInitLpVaultInstruction } from '../instructions/initLpVault';
+import { createInitLongPoolInstruction } from '../instructions/initLongPool';
+import { createInitShortPoolInstruction } from '../instructions/initShortPool';
 import { AddressLookupTableProgram } from '@solana/web3.js';
 
 export const MAX_SERIALIZED_LEN = 1644;
@@ -63,37 +63,41 @@ const WALLETS = {
     }
 };
 
+export type DeployerOptions = {
+    excludeLong?: boolean;
+    excludeShort?: boolean;
+    excludeLookups?: boolean;
+    excludeSol?: boolean;
+    excludeUsdc?: boolean;
+    excludeAta?: boolean;
+};
+
 export class DeployerBuilder {
     private mint!: PublicKey;
-    private tokenName!: string;
-    private tokenSymbol!: string;
-    private tokenUri!: string;
+    private name!: string;
+    private symbol!: string;
+    private uri!: string;
     private program!: Program<WasabiSolana>;
     private swapAuthority?: PublicKey;
-    private excludeLong?: boolean;
-    private excludeShort?: boolean;
-    private excludeLookups?: boolean;
-    private excludeSol?: boolean;
-    private excludeUsdc?: boolean;
-    private excludeAta?: boolean;
+    private options?: DeployerOptions;
 
-    setTokenMint(mint: PublicKey): this {
+    setMint(mint: PublicKey): this {
         this.mint = mint;
         return this;
     }
 
-    setTokenName(name: string): this {
-        this.tokenName = name;
+    setName(name: string): this {
+        this.name = name;
         return this;
     }
 
-    setTokenSymbol(symbol: string): this {
-        this.tokenSymbol = symbol;
+    setSymbol(symbol: string): this {
+        this.symbol = symbol;
         return this;
     }
 
-    setTokenUri(uri: string): this {
-        this.tokenUri = uri;
+    setUri(uri: string): this {
+        this.uri = uri;
         return this;
     }
 
@@ -108,32 +112,37 @@ export class DeployerBuilder {
     }
 
     setExcludeLong(): this {
-        this.excludeLong = true;
+        this.options.excludeLong = true;
         return this;
     }
 
     setExcludeShort(): this {
-        this.excludeShort = true;
+        this.options.excludeShort = true;
         return this;
     }
 
     setExcludeLookups(): this {
-        this.excludeLookups = true;
+        this.options.excludeLookups = true;
         return this;
     }
 
     setExcludeSol(): this {
-        this.excludeSol = true;
+        this.options.excludeSol = true;
         return this;
     }
 
     setExcludeUsdc(): this {
-        this.excludeUsdc = true;
+        this.options.excludeUsdc = true;
         return this;
     }
 
     setExcludeAta(): this {
-        this.excludeAta = true;
+        this.options.excludeAta = true;
+        return this;
+    }
+
+    setOptions(options: DeployerOptions): this {
+        this.options = options;
         return this;
     }
 
@@ -156,7 +165,7 @@ export class DeployerBuilder {
             PDA.getSharesMint(lpVault, this.mint)
         ]);
 
-        if (!this.excludeUsdc) {
+        if (!this.options.excludeUsdc) {
             const usdc = new PublicKey(USDC_MINT);
             const usdcLpVault = PDA.getLpVault(usdc);
             const usdcVault = getAssociatedTokenAddressSync(
@@ -169,7 +178,7 @@ export class DeployerBuilder {
 
             addresses.push(...[usdc, usdcLpVault, usdcVault, usdcSharesMint]);
 
-            if (!this.excludeShort) {
+            if (!this.options.excludeShort) {
                 const usdcLongPool = PDA.getLongPool(this.mint, usdc);
                 const usdcLongPoolQuoteVault = getAssociatedTokenAddressSync(
                     usdc,
@@ -187,7 +196,7 @@ export class DeployerBuilder {
                 addresses.push(...[usdcLongPool, usdcLongPoolQuoteVault, usdcLongPoolBaseVault]);
             }
 
-            if (!this.excludeLong) {
+            if (!this.options.excludeLong) {
                 const usdcShortPool = PDA.getShortPool(this.mint, usdc);
                 const usdcShortPoolQuoteVault = getAssociatedTokenAddressSync(
                     this.mint,
@@ -208,7 +217,7 @@ export class DeployerBuilder {
             addresses.push(...[...WALLETS.FEE[USDC_MINT], ...WALLETS.LIQUIDATION[USDC_MINT]]);
         }
 
-        if (!this.excludeSol) {
+        if (!this.options.excludeSol) {
             const solLpVault = PDA.getLpVault(NATIVE_MINT);
             const solVault = getAssociatedTokenAddressSync(
                 NATIVE_MINT,
@@ -220,7 +229,7 @@ export class DeployerBuilder {
 
             addresses.push(...[solLpVault, solVault, solSharesMint]);
 
-            if (!this.excludeLong) {
+            if (!this.options.excludeLong) {
                 const solLongPool = PDA.getLongPool(this.mint, NATIVE_MINT);
                 const solLongPoolQuoteVault = getAssociatedTokenAddressSync(
                     NATIVE_MINT,
@@ -237,7 +246,7 @@ export class DeployerBuilder {
 
                 addresses.push(...[solLongPool, solLongPoolQuoteVault, solLongPoolBaseVault]);
             }
-            if (!this.excludeShort) {
+            if (!this.options.excludeShort) {
                 const solShortPool = PDA.getShortPool(this.mint, NATIVE_MINT);
                 const solShortPoolQuoteVault = getAssociatedTokenAddressSync(
                     this.mint,
@@ -311,7 +320,7 @@ export class DeployerBuilder {
             throw new Error("Missing required parameters");
         }
 
-        if (!this.tokenName || !this.tokenSymbol || !this.tokenUri) {
+        if (!this.name || !this.symbol || !this.uri) {
             throw new Error("Missing required token parameters");
         }
 
@@ -320,9 +329,9 @@ export class DeployerBuilder {
         instructions.push(...(await createInitLpVaultInstruction(
             this.program,
             {
-                name: this.tokenName,
-                symbol: this.tokenSymbol,
-                uri: this.tokenUri
+                name: this.name,
+                symbol: this.symbol,
+                uri: this.uri
             },
             {
                 admin: this.program.provider.publicKey,
@@ -330,8 +339,8 @@ export class DeployerBuilder {
             },
         )));
 
-        if (!this.excludeSol) {
-            if (!this.excludeLong) {
+        if (!this.options.excludeSol) {
+            if (!this.options.excludeLong) {
                 instructions.push(...(await createInitLongPoolInstruction(
                     this.program, {
                     currency: NATIVE_MINT,
@@ -340,7 +349,7 @@ export class DeployerBuilder {
                 }
                 )));
             }
-            if (!this.excludeShort) {
+            if (!this.options.excludeShort) {
                 instructions.push(...(await createInitShortPoolInstruction(
                     this.program, {
                     currency: this.mint,
@@ -350,17 +359,17 @@ export class DeployerBuilder {
             }
         }
 
-        if (!this.excludeUsdc) {
+        if (!this.options.excludeUsdc) {
             const usdc = new PublicKey(USDC_MINT);
 
-            if (!this.excludeLong) {
+            if (!this.options.excludeLong) {
                 instructions.push(...(await createInitLongPoolInstruction(this.program, {
                     currency: usdc,
                     collateral: this.mint,
                     admin: this.program.provider.publicKey
                 })));
 
-                if (!this.excludeAta) {
+                if (!this.options.excludeAta) {
                     const longPool = PDA.getLongPool(this.mint, usdc);
 
                     instructions.push(createAssociatedTokenAccountIdempotentInstruction(
@@ -378,14 +387,14 @@ export class DeployerBuilder {
                 }
             }
 
-            if (!this.excludeShort) {
+            if (!this.options.excludeShort) {
                 instructions.push(...(await createInitShortPoolInstruction(this.program, {
                     currency: this.mint,
                     collateral: usdc,
                     admin: this.program.provider.publicKey
                 })));
 
-                if (!this.excludeAta) {
+                if (!this.options.excludeAta) {
                     const shortPool = PDA.getShortPool(usdc, this.mint);
 
                     instructions.push(createAssociatedTokenAccountIdempotentInstruction(
@@ -404,7 +413,7 @@ export class DeployerBuilder {
             }
         }
 
-        if (!this.excludeLookups) {
+        if (!this.options.excludeLookups) {
             instructions.push(...(
                 await this.createInitLookupTableInstructions(
                     (await this.program.provider.connection
