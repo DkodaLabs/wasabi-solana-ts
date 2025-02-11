@@ -1,7 +1,7 @@
 import { Connection, VersionedTransaction, PublicKey } from '@solana/web3.js';
 import { JitoClient, Bundle } from '../solana-clients';
 import { ComputeBudgetConfig, DEFAULT_CONFIG } from '../compute-budget';
-import { MAX_SERIALIZED_LEN } from '../instructions/deployToken';
+import { MAX_SERIALIZED_LEN } from '../market-deployer/deployerBuilder';
 
 export type TipLocation = 'TX' | 'IX' | 'AUTO' | 'NONE';
 
