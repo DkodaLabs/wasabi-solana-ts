@@ -974,6 +974,84 @@
       "args": []
     },
     {
+      "name": "close_strategy",
+      "discriminator": [
+        56,
+        247,
+        170,
+        246,
+        89,
+        221,
+        134,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "close_take_profit_order",
       "discriminator": [
         130,
@@ -2415,6 +2493,102 @@
         {
           "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "init_strategy",
+      "discriminator": [
+        154,
+        74,
+        215,
+        216,
+        229,
+        204,
+        141,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The account that has permission to borrow from the vaults"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "docs": [
+            "The lp vault being borrowed from"
+          ]
+        },
+        {
+          "name": "vault",
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "currency",
+          "docs": [
+            "The mint of the asset held by the lp vault"
+          ]
+        },
+        {
+          "name": "collateral",
+          "docs": [
+            "The mint of the token received for staking the lp vault asset"
+          ]
+        },
+        {
+          "name": "strategy",
+          "docs": [
+            "The 'strategy'"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "docs": [
+            "The lp vault's collateral token account"
+          ]
         },
         {
           "name": "system_program",
@@ -4738,6 +4912,623 @@
       ]
     },
     {
+      "name": "strategy_claim_yield",
+      "discriminator": [
+        50,
+        156,
+        7,
+        45,
+        45,
+        214,
+        42,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_quote",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "strategy_deposit_cleanup",
+      "discriminator": [
+        33,
+        245,
+        91,
+        164,
+        12,
+        88,
+        147,
+        174
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The account that has permission to borrow from the vaults"
+          ],
+          "signer": true
+        },
+        {
+          "name": "lp_vault",
+          "docs": [
+            "The lp vault being borrowed from"
+          ],
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The token account for the asset which the lp vault holds"
+          ],
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "collateral",
+          "docs": [
+            "The mint of the token that will be received for staking the vault asset"
+          ],
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy_request",
+          "docs": [
+            "Temporary 'cache' account to store the state of the stake request between instructions"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy",
+          "docs": [
+            "The account that holds the strategy's state"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "docs": [
+            "The lp vault's collateral token account"
+          ],
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "strategy_deposit_setup",
+      "discriminator": [
+        38,
+        134,
+        220,
+        229,
+        48,
+        210,
+        179,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The account that has permission to borrow from the vaults"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "docs": [
+            "The lp vault being borrowed from"
+          ],
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The token account for the asset which the lp vault holds"
+          ],
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "collateral",
+          "docs": [
+            "The mint of the token that will be received for staking the vault asset"
+          ],
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy_request",
+          "docs": [
+            "Temporary 'cache' account to store the state of the strategy request between instructions"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy",
+          "docs": [
+            "The 'strategy'"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "docs": [
+            "The lp vault's token account",
+            "Holds the 'collateral' token"
+          ],
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "strategy_withdraw_cleanup",
+      "discriminator": [
+        144,
+        84,
+        89,
+        51,
+        8,
+        192,
+        83,
+        73
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "strategy_withdraw_setup",
+      "discriminator": [
+        85,
+        147,
+        77,
+        105,
+        240,
+        187,
+        240,
+        114
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "take_profit_cleanup",
       "discriminator": [
         121,
@@ -5484,6 +6275,32 @@
       ]
     },
     {
+      "name": "Strategy",
+      "discriminator": [
+        174,
+        110,
+        39,
+        119,
+        82,
+        106,
+        169,
+        102
+      ]
+    },
+    {
+      "name": "StrategyRequest",
+      "discriminator": [
+        64,
+        193,
+        58,
+        72,
+        171,
+        75,
+        231,
+        28
+      ]
+    },
+    {
       "name": "TakeProfitOrder",
       "discriminator": [
         57,
@@ -5626,6 +6443,45 @@
         117,
         101,
         121
+      ]
+    },
+    {
+      "name": "StrategyClaim",
+      "discriminator": [
+        138,
+        31,
+        183,
+        119,
+        218,
+        136,
+        43,
+        154
+      ]
+    },
+    {
+      "name": "StrategyDeposit",
+      "discriminator": [
+        205,
+        53,
+        91,
+        239,
+        34,
+        136,
+        73,
+        47
+      ]
+    },
+    {
+      "name": "StrategyWithdraw",
+      "discriminator": [
+        120,
+        76,
+        208,
+        95,
+        221,
+        210,
+        229,
+        189
       ]
     },
     {
@@ -5792,6 +6648,36 @@
       "code": 6029,
       "name": "MintMismatch",
       "msg": "The payout token account's associated mint does not match"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidPubkey",
+      "msg": "Invalid pubkey"
+    },
+    {
+      "code": 6031,
+      "name": "ZeroAmount",
+      "msg": "Amount cannot be 0"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidSwap",
+      "msg": "Invalid swap"
+    },
+    {
+      "code": 6033,
+      "name": "BalanceUnchanged",
+      "msg": "Vault balance unchanged"
+    },
+    {
+      "code": 6034,
+      "name": "SourceOverflow",
+      "msg": "Source overflow"
+    },
+    {
+      "code": 6035,
+      "name": "DestionationOverflow",
+      "msg": "Destionation overflow"
     }
   ],
   "types": [
@@ -6091,6 +6977,10 @@
           },
           {
             "name": "can_init_pools",
+            "type": "bool"
+          },
+          {
+            "name": "can_borrow_from_vaults",
             "type": "bool"
           }
         ]
@@ -6555,6 +7445,177 @@
             "docs": [
               "The amount that will be bought to close the position (is in `position.currency`)"
             ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Strategy",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "lp_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "currency",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_borrowed_amount",
+            "type": "u64"
+          },
+          {
+            "name": "last_updated",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyCache",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "src_bal_before",
+            "type": "u64"
+          },
+          {
+            "name": "dst_bal_before",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyClaim",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyDeposit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_deposited",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_received",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyRequest",
+      "docs": [
+        "An account that is used to cache data between the open position setup and cleanup instructions."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "strategy_cache",
+            "type": {
+              "defined": {
+                "name": "StrategyCache"
+              }
+            }
+          },
+          {
+            "name": "min_target_amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "lp_vault_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyWithdraw",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_withdraw",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_sold",
             "type": "u64"
           }
         ]
