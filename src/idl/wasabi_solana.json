@@ -3260,7 +3260,7 @@
       "args": [
         {
           "name": "nonce",
-          "type": "u32"
+          "type": "u16"
         },
         {
           "name": "min_target_amount",
@@ -3663,7 +3663,7 @@
       "args": [
         {
           "name": "nonce",
-          "type": "u32"
+          "type": "u16"
         },
         {
           "name": "min_target_amount",
@@ -5466,13 +5466,6 @@
           }
         },
         {
-          "name": "collateral_vault",
-          "writable": true,
-          "relations": [
-            "strategy"
-          ]
-        },
-        {
           "name": "strategy_request",
           "writable": true,
           "pda": {
@@ -5504,6 +5497,13 @@
               }
             ]
           }
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
         },
         {
           "name": "token_program"

@@ -43,7 +43,9 @@ export const SEED_PREFIX = {
     TAKE_PROFIT_ORDER: 'take_profit_order',
     DEBT_CONTROLLER: 'debt_controller',
     GLOBAL_SETTINGS: 'global_settings',
-    EVENT_AUTHORITY: '__event_authority'
+    EVENT_AUTHORITY: '__event_authority',
+    STRATEGY: 'strategy',
+    STRATEGY_REQ: 'strategy_request'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -213,6 +215,24 @@ export const PDA = {
             [utils.bytes.utf8.encode(SEED_PREFIX.GLOBAL_SETTINGS)],
             WASABI_PROGRAM_ID
         );
+    },
+
+    getStrategy(lpVault: PublicKey, collateral: PublicKey): PublicKey {
+        return findProgramAddress(
+            [
+                utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY),
+                lpVault.toBuffer(),
+                collateral.toBuffer()
+            ],
+            WASABI_PROGRAM_ID
+        );
+    },
+
+    getStrategyRequest(strategy: PublicKey): PublicKey {
+        return findProgramAddress(
+            [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQ), strategy.toBuffer()],
+            WASABI_PROGRAM_ID
+        );
     }
 };
 
@@ -278,7 +298,10 @@ export async function getMetaplexMetadata(
 }
 
 // Mint is the mint of the token in the vault
-export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: PublicKey): Promise<bigint> {
+export async function getMaxWithdraw(
+    program: Program<WasabiSolana>,
+    mint: PublicKey
+): Promise<bigint> {
     const lpVaultAddress = PDA.getLpVault(mint);
     const sharesMintAddress = PDA.getSharesMint(lpVaultAddress, mint);
     const userSharesAddress = getAssociatedTokenAddressSync(
@@ -314,7 +337,7 @@ export async function getMaxWithdraw(program: Program<WasabiSolana>, mint: Publi
 export function calculateAssetsFromShares(
     shares: bigint,
     totalShares: bigint,
-    totalAssets: bigint,
+    totalAssets: bigint
 ): bigint {
     return (shares * totalAssets) / totalShares;
 }
@@ -419,77 +442,12 @@ export async function getMultipleTokenAccounts(
     return results;
 }
 
-export async function handleSerializedTransaction(
-    wallet: Pick<SignerWalletAdapter, 'publicKey' | 'signTransaction'>,
-    serializedTransaction: string,
-    connection: Connection,
-    options: SendOptions = { maxRetries: 3 }
-): Promise<TransactionSignature> {
-    try {
-        if (!wallet.publicKey) {
-            throw new Error('Wallet not connected');
-        }
-
-        if (!wallet.signTransaction) {
-            throw new Error('Wallet does not support transaction signing');
-        }
-
-        const serializedBuffer = Buffer.from(serializedTransaction, 'base64');
-        const transaction = VersionedTransaction.deserialize(serializedBuffer);
-
-        const message = transaction.message;
-        const feePayerPubkey = message.staticAccountKeys[0];
-
-        if (!feePayerPubkey.equals(wallet.publicKey)) {
-            throw new Error('Fee payer public key mismatch');
-        }
-
-        const signedTransaction = await wallet.signTransaction(transaction);
-
-        if (transaction.signatures.length < message.header.numRequiredSignatures) {
-            throw new Error(
-                `Transaction requires ${message.header.numRequiredSignatures} signatures but only has ${transaction.signatures.length}`
-            );
-        }
-
-        if (!signedTransaction.signatures[0]) {
-            throw new Error('Fee payer signature is missing');
-        }
-
-        const signature = await connection.sendTransaction(signedTransaction, options);
-
-        const latestBlockhash = await connection.getLatestBlockhash();
-        const confirmation = await connection.confirmTransaction({
-            signature,
-            blockhash: latestBlockhash.blockhash,
-            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-        });
-
-        if (confirmation.value.err) {
-            throw new Error(`Transaction confirmation failed: ${confirmation.value.err}`);
-        }
-
-        return signature;
-    } catch (error) {
-        console.error('Transaction failed:', error);
-        throw error;
-    }
-}
-
 export function isSOL(mint: PublicKey): boolean {
     return mint.equals(SOL_MINT);
 }
 
 export function isNativeMint(mint: PublicKey): boolean {
     return mint.equals(NATIVE_MINT) || mint.equals(NATIVE_MINT_2022);
-}
-
-export function getNativeProgramId(mint: PublicKey): PublicKey {
-    return mint.equals(NATIVE_MINT) ? TOKEN_PROGRAM_ID : TOKEN_2022_PROGRAM_ID;
-}
-
-export function getPreferredNativeMint(tokenProgramId: PublicKey): PublicKey {
-    return tokenProgramId.equals(TOKEN_PROGRAM_ID) ? NATIVE_MINT : NATIVE_MINT_2022;
 }
 
 export async function createAtaIfNeeded(
@@ -687,13 +645,15 @@ export async function handleMint(
         const userTokenAccount = await connection.getAccountInfo(userAta);
 
         if (!userTokenAccount) {
-            instructions.setupIx.push(createAssociatedTokenAccountIdempotentInstruction(
-              owner,
-              userAta,
-              owner,
-              mint,
-              tokenProgram
-            ));
+            instructions.setupIx.push(
+                createAssociatedTokenAccountIdempotentInstruction(
+                    owner,
+                    userAta,
+                    owner,
+                    mint,
+                    tokenProgram
+                )
+            );
         }
     }
 
@@ -708,7 +668,7 @@ export async function handleMintsAndTokenProgram(
     connection: Connection,
     currency: PublicKey,
     collateral: PublicKey,
-    owner?: PublicKey,
+    owner?: PublicKey
 ): Promise<TokenProgramsResult> {
     if (currency.equals(collateral)) {
         throw new Error('Mints cannot be the same');
@@ -785,7 +745,6 @@ export async function handlePaymentTokenMintWithAuthority(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
-
     let instructions = { setupIx: [], cleanupIx: [] };
 
     if (paymentToken.equals(NATIVE_MINT)) {

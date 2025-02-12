@@ -3266,7 +3266,7 @@ export type WasabiSolana = {
       "args": [
         {
           "name": "nonce",
-          "type": "u32"
+          "type": "u16"
         },
         {
           "name": "minTargetAmount",
@@ -3669,7 +3669,7 @@ export type WasabiSolana = {
       "args": [
         {
           "name": "nonce",
-          "type": "u32"
+          "type": "u16"
         },
         {
           "name": "minTargetAmount",
@@ -5472,13 +5472,6 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "collateralVault",
-          "writable": true,
-          "relations": [
-            "strategy"
-          ]
-        },
-        {
           "name": "strategyRequest",
           "writable": true,
           "pda": {
@@ -5510,6 +5503,13 @@ export type WasabiSolana = {
               }
             ]
           }
+        },
+        {
+          "name": "collateralVault",
+          "writable": true,
+          "relations": [
+            "strategy"
+          ]
         },
         {
           "name": "tokenProgram"
