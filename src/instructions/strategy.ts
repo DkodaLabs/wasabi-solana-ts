@@ -13,6 +13,8 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type StrategyParams = StrategyArgs & StrategyAccounts;
 
+export type StrategyAction = 'INIT' | 'DEPOSIT' | 'WITHDRAW' | 'CLOSE' | 'CLAIM';
+
 export type StrategyArgs = {
     amountIn: number;
     minAmountOut: number;
@@ -318,6 +320,19 @@ export async function createStrategyDepositCleanupInstruction(
     }) as Promise<TransactionInstruction[]>;
 }
 
+export async function createStrategyDepositInstructions(
+    program: Program<WasabiSolana>,
+    accounts: StrategyAccounts,
+    args: StrategyArgs
+): Promise<TransactionInstruction[]> {
+    const [setupIx, cleanupIx] = await Promise.all([
+        createStrategyDepositSetupInstruction(program, accounts, args),
+        createStrategyDepositCleanupInstruction(program, accounts)
+    ]);
+
+    return [...setupIx, ...cleanupIx];
+}
+
 export async function createStrategyWithdrawSetupInstruction(
     program: Program<WasabiSolana>,
     accounts: StrategyAccounts,
@@ -340,6 +355,19 @@ export async function createStrategyWithdrawCleanupInstruction(
         accounts,
         config: strategyWithdrawCleanupConfig
     }) as Promise<TransactionInstruction[]>;
+}
+
+export async function createStrategyWithdrawInstructions(
+    program: Program<WasabiSolana>,
+    accounts: StrategyAccounts,
+    args: StrategyArgs
+): Promise<TransactionInstruction[]> {
+    const [setupIx, cleanupIx] = await Promise.all([
+        createStrategyWithdrawSetupInstruction(program, accounts, args),
+        createStrategyWithdrawCleanupInstruction(program, accounts)
+    ]);
+
+    return [...setupIx, ...cleanupIx];
 }
 
 export async function createStrategyClaimInstruction(
