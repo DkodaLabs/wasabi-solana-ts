@@ -100,10 +100,19 @@ export const getStrategyAccounts = async (
 export const initStrategyConfig: BaseMethodConfig<
     void,
     StrategyAccounts,
-    StrategyInstructionAccounts
+    InitStrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
-        const accounts = await getStrategyAccounts(
+        const {
+            authority,
+            permission,
+            lpVault,
+            collateral,
+            vault,
+            collateralVault,
+            strategy,
+            systemProgram
+        } = await getStrategyAccounts(
             config.program.provider.connection,
             config.program.provider.publicKey,
             config.accounts.principal,
@@ -111,7 +120,17 @@ export const initStrategyConfig: BaseMethodConfig<
         );
 
         return {
-            accounts
+            accounts: {
+                authority,
+                permission,
+                collateral,
+                currency: config.accounts.principal,
+                lpVault,
+                vault,
+                collateralVault,
+                strategy,
+                systemProgram
+            }
         };
     },
     getMethod: (program) => () => program.methods.initStrategy()
