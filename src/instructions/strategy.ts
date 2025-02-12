@@ -6,7 +6,7 @@ import {
     PublicKey,
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { getTokenProgram, PDA } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -35,6 +35,12 @@ export type StrategyBaseInstructionAccounts = {
     permission: PublicKey;
     lpVault: PublicKey;
     collateral: PublicKey;
+};
+
+export type StrategyAccountsTokenProgram = StrategyInstructionAccounts & {
+    collateralTokenProgram: PublicKey;
+    principalTokenProgram: PublicKey;
+
 };
 
 export type StrategyInstructionAccounts = StrategyClaimInstructionAccounts & {
@@ -66,7 +72,7 @@ export const getStrategyAccounts = async (
     authority: PublicKey,
     principal: PublicKey,
     collateral: PublicKey
-): Promise<StrategyInstructionAccounts> => {
+): Promise<StrategyAccountsTokenProgram> => {
     const permission = PDA.getAdmin(authority);
     const lpVault = PDA.getLpVault(principal);
     const [principalTokenProgram, collateralTokenProgram] = await Promise.all([
@@ -95,7 +101,9 @@ export const getStrategyAccounts = async (
         strategyRequest,
         tokenProgram: principalTokenProgram,
         systemProgram: SystemProgram.programId,
-        sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
+        sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
+        collateralTokenProgram,
+        principalTokenProgram,
     };
 };
 
@@ -113,12 +121,21 @@ export const initStrategyConfig: BaseMethodConfig<
             vault,
             collateralVault,
             strategy,
-            systemProgram
+            systemProgram,
+            collateralTokenProgram,
         } = await getStrategyAccounts(
             config.program.provider.connection,
             config.program.provider.publicKey,
             config.accounts.principal,
             config.accounts.collateral
+        );
+
+        const setupIx = createAssociatedTokenAccountIdempotentInstruction(
+            config.program.provider.publicKey,
+            vault,
+            lpVault,
+            collateral,
+            collateralTokenProgram,
         );
 
         return {
@@ -132,7 +149,8 @@ export const initStrategyConfig: BaseMethodConfig<
                 collateralVault,
                 strategy,
                 systemProgram
-            }
+            },
+            setup: [setupIx],
         };
     },
     getMethod: (program) => () => program.methods.initStrategy()
