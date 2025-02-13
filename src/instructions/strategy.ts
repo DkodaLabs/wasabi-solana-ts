@@ -132,7 +132,7 @@ export const initStrategyConfig: BaseMethodConfig<
 
         const setupIx = createAssociatedTokenAccountIdempotentInstruction(
             config.program.provider.publicKey,
-            vault,
+            collateralVault,
             lpVault,
             collateral,
             collateralTokenProgram,
