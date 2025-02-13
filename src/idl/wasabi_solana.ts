@@ -5301,7 +5301,13 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "lpVault",
@@ -5394,6 +5400,10 @@ export type WasabiSolana = {
         },
         {
           "name": "tokenProgram"
+        },
+        {
+          "name": "wasabiProgram",
+          "address": "spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c"
         }
       ],
       "args": []
