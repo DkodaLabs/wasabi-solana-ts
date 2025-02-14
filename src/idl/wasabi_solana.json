@@ -5295,7 +5295,13 @@
         {
           "name": "authority",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "lp_vault",
@@ -5388,6 +5394,10 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "wasabi_program",
+          "address": "spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c"
         }
       ],
       "args": []

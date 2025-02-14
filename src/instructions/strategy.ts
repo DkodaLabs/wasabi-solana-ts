@@ -6,9 +6,12 @@ import {
     PublicKey,
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
-import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
+import {
+    createAssociatedTokenAccountIdempotentInstruction,
+    getAssociatedTokenAddressSync
+} from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import { getTokenProgram, PDA } from '../utils';
+import { getTokenProgram, PDA, WASABI_PROGRAM_ID } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type StrategyParams = StrategyArgs & StrategyAccounts;
@@ -40,7 +43,6 @@ export type StrategyBaseInstructionAccounts = {
 export type StrategyAccountsTokenProgram = StrategyInstructionAccounts & {
     collateralTokenProgram: PublicKey;
     principalTokenProgram: PublicKey;
-
 };
 
 export type StrategyInstructionAccounts = StrategyClaimInstructionAccounts & {
@@ -103,7 +105,7 @@ export const getStrategyAccounts = async (
         systemProgram: SystemProgram.programId,
         sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
         collateralTokenProgram,
-        principalTokenProgram,
+        principalTokenProgram
     };
 };
 
@@ -122,7 +124,7 @@ export const initStrategyConfig: BaseMethodConfig<
             collateralVault,
             strategy,
             systemProgram,
-            collateralTokenProgram,
+            collateralTokenProgram
         } = await getStrategyAccounts(
             config.program.provider.connection,
             config.program.provider.publicKey,
@@ -135,7 +137,7 @@ export const initStrategyConfig: BaseMethodConfig<
             collateralVault,
             lpVault,
             collateral,
-            collateralTokenProgram,
+            collateralTokenProgram
         );
 
         return {
@@ -150,7 +152,7 @@ export const initStrategyConfig: BaseMethodConfig<
                 strategy,
                 systemProgram
             },
-            setup: [setupIx],
+            setup: [setupIx]
         };
     },
     getMethod: (program) => () => program.methods.initStrategy()
@@ -234,7 +236,10 @@ export const strategyWithdrawCleanupConfig: BaseMethodConfig<
         );
 
         return {
-            accounts
+            accounts: {
+                ...accounts,
+                wasabiProgram: WASABI_PROGRAM_ID
+            }
         };
     },
     getMethod: (program) => () => program.methods.strategyWithdrawCleanup()
