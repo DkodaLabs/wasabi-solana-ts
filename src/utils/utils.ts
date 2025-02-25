@@ -37,7 +37,7 @@ export const SEED_PREFIX = {
     ADMIN: 'admin',
     LP_VAULT: 'lp_vault',
     POSITION: 'position',
-    OPEN_POSTIION: 'open_pos',
+    OPEN_POSITION: 'open_pos',
     CLOSE_POSITION: 'close_pos',
     STOP_LOSS_ORDER: 'stop_loss_order',
     TAKE_PROFIT_ORDER: 'take_profit_order',
@@ -45,8 +45,8 @@ export const SEED_PREFIX = {
     GLOBAL_SETTINGS: 'global_settings',
     EVENT_AUTHORITY: '__event_authority',
     STRATEGY: 'strategy',
-    STRATEGY_REQ: 'strategy_request'
-    BUNDLE_CACHE: 'bundle_cache'
+    STRATEGY_REQUEST: 'strategy_request',
+    BUNDLE_REQUEST: 'bundle_request'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -171,7 +171,7 @@ export const PDA = {
 
     getOpenPositionRequest(owner: PublicKey): PublicKey {
         return findProgramAddress(
-            [utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSTIION), owner.toBuffer()],
+            [utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSITION), owner.toBuffer()],
             WASABI_PROGRAM_ID
         );
     },
@@ -218,10 +218,10 @@ export const PDA = {
         );
     },
 
-    getBundleCache(payer: PublicKey, authority: PublicKey): PublicKey {
+    getBundleRequest(payer: PublicKey, authority: PublicKey): PublicKey {
         return findProgramAddress(
             [
-                utils.bytes.utf8.encode(SEED_PREFIX.BUNDLE_CACHE),
+                utils.bytes.utf8.encode(SEED_PREFIX.BUNDLE_REQUEST),
                 payer.toBuffer(),
                 authority.toBuffer()
             ],
@@ -242,7 +242,7 @@ export const PDA = {
 
     getStrategyRequest(strategy: PublicKey): PublicKey {
         return findProgramAddress(
-            [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQ), strategy.toBuffer()],
+            [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQUEST), strategy.toBuffer()],
             WASABI_PROGRAM_ID
         );
     }

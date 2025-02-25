@@ -19,7 +19,7 @@ export type BaseBundleRequestInstructionAccounts = {
     payer: PublicKey;
     authority: PublicKey;
     permission: PublicKey;
-    bundleCache: PublicKey;
+    bundleRequest: PublicKey;
 };
 
 export type ValidateBundleInstructionAccounts = BaseBundleRequestInstructionAccounts & {
@@ -52,13 +52,13 @@ export const getBaseInstructionAccounts = (
     authority: PublicKey
 ): BaseBundleRequestInstructionAccounts => {
     const permission = PDA.getAdmin(authority);
-    const bundleCache = PDA.getBundleCache(payer, authority);
+    const bundleRequest = PDA.getBundleRequest(payer, authority);
 
     return {
         payer,
         authority,
         permission,
-        bundleCache,
+        bundleRequest,
     };
 }
 
@@ -66,13 +66,13 @@ export const getBundleSetupInstructionAccounts = (
     payer: PublicKey,
     authority: PublicKey
 ): BundleSetupInstructionAccounts => {
-    const { permission, bundleCache } = getBaseInstructionAccounts(payer, authority);
+    const { permission, bundleRequest } = getBaseInstructionAccounts(payer, authority);
 
     return {
         payer,
         authority,
         permission,
-        bundleCache,
+        bundleRequest,
         systemProgram: SystemProgram.programId,
         sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY,
     };
