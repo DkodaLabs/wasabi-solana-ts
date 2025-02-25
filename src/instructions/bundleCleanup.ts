@@ -3,15 +3,15 @@ import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
-    CloseBundleArgs,
-    CloseBundleAccounts,
-    CloseBundleCacheInstructionAccounts,
-    getInitBundleCacheInstructionAccounts
-} from './bundleCache';
+    BundleCleanupArgs,
+    BundleCleanupAccounts,
+    BundleCleanupInstructionAccounts,
+    getBundleSetupInstructionAccounts
+} from './bundle';
 
-const closeBundleCacheConfig: BaseMethodConfig<CloseBundleArgs, CloseBundleAccounts, CloseBundleCacheInstructionAccounts> = {
-    process: async (config: ConfigArgs<CloseBundleArgs, CloseBundleAccounts>) => {
-        const accounts = getInitBundleCacheInstructionAccounts(
+const bundleCleanupConfig: BaseMethodConfig<BundleCleanupArgs, BundleCleanupAccounts, BundleCleanupInstructionAccounts> = {
+    process: async (config: ConfigArgs<BundleCleanupArgs, BundleCleanupAccounts>) => {
+        const accounts = getBundleSetupInstructionAccounts(
             config.accounts.payer, 
             config.accounts.authority
         );
@@ -26,16 +26,16 @@ const closeBundleCacheConfig: BaseMethodConfig<CloseBundleArgs, CloseBundleAccou
             args: new BN(config.args.tipAmount)
         };
     },
-    getMethod: (program) => (args) => program.methods.closeBundle(args.tipAmount)
+    getMethod: (program) => (args) => program.methods.bundleCleanup(args.tipAmount)
 };
 
-export async function createCloseBundleCacheInstruction(
+export async function createBundleCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: CloseBundleAccounts
+    accounts: BundleCleanupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: closeBundleCacheConfig,
+        config: bundleCleanupConfig,
     }) as Promise<TransactionInstruction[]>;
 }

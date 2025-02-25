@@ -1,7 +1,7 @@
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
 import { PDA } from '../utils';
 
-export type BundleCacheAccounts = {
+export type BundleRequestAccounts = {
     payer: PublicKey;
     authority: PublicKey;
 };
@@ -9,48 +9,48 @@ export type BundleCacheAccounts = {
 export type ValidateBundleAccounts = {
     src: PublicKey;
     dst: PublicKey;
-} & BundleCacheAccounts;
+} & BundleRequestAccounts;
 
-export type CloseBundleAccounts = ValidateBundleAccounts & {
+export type BundleCleanupAccounts = ValidateBundleAccounts & {
     tipReceiver: PublicKey;
 };
 
-export type BaseBundleCacheInstructionAccounts = {
+export type BaseBundleRequestInstructionAccounts = {
     payer: PublicKey;
     authority: PublicKey;
     permission: PublicKey;
     bundleCache: PublicKey;
 };
 
-export type ValidateBundleInstructionAccounts = BaseBundleCacheInstructionAccounts & {
+export type ValidateBundleInstructionAccounts = BaseBundleRequestInstructionAccounts & {
     src: PublicKey;
     dst: PublicKey;
 };
 
-export type InitBundleCacheInstructionAccounts = BaseBundleCacheInstructionAccounts & {
+export type BundleSetupInstructionAccounts = BaseBundleRequestInstructionAccounts & {
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
 }
 
-export type CloseBundleCacheInstructionAccounts =
-    InitBundleCacheInstructionAccounts & ValidateBundleInstructionAccounts & {
+export type BundleCleanupInstructionAccounts =
+    BundleSetupInstructionAccounts & ValidateBundleInstructionAccounts & {
         tipRecipient: PublicKey;
     }
 
-export type InitBundleCacheArgs = {
+export type BundleSetupArgs = {
     numExpectedTx: number;
     srcMaxDelta: bigint;
     dstMinDelta: bigint;
 };
 
-export type CloseBundleArgs = {
+export type BundleCleanupArgs = {
     tipAmount: bigint;
 };
 
 export const getBaseInstructionAccounts = (
     payer: PublicKey,
     authority: PublicKey
-): BaseBundleCacheInstructionAccounts => {
+): BaseBundleRequestInstructionAccounts => {
     const permission = PDA.getAdmin(authority);
     const bundleCache = PDA.getBundleCache(payer, authority);
 
@@ -62,10 +62,10 @@ export const getBaseInstructionAccounts = (
     };
 }
 
-export const getInitBundleCacheInstructionAccounts = (
+export const getBundleSetupInstructionAccounts = (
     payer: PublicKey,
     authority: PublicKey
-): InitBundleCacheInstructionAccounts => {
+): BundleSetupInstructionAccounts => {
     const { permission, bundleCache } = getBaseInstructionAccounts(payer, authority);
 
     return {

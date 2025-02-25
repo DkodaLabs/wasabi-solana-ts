@@ -80,6 +80,36 @@ const liquidatePositionCleanupConfig: BaseMethodConfig<
     getMethod: (program) => () => program.methods.liquidatePositionCleanup()
 };
 
+const liquidatePositionSetupWithBundleConfig: BaseMethodConfig<
+    ClosePositionSetupArgs,
+    ClosePositionSetupAccounts,
+    LiquidatePositionSetupInstructionAccounts
+> = {
+    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
+            config.program,
+            config.accounts,
+            'LIQUIDATION'
+        );
+
+        return {
+            accounts: {
+                closePositionSetup: {
+                    ...accounts
+                }
+            },
+            args: transformArgs(config.args),
+            setup: ixes.setupIx
+        };
+    },
+    getMethod: (program) => (args) =>
+        program.methods.liquidatePositionSetupWithBundle(
+            new BN(args.minTargetAmount),
+            new BN(args.interest),
+            new BN(args.executionFee),
+            new BN(args.expiration)
+        )
+};
 export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
@@ -101,5 +131,18 @@ export async function createLiquidatePositionCleanupInstruction(
         program,
         accounts,
         config: liquidatePositionCleanupConfig,
+    }) as Promise<TransactionInstruction[]>;
+}
+
+export async function createLiquidatePositionSetupWithBundleInstruction(
+    program: Program<WasabiSolana>,
+    args: ClosePositionSetupArgs,
+    accounts: ClosePositionSetupAccounts
+): Promise<TransactionInstruction[]> {
+    return handleMethodCall({
+        program,
+        accounts,
+        config: liquidatePositionSetupWithBundleConfig,
+        args
     }) as Promise<TransactionInstruction[]>;
 }

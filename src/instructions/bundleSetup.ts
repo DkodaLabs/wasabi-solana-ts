@@ -3,15 +3,15 @@ import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
-    InitBundleCacheArgs,
-    BundleCacheAccounts,
-    InitBundleCacheInstructionAccounts,
-    getInitBundleCacheInstructionAccounts
-} from './bundleCache';
+    BundleSetupArgs,
+    BundleCleanupAccounts,
+    BundleSetupInstructionAccounts,
+    getBundleSetupInstructionAccounts
+} from './bundle';
 
-const initBundleCacheConfig: BaseMethodConfig<InitBundleCacheArgs, BundleCacheAccounts, InitBundleCacheInstructionAccounts> = {
-    process: async (config: ConfigArgs<InitBundleCacheArgs, BundleCacheAccounts>) => {
-        const accounts = getInitBundleCacheInstructionAccounts(
+const bundleSetupConfig: BaseMethodConfig<BundleSetupArgs, BundleCleanupAccounts, BundleSetupInstructionAccounts> = {
+    process: async (config: ConfigArgs<BundleSetupArgs, BundleCleanupAccounts>) => {
+        const accounts = getBundleSetupInstructionAccounts(
             config.accounts.payer,
             config.accounts.authority
         );
@@ -28,22 +28,18 @@ const initBundleCacheConfig: BaseMethodConfig<InitBundleCacheArgs, BundleCacheAc
             },
         };
     },
-    getMethod: (program) => (args) => program.methods.initBundle(
-        args.numExpectedTx,
-        args.srcMaxDelta,
-        args.dstMinDelta
-    )
+    getMethod: (program) => (args) => program.methods.bundleSetup(args.reciprocal, args.numExpectedTx),
 };
 
-export async function createInitBundleCacheInstruction(
+export async function createBundleSetupInstruction(
     program: Program<WasabiSolana>,
-    accounts: BundleCacheAccounts,
-    args: InitBundleCacheArgs
+    accounts: BundleCleanupAccounts,
+    args: BundleSetupArgs
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: initBundleCacheConfig,
+        config: bundleSetupConfig,
         args
     }) as Promise<TransactionInstruction[]>;
 }

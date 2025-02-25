@@ -7,7 +7,7 @@ import {
     ValidateBundleInstructionAccounts,
     getBaseInstructionAccounts,
     ValidateBundleAccounts
-} from './bundleCache';
+} from './bundle';
 
 const validateBundleConfig: BaseMethodConfig<void, ValidateBundleAccounts, ValidateBundleInstructionAccounts> = {
     process: async (config: ConfigArgs<void, ValidateBundleAccounts>) => {
