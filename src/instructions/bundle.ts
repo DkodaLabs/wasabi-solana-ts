@@ -6,41 +6,32 @@ export type BundleRequestAccounts = {
     authority: PublicKey;
 };
 
-export type ValidateBundleAccounts = {
-    src: PublicKey;
-    dst: PublicKey;
-} & BundleRequestAccounts;
-
-export type BundleCleanupAccounts = ValidateBundleAccounts & {
-    tipReceiver: PublicKey;
+export type BundleCleanupAccounts = BundleRequestAccounts & {
+    reciprocal: PublicKey;
+    tipAccount: PublicKey;
 };
 
-export type BaseBundleRequestInstructionAccounts = {
+export type BundleRequestInstructionAccounts = {
     payer: PublicKey;
     authority: PublicKey;
     permission: PublicKey;
     bundleRequest: PublicKey;
 };
 
-export type ValidateBundleInstructionAccounts = BaseBundleRequestInstructionAccounts & {
-    src: PublicKey;
-    dst: PublicKey;
-};
-
-export type BundleSetupInstructionAccounts = BaseBundleRequestInstructionAccounts & {
+export type BundleSetupInstructionAccounts = BundleRequestInstructionAccounts & {
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
 }
 
 export type BundleCleanupInstructionAccounts =
-    BundleSetupInstructionAccounts & ValidateBundleInstructionAccounts & {
-        tipRecipient: PublicKey;
+    BundleSetupInstructionAccounts & {
+        reciprocal: PublicKey;
+        tipAccount: PublicKey;
     }
 
 export type BundleSetupArgs = {
-    numExpectedTx: number;
-    srcMaxDelta: bigint;
-    dstMinDelta: bigint;
+    numExpectedTxns: number;
+    reciprocal: PublicKey;
 };
 
 export type BundleCleanupArgs = {
@@ -50,7 +41,7 @@ export type BundleCleanupArgs = {
 export const getBaseInstructionAccounts = (
     payer: PublicKey,
     authority: PublicKey
-): BaseBundleRequestInstructionAccounts => {
+): BundleRequestInstructionAccounts => {
     const permission = PDA.getAdmin(authority);
     const bundleRequest = PDA.getBundleRequest(payer, authority);
 
@@ -62,7 +53,7 @@ export const getBaseInstructionAccounts = (
     };
 }
 
-export const getBundleSetupInstructionAccounts = (
+export const getBundleInstructionAccounts = (
     payer: PublicKey,
     authority: PublicKey
 ): BundleSetupInstructionAccounts => {

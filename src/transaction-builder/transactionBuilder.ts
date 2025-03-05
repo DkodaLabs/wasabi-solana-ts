@@ -31,6 +31,9 @@ export class TransactionBuilder {
     // Identifies a tip transaction
     private stripLimit: boolean = false;
 
+    // Used when creating optimized transactions - we don't need a new blockhash on every iteration
+    private recentBlockhash?: string;
+
     setPayer(payerKey: PublicKey): this {
         this.payerKey = payerKey;
         return this;
@@ -43,6 +46,21 @@ export class TransactionBuilder {
 
     addInstructions(...instructions: TransactionInstruction[]): this {
         this.instructions.push(...instructions);
+        return this;
+    }
+
+    setInstructions(instructions: TransactionInstruction[]): this {
+        this.instructions = instructions;
+        return this;
+    }
+
+    getInstructions(): TransactionInstruction[] {
+        return this.instructions;
+    }
+
+    addLookupTables(...lookupTables: AddressLookupTableAccount[]): this {
+        this.lookupTables = this.lookupTables || [];
+        this.lookupTables.push(...lookupTables);
         return this;
     }
 
@@ -68,6 +86,11 @@ export class TransactionBuilder {
 
     setStripLimitIx(stripLimitIx: boolean): this {
         this.stripLimit = stripLimitIx;
+        return this;
+    }
+
+    setRecentBlockhash(blockhash: string): this {
+        this.recentBlockhash = blockhash;
         return this;
     }
 
@@ -108,7 +131,10 @@ export class TransactionBuilder {
         const ixesWithComputeBudget = [...computeBudgetInstructions, ...this.instructions];
 
         // Simulate transaction to get actual compute units consumed
-        const blockhash = (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
+        const blockhash = this.recentBlockhash
+            ? this.recentBlockhash
+            : (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
+
         let transaction = this.createVersionedTransaction(
             blockhash,
             ixesWithComputeBudget,

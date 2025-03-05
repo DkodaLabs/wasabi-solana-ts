@@ -1,17 +1,21 @@
-import { Program, BN } from '@coral-xyz/anchor';
+import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
     BundleSetupArgs,
-    BundleCleanupAccounts,
+    BundleRequestAccounts,
     BundleSetupInstructionAccounts,
-    getBundleSetupInstructionAccounts
+    getBundleInstructionAccounts
 } from './bundle';
 
-const bundleSetupConfig: BaseMethodConfig<BundleSetupArgs, BundleCleanupAccounts, BundleSetupInstructionAccounts> = {
-    process: async (config: ConfigArgs<BundleSetupArgs, BundleCleanupAccounts>) => {
-        const accounts = getBundleSetupInstructionAccounts(
+const bundleSetupConfig: BaseMethodConfig<
+    BundleSetupArgs,
+    BundleRequestAccounts,
+    BundleSetupInstructionAccounts
+> = {
+    process: async (config: ConfigArgs<BundleSetupArgs, BundleRequestAccounts>) => {
+        const accounts = getBundleInstructionAccounts(
             config.accounts.payer,
             config.accounts.authority
         );
@@ -19,21 +23,21 @@ const bundleSetupConfig: BaseMethodConfig<BundleSetupArgs, BundleCleanupAccounts
         return {
             accounts: {
                 payer: config.accounts.payer,
-                ...accounts,
+                ...accounts
             },
             args: {
-                numExpectedTx: config.args.numExpectedTx,
-                srcMaxDelta: new BN(config.args.srcMaxDelta),
-                dstMinDelta: new BN(config.args.dstMinDelta),
-            },
+                reciprocal: config.args.reciprocal,
+                numExpectedTx: config.args.numExpectedTxns
+            }
         };
     },
-    getMethod: (program) => (args) => program.methods.bundleSetup(args.reciprocal, args.numExpectedTx),
+    getMethod: (program) => (args) =>
+        program.methods.bundleSetup(args.reciprocal, args.numExpectedTx)
 };
 
 export async function createBundleSetupInstruction(
     program: Program<WasabiSolana>,
-    accounts: BundleCleanupAccounts,
+    accounts: BundleRequestAccounts,
     args: BundleSetupArgs
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({

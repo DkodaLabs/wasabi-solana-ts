@@ -117,6 +117,38 @@ export class JitoClient implements SolanaClient {
         return await this.fetchLatestTips();
     }
 
+    public async getTipAmount(computeBudgetConfig: ComputeBudgetConfig): Promise<number> {
+        let tipAmount = computeBudgetConfig.price;
+
+        if (computeBudgetConfig.type === 'DYNAMIC') {
+            const latestTips = await this.getTips();
+            switch (computeBudgetConfig.speed) {
+                case 'NORMAL':
+                    tipAmount = Math.ceil(latestTips.landedTips50thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                case 'FAST':
+                    tipAmount = Math.ceil(latestTips.landedTips75thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                case 'TURBO':
+                    tipAmount = Math.ceil(latestTips.landedTips95thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                default:
+                    throw new Error('Invalid speed: ' + computeBudgetConfig.speed);
+            }
+        }
+
+        return tipAmount;
+    }
+
+    public async getTipAmountAndAccount(
+        computeBudgetConfig: ComputeBudgetConfig
+    ): Promise<[number, PublicKey]> {
+        return [
+            await this.getTipAmount(computeBudgetConfig),
+            new PublicKey(JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)])
+        ];
+    }
+
     async fetchLatestTipsFromWs(): Promise<void> {
         const ws = new WebSocket('wss://bundles.jito.wtf/api/v1/bundles/tip_floor');
         ws.onopen = () => {

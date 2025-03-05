@@ -6,22 +6,21 @@ import {
     BundleCleanupArgs,
     BundleCleanupAccounts,
     BundleCleanupInstructionAccounts,
-    getBundleSetupInstructionAccounts
+    getBundleInstructionAccounts
 } from './bundle';
 
 const bundleCleanupConfig: BaseMethodConfig<BundleCleanupArgs, BundleCleanupAccounts, BundleCleanupInstructionAccounts> = {
     process: async (config: ConfigArgs<BundleCleanupArgs, BundleCleanupAccounts>) => {
-        const accounts = getBundleSetupInstructionAccounts(
-            config.accounts.payer, 
+        const accounts = getBundleInstructionAccounts(
+            config.accounts.payer,
             config.accounts.authority
         );
 
         return {
             accounts: {
                 ...accounts,
-                src: config.accounts.src,
-                dst: config.accounts.dst,
-                tipRecipient: config.accounts.tipReceiver
+                reciprocal: config.accounts.reciprocal,
+                tipAccount: config.accounts.tipAccount
             },
             args: new BN(config.args.tipAmount)
         };
@@ -31,11 +30,13 @@ const bundleCleanupConfig: BaseMethodConfig<BundleCleanupArgs, BundleCleanupAcco
 
 export async function createBundleCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: BundleCleanupAccounts
+    accounts: BundleCleanupAccounts,
+    args: BundleCleanupArgs,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: bundleCleanupConfig,
+        args,
     }) as Promise<TransactionInstruction[]>;
 }

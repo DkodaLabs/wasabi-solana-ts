@@ -1,16 +1,19 @@
-
 import { Program } from '@coral-xyz/anchor';
 import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
-    ValidateBundleInstructionAccounts,
+    BundleRequestInstructionAccounts,
     getBaseInstructionAccounts,
-    ValidateBundleAccounts
+    BundleRequestAccounts
 } from './bundle';
 
-const validateBundleConfig: BaseMethodConfig<void, ValidateBundleAccounts, ValidateBundleInstructionAccounts> = {
-    process: async (config: ConfigArgs<void, ValidateBundleAccounts>) => {
+const validateBundleConfig: BaseMethodConfig<
+    void,
+    BundleRequestAccounts,
+    BundleRequestInstructionAccounts
+> = {
+    process: async (config: ConfigArgs<void, BundleRequestAccounts>) => {
         const accounts = getBaseInstructionAccounts(
             config.accounts.payer,
             config.accounts.authority
@@ -18,9 +21,7 @@ const validateBundleConfig: BaseMethodConfig<void, ValidateBundleAccounts, Valid
 
         return {
             accounts: {
-                ...accounts,
-                src: config.accounts.src,
-                dst: config.accounts.dst,
+                ...accounts
             }
         };
     },
@@ -29,11 +30,11 @@ const validateBundleConfig: BaseMethodConfig<void, ValidateBundleAccounts, Valid
 
 export async function createValidateBundleInstruction(
     program: Program<WasabiSolana>,
-    accounts: ValidateBundleAccounts
+    accounts: BundleRequestAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: validateBundleConfig,
+        config: validateBundleConfig
     }) as Promise<TransactionInstruction[]>;
 }
