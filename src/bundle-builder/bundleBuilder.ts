@@ -3,7 +3,6 @@ import {
     VersionedTransaction,
     PublicKey,
     TransactionInstruction,
-    AddressLookupTableAccount
 } from '@solana/web3.js';
 import { JitoClient, Bundle } from '../solana-clients';
 import { ComputeBudgetConfig, DEFAULT_CONFIG } from '../compute-budget';
@@ -16,6 +15,7 @@ import {
 } from '../instructions';
 import { Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
+import { getAddressLookupTableAccounts } from '../utils';
 
 // TipLocations:
 // 'TX' - tip is appended as a separate transaction to the current payload
@@ -25,9 +25,9 @@ import { WasabiSolana } from '../idl';
 
 export type TipLocation = 'TX' | 'IX' | 'AUTO' | 'NONE';
 
-interface IxLut {
-    ix: TransactionInstruction;
-    lut?: AddressLookupTableAccount;
+export type InstructionGroup = {
+    ixes: TransactionInstruction[],
+    luts?: string[],
 }
 
 export class BundleBuilder {
@@ -37,7 +37,7 @@ export class BundleBuilder {
     private payer: PublicKey;
     private authority?: PublicKey;
     private transactions?: VersionedTransaction[] = [];
-    private instructions?: IxLut[][] = [];
+    private instructions?: InstructionGroup[] = [];
     private numExpectedTxns: number = 0;
     private computeBudgetConfig: ComputeBudgetConfig = DEFAULT_CONFIG;
     private tipLocation: TipLocation = 'NONE';
@@ -77,8 +77,8 @@ export class BundleBuilder {
         return this;
     }
 
-    addInstructions(...instructions: IxLut[]): this {
-        this.instructions.push(instructions);
+    addInstructions(...instructions: InstructionGroup[]): this {
+        this.instructions.push(...instructions);
         return this;
     }
 
@@ -149,6 +149,9 @@ export class BundleBuilder {
                 if (!this.reciprocal) {
                     throw new Error('Reciprocal must be set for validated bundles');
                 }
+                if (!this.instructions) {
+                    throw new Error('No instructions to build validated bundle with');
+                }
 
                 transactions = await this.createStructuredTransactions();
                 break;
@@ -198,19 +201,36 @@ export class BundleBuilder {
             this.program.provider.connection.getLatestBlockhash()
         ]);
 
-        const composedIxlut = [...this.instructions];
-        composedIxlut[0] = [...bundleSetup, ...composedIxlut[0]];
-        composedIxlut[composedIxlut.length - 1] = [
-            ...bundleCleanup,
-            ...composedIxlut[composedIxlut.length - 1]
-        ];
+        this.instructions[0].ixes = bundleSetup.map(item => item.ix).concat(this.instructions[0].ixes);
+        this.instructions[this.instructions.length - 1].ixes =
+            this.instructions[this.instructions.length - 1].ixes.concat(bundleCleanup.map(item => item.ix));
 
-        for (let i = 1; i < composedIxlut.length - 2; i++) {
-            composedIxlut[i].push(...validateBundle);
+        if (this.instructions.length > 2) {
+            for (let i = 1; i < this.instructions.length - 1; i++) {
+                this.instructions[i].ixes = this.instructions[i].ixes.concat(validateBundle.map(item => item.ix));
+            }
         }
 
-        return Promise.all(
-            composedIxlut.map((ixes, i) => {
+        // Fetch all unique luts in one call instead of per group
+        const uniqueLuts = Array.from(new Set(
+            this.instructions
+                .filter(group => group.luts && group.luts.length > 0)
+                .flatMap(group => group.luts || [])
+        ));
+
+        const addrIdxMap = new Map();
+        uniqueLuts.forEach((address, index) => {
+            addrIdxMap.set(address, index);
+        });
+
+        let lutAccounts = [];
+        if (uniqueLuts.length > 0) {
+            lutAccounts = await getAddressLookupTableAccounts(this.program.provider.connection, uniqueLuts);
+        }
+
+        const txnBuilders = await Promise.all(
+            this.instructions.map(async (group, i) => {
+
                 const builder = new TransactionBuilder()
                     .setPayer(this.payer)
                     .setConnection(this.program.provider.connection)
@@ -218,83 +238,24 @@ export class BundleBuilder {
                     .setRecentBlockhash(blockhash)
                     .setStripLimitIx(i > 0);
 
-                ixes.forEach(({ ix, lut }) => {
-                    builder.addInstructions(ix);
-                    if (lut) builder.addLookupTables(lut);
-                });
+                builder.addInstructions(...group.ixes);
 
-                return builder.build();
+                if (group.luts && group.luts.length > 0) {
+                    const groupLuts = group.luts.map(address =>
+                        lutAccounts[addrIdxMap.get(address)]
+                    );
+
+                    if (groupLuts) {
+                        builder.addLookupTables(...groupLuts);
+                    }
+                }
+
+                return builder;
             })
         );
-    }
-}
 
-// Slowest - will optimally fit instructions within transactions (gets as close to the size limit as possible)
-// Caveat - we have can't know how many transaction there are. Thus, we make an assumption of two (2) as our current
-// instruction set will always fit into two (2) transactions.
-// NOTE: We can safely make an assumption that the first two (2) instructions in the payload will always
-// fit into the first transaction. (`bundle_setup` and `init_ata`/`xyz_setup`)
-//export const createOptimizedTransactions = async (
-//    payerKey: PublicKey,
-//    authority: PublicKey,
-//    program: Program<WasabiSolana>,
-//    jito: JitoClient,
-//    ixlut: IxLut[],
-//    computeBudget: ComputeBudgetConfig
-//): Promise<VersionedTransaction[]> => {
-//    const txns: VersionedTransaction[] = [];
-//
-//    const tipAmount = jito.getTipAmount(computeBudget);
-//    const bundleSetup = (await createBundleSetupInstruction()).map((ix) => <IxLut>{ ix });
-//    const bundleCleanup = (await createBundleCleanupInstruction(tipAmount)).map(
-//        (ix) => <IxLut>{ ix }
-//    );
-//    const validateBundle = await createValidateBundleInstruction();
-//
-//    ixlut = { ...bundleSetup, ...ixlut, ...bundleCleanup };
-//
-//    let lastValidTxn: VersionedTransaction | undefined;
-//
-//    const builder = new TransactionBuilder()
-//        .setPayer(payerKey)
-//        .setConnection(program.provider.connection)
-//        .setComputeBudgetConfig(computeBudget)
-//        .setRecentBlockhash((await program.provider.connection.getLatestBlockhash()).blockhash);
-//
-//    for (let i = 0; i < ixlut.length; i++) {
-//        builder.addInstructions(ixlut[i].ix);
-//        builder.addLookupTables(ixlut[i].lut);
-//
-//        // In a validated bundle, the last ix should always be the `bundle_cleanup` ix
-//        // Bundle validation is not required since the cleanup also performs this logic
-//        // Bundle validation will always be the 2nd instruction in intermediate bundles after
-//        // a zeroed out compute price ix.
-//        if (i === ixlut.length - 1) {
-//            const instructions = builder.getInstructions();
-//            builder.setInstructions(instructions.slice(0, 2).concat(instructions.slice(3)));
-//        }
-//
-//        if (txns.length > 0) {
-//            builder.setStripLimitIx(true);
-//        }
-//
-//        const txn = await builder.build();
-//
-//        if (txn.serialize().length >= MAX_SERIALIZED_LEN) {
-//            if (!lastValidTxn)
-//                throw new Error('The first instruction is too large to fit in a transaction');
-//            txns.push(lastValidTxn);
-//            lastValidTxn = undefined;
-//            builder.setInstructions([...validateBundle, ixlut[i].ix]);
-//            builder.setLookupTables([ixlut[i].lut]);
-//        } else {
-//            lastValidTxn = txn;
-//        }
-//    }
-//
-//    if (lastValidTxn) {
-//        txns.push(lastValidTxn);
-//    }
-//
-//    return txns;
-//};
+        return await Promise.all(txnBuilders.map(builder => builder.build()));
+
+    }
+
+}

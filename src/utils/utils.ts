@@ -1,13 +1,10 @@
-import { SignerWalletAdapter } from '@solana/wallet-adapter-base';
 import {
     PublicKey,
     Connection,
-    SendOptions,
     SystemProgram,
-    VersionedTransaction,
     TransactionInstruction,
-    TransactionSignature,
-    LAMPORTS_PER_SOL
+    LAMPORTS_PER_SOL,
+    AddressLookupTableAccount
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -779,3 +776,21 @@ export async function handlePaymentTokenMintWithAuthority(
         cleanupIx: instructions.cleanupIx
     };
 }
+
+export async function getAddressLookupTableAccounts(
+    connection: Connection,
+    addresses: string[]
+): Promise<AddressLookupTableAccount[]> {
+    return Promise.all(
+        addresses.map(async (address) => {
+            const account = await connection
+                .getAddressLookupTable(new PublicKey(address))
+                .then((res: any) => res.value);
+
+            if (!account) {
+                throw new Error(`Lookup table ${address} not found`);
+            }
+            return account;
+        })
+    );
+    }
