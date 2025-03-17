@@ -6688,6 +6688,11 @@
       "code": 6035,
       "name": "DestionationOverflow",
       "msg": "Destionation overflow"
+    },
+    {
+      "code": 6036,
+      "name": "VaultNotEmpty",
+      "msg": "Strategy cannot be closed if the collateral vault is not empty"
     }
   ],
   "types": [

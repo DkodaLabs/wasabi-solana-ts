@@ -6694,6 +6694,11 @@ export type WasabiSolana = {
       "code": 6035,
       "name": "destionationOverflow",
       "msg": "Destionation overflow"
+    },
+    {
+      "code": 6036,
+      "name": "vaultNotEmpty",
+      "msg": "Strategy cannot be closed if the collateral vault is not empty"
     }
   ],
   "types": [
