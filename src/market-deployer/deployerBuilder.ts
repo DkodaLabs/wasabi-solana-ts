@@ -4,8 +4,7 @@ import {
     SystemProgram,
     TransactionInstruction,
     VersionedTransaction,
-    TransactionMessage,
-    SYSVAR_INSTRUCTIONS_PUBKEY
+    SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js';
 import {
     getAssociatedTokenAddressSync,
@@ -22,6 +21,8 @@ import {
     createInitShortPoolInstruction
 } from '../instructions';
 import { AddressLookupTableProgram } from '@solana/web3.js';
+import { TransactionBuilder } from '../transaction-builder';
+import { ComputeBudgetConfig } from '../compute-budget';
 
 export const MAX_SERIALIZED_LEN = 1644;
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
@@ -87,6 +88,7 @@ export class DeployerBuilder {
     private program!: Program<WasabiSolana>;
     private swapAuthority?: PublicKey;
     private options: DeployerOptions = {};
+    private computeBudget?: ComputeBudgetConfig;
 
     setMint(mint: PublicKey): this {
         this.mint = mint;
@@ -150,6 +152,11 @@ export class DeployerBuilder {
 
     setOptions(options: Partial<DeployerOptions>): this {
         this.options = { ...this.options, ...options };
+        return this;
+    }
+
+    setComputeBudget(computeBudget: ComputeBudgetConfig): this {
+        this.computeBudget = computeBudget;
         return this;
     }
 
@@ -439,33 +446,37 @@ export class DeployerBuilder {
             instructions.push(...lookupTableInstructions);
         }
 
-        let txIdx = 0;
-        let lastTx: VersionedTransaction | undefined = undefined;
-        const transactions: VersionedTransaction[] = [];
-        const recentBlockhash = (await this.program.provider.connection.getLatestBlockhash())
+        let lastValidTxn: VersionedTransaction | undefined = undefined;
+        const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
             .blockhash;
+        const transactions: VersionedTransaction[] = [];
+        const builder = new TransactionBuilder()
+            .setPayer(this.program.provider.publicKey)
+            .setConnection(this.program.provider.connection)
+            .setComputeBudgetConfig(this.computeBudget)
+            .setRecentBlockhash(latestBlockhash);
 
-        for (let i = 0; i <= instructions.length - 1; i++) {
-            const transaction = new VersionedTransaction(
-                new TransactionMessage({
-                    payerKey: this.program.provider.publicKey,
-                    recentBlockhash,
-                    instructions: instructions.slice(txIdx, i)
-                }).compileToV0Message()
-            );
+        for (const ix of instructions) {
+            const txn = await builder.addInstructions(ix).build();
 
-            if (transaction.serialize().length >= MAX_SERIALIZED_LEN) {
-                if (!lastTx) throw new Error('Transaction is too large and cannot be broken down');
+            builder.setStripLimitIx(transactions.length > 1 && !builder.stripLimitState);
 
-                transactions.push(lastTx);
-
-                lastTx = undefined;
-                txIdx = i;
-
-                continue;
+            if (txn.serialize().length >= MAX_SERIALIZED_LEN) {
+                if (!lastValidTxn)
+                    throw new Error('Transaction is too large and cannot be broken down');
+                transactions.push(lastValidTxn);
+                builder.setInstructions([ix]);
+                lastValidTxn = undefined;
+            } else {
+                lastValidTxn = txn;
             }
+        }
 
-            lastTx = transaction;
+        if (lastValidTxn) {
+            if (transactions.length >= 5) {
+                throw new Error('Failed to append last transaction - transaction limit reached (5)');
+            }
+            transactions.push(lastValidTxn);
         }
 
         response.transactions = transactions;

@@ -94,6 +94,10 @@ export class TransactionBuilder {
         return this;
     }
 
+    get stripLimitState(): boolean {
+        return this.stripLimit;
+    }
+
     private async createComputeBudgetInstructions(): Promise<TransactionInstruction[]> {
         if (this.computeBudgetConfig.destination === 'JITO') {
             // Create a compute budget instruction with 0 priority fees
