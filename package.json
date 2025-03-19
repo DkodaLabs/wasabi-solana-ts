@@ -27,7 +27,7 @@
     "format": "prettier --write 'src/**/*.{js,ts}'"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.30.1",
+    "@coral-xyz/anchor": "0.31.0",
     "@metaplex-foundation/js": "0.20.1",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.23",
