@@ -78,35 +78,6 @@ const takeProfitCleanupConfig: BaseMethodConfig<
     getMethod: (program) => () => program.methods.takeProfitCleanup()
 };
 
-const takeProfitSetupWithBundleConfig: BaseMethodConfig<
-    ClosePositionSetupArgs,
-    ClosePositionSetupAccounts,
-    ExitOrderSetupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
-            config.program,
-            config.accounts,
-            'TAKE_PROFIT'
-        );
-
-        return {
-            accounts: {
-                closePositionSetup: accounts
-            },
-            args: transformArgs(config.args),
-            setup: ixes.setupIx
-        };
-    },
-    getMethod: (program) => (args) =>
-        program.methods.takeProfitSetup(
-            args.minTargetAmount,
-            args.interest,
-            args.executionFee,
-            args.expiration
-        )
-};
-
 export async function createTakeProfitSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
@@ -128,18 +99,5 @@ export async function createTakeProfitCleanupInstruction(
         program,
         accounts,
         config: takeProfitCleanupConfig,
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createTakeProfitSetupWithBundleInstruction(
-    program: Program<WasabiSolana>,
-    args: ClosePositionSetupArgs,
-    accounts: ClosePositionSetupAccounts,
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: takeProfitSetupWithBundleConfig,
-        args
     }) as Promise<TransactionInstruction[]>;
 }

@@ -77,35 +77,6 @@ const stopLossCleanupConfig: BaseMethodConfig<
     getMethod: (program) => () => program.methods.stopLossCleanup()
 };
 
-const stopLossSetupWithBundleConfig: BaseMethodConfig<
-    ClosePositionSetupArgs,
-    ClosePositionSetupAccounts,
-    ExitOrderSetupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
-            config.program,
-            config.accounts,
-            'STOP_LOSS'
-        );
-
-        return {
-            accounts: {
-                closePositionSetup: accounts
-            },
-            args: transformArgs(config.args),
-            setup: ixes.setupIx
-        };
-    },
-    getMethod: (program) => (args) =>
-        program.methods.stopLossSetupWithBundle(
-            args.minTargetAmount,
-            args.interest,
-            args.executionFee,
-            args.expiration
-        )
-};
-
 export async function createStopLossSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
@@ -127,18 +98,5 @@ export async function createStopLossCleanupInstruction(
         program,
         accounts,
         config: stopLossCleanupConfig,
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createStopLossSetupWithBundleInstruction(
-    program: Program<WasabiSolana>,
-    args: ClosePositionSetupArgs,
-    accounts: ClosePositionSetupAccounts,
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: stopLossSetupWithBundleConfig,
-        args
     }) as Promise<TransactionInstruction[]>;
 }

@@ -83,38 +83,6 @@ const closeLongPositionCleanupConfig: BaseMethodConfig<
     getMethod: (program) => () => program.methods.closeLongPositionCleanup()
 };
 
-const closeLongPositionSetupWithBundleConfig: BaseMethodConfig<
-    ClosePositionSetupArgs,
-    ClosePositionSetupAccounts,
-    CloseLongPositionSetupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
-            config.program,
-            config.accounts,
-            'MARKET'
-        );
-
-        return {
-            accounts: {
-                owner: accounts.owner,
-                closePositionSetup: {
-                    ...accounts
-                },
-                args: transformArgs(config.args),
-                setup: ixes.setupIx
-            },
-        };
-    },
-    getMethod: (program) => (args) =>
-        program.methods.closeLongPositionSetupWithBundle(
-            args.minTargetAmount,
-            args.interest,
-            args.executionFee,
-            args.expiration
-        )
-}
-
 export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
@@ -136,18 +104,5 @@ export async function createCloseLongPositionCleanupInstruction(
         program,
         accounts,
         config: closeLongPositionCleanupConfig,
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createCloseLongPositionSetupWithBundleInstruction(
-    program: Program<WasabiSolana>,
-    args: ClosePositionSetupArgs,
-    accounts: ClosePositionSetupAccounts
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: closeLongPositionSetupWithBundleConfig,
-        args
     }) as Promise<TransactionInstruction[]>;
 }

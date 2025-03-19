@@ -42,8 +42,7 @@ export const SEED_PREFIX = {
     GLOBAL_SETTINGS: 'global_settings',
     EVENT_AUTHORITY: '__event_authority',
     STRATEGY: 'strategy',
-    STRATEGY_REQUEST: 'strategy_request',
-    BUNDLE_REQUEST: 'bundle_request'
+    STRATEGY_REQ: 'strategy_request'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -215,17 +214,6 @@ export const PDA = {
         );
     },
 
-    getBundleRequest(payer: PublicKey, authority: PublicKey): PublicKey {
-        return findProgramAddress(
-            [
-                utils.bytes.utf8.encode(SEED_PREFIX.BUNDLE_REQUEST),
-                payer.toBuffer(),
-                authority.toBuffer()
-            ],
-            WASABI_PROGRAM_ID
-        );
-    },
-
     getStrategy(lpVault: PublicKey, collateral: PublicKey): PublicKey {
         return findProgramAddress(
             [
@@ -239,7 +227,7 @@ export const PDA = {
 
     getStrategyRequest(strategy: PublicKey): PublicKey {
         return findProgramAddress(
-            [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQUEST), strategy.toBuffer()],
+            [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQ), strategy.toBuffer()],
             WASABI_PROGRAM_ID
         );
     }
@@ -776,21 +764,3 @@ export async function handlePaymentTokenMintWithAuthority(
         cleanupIx: instructions.cleanupIx
     };
 }
-
-export async function getAddressLookupTableAccounts(
-    connection: Connection,
-    addresses: string[]
-): Promise<AddressLookupTableAccount[]> {
-    return Promise.all(
-        addresses.map(async (address) => {
-            const account = await connection
-                .getAddressLookupTable(new PublicKey(address))
-                .then((res: any) => res.value);
-
-            if (!account) {
-                throw new Error(`Lookup table ${address} not found`);
-            }
-            return account;
-        })
-    );
-    }

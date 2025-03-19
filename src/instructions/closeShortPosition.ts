@@ -63,7 +63,7 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.closeShortPositionSetupWithBundle(
+        program.methods.closeShortPositionSetup(
             args.minTargetAmount,
             args.interest,
             args.executionFee,
@@ -96,39 +96,6 @@ const closeShortPositionCleanupConfig: BaseMethodConfig<
     getMethod: (program) => () => program.methods.closeShortPositionCleanup()
 };
 
-const closeShortPositionSetupWithBundleConfig: BaseMethodConfig<
-    ClosePositionSetupArgs,
-    ClosePositionSetupAccounts,
-    CloseShortPositionSetupInstructionAccounts | CloseShortPositionSetupInstructionAccountsStrict
-> = {
-    process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
-            config.program,
-            config.accounts,
-            'MARKET'
-        );
-
-        return {
-            accounts: {
-                owner: accounts.owner,
-                closePositionSetup: {
-                    ...accounts
-                }
-            },
-            args: transformArgs(config.args),
-            setup: ixes.setupIx
-        };
-    },
-    getMethod: (program) => (args) =>
-        program.methods.closeShortPositionSetupWithBundle(
-            args.minTargetAmount,
-            args.interest,
-            args.executionFee,
-            args.expiration
-        )
-};
-
-
 export async function createCloseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
@@ -152,17 +119,3 @@ export async function createCloseShortPositionCleanupInstruction(
         config: closeShortPositionCleanupConfig,
     }) as Promise<TransactionInstruction[]>;
 }
-
-export async function createCloseShortPositionSetupWithBundleInstruction(
-    program: Program<WasabiSolana>,
-    args: ClosePositionSetupArgs,
-    accounts: ClosePositionSetupAccounts
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: closeShortPositionSetupWithBundleConfig,
-        args
-    }) as Promise<TransactionInstruction[]>;
-}
-
