@@ -290,7 +290,7 @@ export class DeployerBuilder {
         });
         lookupTableInstructions.push(createLookupTableIx);
 
-        // 18 was the maximum number of accounts per transaction I found I could fit reliably could maybe squeeze in a couple additional accounts
+        // 18 was the maximum number of accounts I found I could reliably fit in a transaction
         // Let's start at 21
         for (let i = 0; i <= addresses.length - 1; i += 20) {
             const addressesToAdd = addresses.slice(i, i + 20);
