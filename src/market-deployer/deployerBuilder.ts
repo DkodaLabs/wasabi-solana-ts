@@ -394,7 +394,9 @@ export class DeployerBuilder {
             const usdc = new PublicKey(USDC_MINT);
 
             if (!this.options.excludeLong) {
-                response.pools.longUsdc = PDA.getLongPool(this.mint, usdc);
+                const longPool = PDA.getLongPool(this.mint, usdc);
+                response.pools.longUsdc = longPool;
+
                 instructions.push(
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: usdc,
@@ -404,8 +406,6 @@ export class DeployerBuilder {
                 );
 
                 if (!this.options.excludeAta) {
-                    const longPool = PDA.getLongPool(this.mint, usdc);
-
                     instructions.push(
                         createAssociatedTokenAccountIdempotentInstruction(
                             this.program.provider.publicKey,
@@ -419,7 +419,9 @@ export class DeployerBuilder {
             }
 
             if (!this.options.excludeShort) {
-                response.pools.shortUsdc = PDA.getShortPool(usdc, this.mint);
+                const shortPool = PDA.getShortPool(usdc, this.mint);
+                response.pools.shortUsdc = shortPool;
+
                 instructions.push(
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
@@ -429,8 +431,6 @@ export class DeployerBuilder {
                 );
 
                 if (!this.options.excludeAta) {
-                    const shortPool = PDA.getShortPool(usdc, this.mint);
-
                     instructions.push(
                         createAssociatedTokenAccountIdempotentInstruction(
                             this.program.provider.publicKey,
@@ -467,9 +467,9 @@ export class DeployerBuilder {
             .setRecentBlockhash(latestBlockhash);
 
         for (const ix of instructions) {
-            const txn = await builder.addInstructions(ix).build();
-
             builder.setStripLimitIx(transactions.length > 1 && !builder.stripLimitState);
+
+            const txn = await builder.addInstructions(ix).build();
 
             if (txn.serialize().length >= MAX_SERIALIZED_LEN) {
                 if (!lastValidTxn)
