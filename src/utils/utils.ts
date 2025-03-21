@@ -1,13 +1,10 @@
-import { SignerWalletAdapter } from '@solana/wallet-adapter-base';
 import {
     PublicKey,
     Connection,
-    SendOptions,
     SystemProgram,
-    VersionedTransaction,
     TransactionInstruction,
-    TransactionSignature,
-    LAMPORTS_PER_SOL
+    LAMPORTS_PER_SOL,
+    AddressLookupTableAccount
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -37,7 +34,7 @@ export const SEED_PREFIX = {
     ADMIN: 'admin',
     LP_VAULT: 'lp_vault',
     POSITION: 'position',
-    OPEN_POSTIION: 'open_pos',
+    OPEN_POSITION: 'open_pos',
     CLOSE_POSITION: 'close_pos',
     STOP_LOSS_ORDER: 'stop_loss_order',
     TAKE_PROFIT_ORDER: 'take_profit_order',
@@ -170,7 +167,7 @@ export const PDA = {
 
     getOpenPositionRequest(owner: PublicKey): PublicKey {
         return findProgramAddress(
-            [utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSTIION), owner.toBuffer()],
+            [utils.bytes.utf8.encode(SEED_PREFIX.OPEN_POSITION), owner.toBuffer()],
             WASABI_PROGRAM_ID
         );
     },
@@ -745,6 +742,7 @@ export async function handlePaymentTokenMintWithAuthority(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
+
     let instructions = { setupIx: [], cleanupIx: [] };
 
     if (paymentToken.equals(NATIVE_MINT)) {

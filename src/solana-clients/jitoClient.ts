@@ -6,6 +6,8 @@ import {
     SystemProgram,
     VersionedTransaction,
     PublicKey,
+    TransactionInstruction,
+    MessageV0,
     LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { TransactionBuilder } from '../transaction-builder';
@@ -39,8 +41,8 @@ export interface LatestTips {
 }
 
 export interface Bundle {
-    transactions: Uint8Array[];
     maxTransactionCount: number;
+    transactions: VersionedTransaction[];
 }
 
 const mapLatestTips = (tipResponse: any): LatestTips => {
@@ -115,6 +117,38 @@ export class JitoClient implements SolanaClient {
         return await this.fetchLatestTips();
     }
 
+    public async getTipAmount(computeBudgetConfig: ComputeBudgetConfig): Promise<number> {
+        let tipAmount = computeBudgetConfig.price;
+
+        if (computeBudgetConfig.type === 'DYNAMIC') {
+            const latestTips = await this.getTips();
+            switch (computeBudgetConfig.speed) {
+                case 'NORMAL':
+                    tipAmount = Math.ceil(latestTips.landedTips50thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                case 'FAST':
+                    tipAmount = Math.ceil(latestTips.landedTips75thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                case 'TURBO':
+                    tipAmount = Math.ceil(latestTips.landedTips95thPercentile * LAMPORTS_PER_SOL);
+                    break;
+                default:
+                    throw new Error('Invalid speed: ' + computeBudgetConfig.speed);
+            }
+        }
+
+        return tipAmount;
+    }
+
+    public async getTipAmountAndAccount(
+        computeBudgetConfig: ComputeBudgetConfig
+    ): Promise<[number, PublicKey]> {
+        return [
+            await this.getTipAmount(computeBudgetConfig),
+            new PublicKey(JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)])
+        ];
+    }
+
     async fetchLatestTipsFromWs(): Promise<void> {
         const ws = new WebSocket('wss://bundles.jito.wtf/api/v1/bundles/tip_floor');
         ws.onopen = () => {
@@ -136,18 +170,17 @@ export class JitoClient implements SolanaClient {
         };
     }
 
-    /// Transaction should be signed after this step and then bundled
-    async appendTipTransaction(
-        connection: Connection,
+    /// Create a tip instruction
+    async createTipInstruction(
         payer: PublicKey,
-        computeBudgetConfig: ComputeBudgetConfig,
-        transactions: VersionedTransaction[]
-    ): Promise<VersionedTransaction[]> {
+        computeBudgetConfig: ComputeBudgetConfig
+    ): Promise<TransactionInstruction> {
         const tipAccount = new PublicKey(
             JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]
         );
 
         let tipAmount: number;
+
         if (computeBudgetConfig.type === 'FIXED') {
             tipAmount = computeBudgetConfig.price;
         } else {
@@ -171,11 +204,64 @@ export class JitoClient implements SolanaClient {
             tipAmount = Math.min(tipAmount, computeBudgetConfig.price);
         }
 
-        const tipInstruction = SystemProgram.transfer({
+        return SystemProgram.transfer({
             fromPubkey: payer,
             toPubkey: tipAccount,
             lamports: tipAmount
         });
+    }
+
+    async appendTipInstruction(
+        connection: Connection,
+        payer: PublicKey,
+        computeBudgetConfig: ComputeBudgetConfig,
+        transactions: VersionedTransaction[]
+    ): Promise<VersionedTransaction[]> {
+        const message = transactions[transactions.length - 1].message as MessageV0;
+        const instructions = message.compiledInstructions.map((ix) => {
+            const keys = ix.accountKeyIndexes.map((index) => ({
+                pubkey: message.staticAccountKeys[index],
+                isSigner: message.isAccountSigner(index),
+                isWritable: message.isAccountWritable(index)
+            }));
+
+            const programId = message.staticAccountKeys[ix.programIdIndex];
+
+            return new TransactionInstruction({
+                keys,
+                programId,
+                data: Buffer.from(ix.data)
+            });
+        });
+
+        const tipInstruction = await this.createTipInstruction(payer, computeBudgetConfig);
+        instructions.push(tipInstruction);
+
+        const newTx = await new TransactionBuilder()
+            .setPayer(payer)
+            .setConnection(connection)
+            .addInstructions(...instructions)
+            .setComputeBudgetConfig({
+                destination: 'PRIORITY_FEE',
+                type: 'FIXED',
+                price: 0
+            })
+            .setStripLimitIx(true)
+            .build();
+
+        transactions[transactions.length - 1] = newTx;
+
+        return transactions;
+    }
+
+    /// Transaction should be signed after this step and then bundled
+    async appendTipTransaction(
+        connection: Connection,
+        payer: PublicKey,
+        computeBudgetConfig: ComputeBudgetConfig,
+        transactions: VersionedTransaction[]
+    ): Promise<VersionedTransaction[]> {
+        const tipInstruction = await this.createTipInstruction(payer, computeBudgetConfig);
 
         const tipTransaction = await new TransactionBuilder()
             .setPayer(payer)

@@ -6772,6 +6772,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
             "name": "swap_cache",
             "type": {
               "defined": {

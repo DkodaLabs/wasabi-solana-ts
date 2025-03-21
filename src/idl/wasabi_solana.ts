@@ -6778,6 +6778,10 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
             "name": "swapCache",
             "type": {
               "defined": {
