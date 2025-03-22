@@ -67,6 +67,12 @@ const WALLETS = {
 };
 
 export interface DeployerResponse {
+    pools: {
+        shortUsdc?: PublicKey;
+        longUsdc?: PublicKey;
+        shortSol?: PublicKey;
+        longSol?: PublicKey;
+    }
     transactions: VersionedTransaction[];
     lookupTable?: PublicKey;
 }
@@ -363,6 +369,7 @@ export class DeployerBuilder {
 
         if (!this.options.excludeSol) {
             if (!this.options.excludeLong) {
+                response.pools.longSol = PDA.getLongPool(this.mint, NATIVE_MINT);
                 instructions.push(
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: NATIVE_MINT,
@@ -372,6 +379,7 @@ export class DeployerBuilder {
                 );
             }
             if (!this.options.excludeShort) {
+                response.pools.shortSol = PDA.getShortPool(NATIVE_MINT, this.mint);
                 instructions.push(
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
@@ -386,6 +394,7 @@ export class DeployerBuilder {
             const usdc = new PublicKey(USDC_MINT);
 
             if (!this.options.excludeLong) {
+                response.pools.longUsdc = PDA.getLongPool(this.mint, usdc);
                 instructions.push(
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: usdc,
@@ -410,6 +419,7 @@ export class DeployerBuilder {
             }
 
             if (!this.options.excludeShort) {
+                response.pools.shortUsdc = PDA.getShortPool(usdc, this.mint);
                 instructions.push(
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
