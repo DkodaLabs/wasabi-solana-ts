@@ -67,12 +67,7 @@ const WALLETS = {
 };
 
 export interface DeployerResponse {
-    pools: {
-        shortUsdc?: PublicKey;
-        longUsdc?: PublicKey;
-        shortSol?: PublicKey;
-        longSol?: PublicKey;
-    }
+    pools: PublicKey[];
     transactions: VersionedTransaction[];
     lookupTable?: PublicKey;
 }
@@ -349,7 +344,8 @@ export class DeployerBuilder {
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
 
-        const response = <DeployerResponse>{};
+        const pools: PublicKey[] = [];
+
         const instructions: TransactionInstruction[] = [];
 
         instructions.push(
@@ -369,7 +365,7 @@ export class DeployerBuilder {
 
         if (!this.options.excludeSol) {
             if (!this.options.excludeLong) {
-                response.pools.longSol = PDA.getLongPool(this.mint, NATIVE_MINT);
+                pools.push(PDA.getLongPool(this.mint, NATIVE_MINT));
                 instructions.push(
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: NATIVE_MINT,
@@ -379,7 +375,7 @@ export class DeployerBuilder {
                 );
             }
             if (!this.options.excludeShort) {
-                response.pools.shortSol = PDA.getShortPool(NATIVE_MINT, this.mint);
+                pools.push(PDA.getShortPool(NATIVE_MINT, this.mint));
                 instructions.push(
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
@@ -394,7 +390,7 @@ export class DeployerBuilder {
             const usdc = new PublicKey(USDC_MINT);
 
             if (!this.options.excludeLong) {
-                response.pools.longUsdc = PDA.getLongPool(this.mint, usdc);
+                pools.push(PDA.getLongPool(this.mint, usdc));
                 instructions.push(
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: usdc,
@@ -419,7 +415,7 @@ export class DeployerBuilder {
             }
 
             if (!this.options.excludeShort) {
-                response.pools.shortUsdc = PDA.getShortPool(usdc, this.mint);
+                pools.push(PDA.getShortPool(usdc, this.mint));
                 instructions.push(
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
@@ -444,6 +440,8 @@ export class DeployerBuilder {
             }
         }
 
+        let marketLookupTable: PublicKey | undefined = undefined;
+
         if (!this.options.excludeLookups) {
             const { lookupTable, lookupTableInstructions } =
                 await this.createInitLookupTableInstructions(
@@ -452,7 +450,7 @@ export class DeployerBuilder {
                         .then((acc) => acc.owner)
                 );
 
-            response.lookupTable = lookupTable;
+            marketLookupTable = lookupTable;
             instructions.push(...lookupTableInstructions);
         }
 
@@ -489,8 +487,10 @@ export class DeployerBuilder {
             transactions.push(lastValidTxn);
         }
 
-        response.transactions = transactions;
-
-        return response;
+        return {
+            pools,
+            transactions,
+            lookupTable: marketLookupTable
+        };
     }
 }
