@@ -4,7 +4,7 @@ import {
     SystemProgram,
     TransactionInstruction,
     VersionedTransaction,
-    SYSVAR_INSTRUCTIONS_PUBKEY,
+    SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import {
     getAssociatedTokenAddressSync,
@@ -210,18 +210,18 @@ export class DeployerBuilder {
                 addresses.push(...[solLongPool, solLongPoolQuoteVault, solLongPoolBaseVault]);
             }
             if (!this.options.excludeShort) {
-                const solShortPool = PDA.getShortPool(this.mint, NATIVE_MINT);
+                const solShortPool = PDA.getShortPool(NATIVE_MINT, this.mint);
                 const solShortPoolQuoteVault = getAssociatedTokenAddressSync(
                     this.mint,
                     solShortPool,
                     true,
-                    TOKEN_PROGRAM_ID
+                    tokenProgram
                 );
                 const solShortPoolBaseVault = getAssociatedTokenAddressSync(
                     NATIVE_MINT,
                     solShortPool,
                     true,
-                    tokenProgram
+                    TOKEN_PROGRAM_ID
                 );
 
                 addresses.push(...[solShortPool, solShortPoolQuoteVault, solShortPoolBaseVault]);
@@ -272,13 +272,13 @@ export class DeployerBuilder {
                     this.mint,
                     usdcShortPool,
                     true,
-                    TOKEN_PROGRAM_ID
+                    tokenProgram
                 );
                 const usdcShortPoolBaseVault = getAssociatedTokenAddressSync(
                     usdc,
                     usdcShortPool,
                     true,
-                    tokenProgram
+                    TOKEN_PROGRAM_ID
                 );
 
                 addresses.push(...[usdcShortPool, usdcShortPoolQuoteVault, usdcShortPoolBaseVault]);
@@ -299,14 +299,15 @@ export class DeployerBuilder {
         lookupTableInstructions.push(createLookupTableIx);
 
         // 18 was the maximum number of accounts I found I could reliably fit in a transaction
-        // Let's start at 21
-        for (let i = 0; i <= addresses.length - 1; i += 20) {
-            const addressesToAdd = addresses.slice(i, i + 20);
+        const step = 21;
+        for (let i = 0; i <= addresses.length - 1; i += step) {
+            const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
             lookupTableInstructions.push(
                 AddressLookupTableProgram.extendLookupTable({
                     lookupTable,
                     authority: this.program.provider.publicKey,
+                    payer: this.program.provider.publicKey,
                     addresses: addressesToAdd
                 })
             );
@@ -405,10 +406,15 @@ export class DeployerBuilder {
                     instructions.push(
                         createAssociatedTokenAccountIdempotentInstruction(
                             this.program.provider.publicKey,
-                            getAssociatedTokenAddressSync(NATIVE_MINT, longPool, true, this.mint),
+                            getAssociatedTokenAddressSync(
+                                NATIVE_MINT,
+                                longPool,
+                                true,
+                                TOKEN_PROGRAM_ID
+                            ),
                             longPool,
-                            usdc,
-                            this.mint
+                            NATIVE_MINT,
+                            TOKEN_PROGRAM_ID
                         )
                     );
                 }
@@ -430,10 +436,15 @@ export class DeployerBuilder {
                     instructions.push(
                         createAssociatedTokenAccountIdempotentInstruction(
                             this.program.provider.publicKey,
-                            getAssociatedTokenAddressSync(NATIVE_MINT, shortPool, true, this.mint),
+                            getAssociatedTokenAddressSync(
+                                NATIVE_MINT,
+                                shortPool,
+                                true,
+                                TOKEN_PROGRAM_ID
+                            ),
                             shortPool,
-                            usdc,
-                            this.mint
+                            NATIVE_MINT,
+                            TOKEN_PROGRAM_ID
                         )
                     );
                 }
@@ -464,25 +475,55 @@ export class DeployerBuilder {
             .setComputeBudgetConfig(this.computeBudget)
             .setRecentBlockhash(latestBlockhash);
 
+        const validateAndBuildTxn = async (
+            ixToAdd?: TransactionInstruction,
+            resetInstructions: boolean = false
+        ) => {
+            try {
+                let txn;
+
+                builder.setStripLimitIx(transactions.length > 0)
+
+                if (resetInstructions && ixToAdd) {
+                    txn = await builder.setInstructions([ixToAdd]).build();
+                } else if (ixToAdd) {
+                    txn = await builder.addInstructions(ixToAdd).build();
+                } else {
+                    txn = await builder.build();
+                }
+
+                const serializedTxnLen = txn.serialize().length;
+
+                if (serializedTxnLen >= MAX_SERIALIZED_LEN) {
+                    throw new Error(`Transaction is too large: ${serializedTxnLen}`);
+                }
+
+                return txn;
+            } catch (error) {
+                if (resetInstructions && ixToAdd) {
+                    throw new Error(`Single instruction is too large and cannot be processed: ${error}`);
+                }
+                throw error;
+            }
+        };
+
         for (const ix of instructions) {
-            const txn = await builder.addInstructions(ix).build();
-
-            builder.setStripLimitIx(transactions.length > 1 && !builder.stripLimitState);
-
-            if (txn.serialize().length >= MAX_SERIALIZED_LEN) {
-                if (!lastValidTxn)
+            try {
+                lastValidTxn = await validateAndBuildTxn(ix);
+            } catch (error) {
+                if ((transactions.length === 0 && !lastValidTxn) || !lastValidTxn)
                     throw new Error('Transaction is too large and cannot be broken down');
                 transactions.push(lastValidTxn);
-                builder.setInstructions([ix]);
-                lastValidTxn = undefined;
-            } else {
-                lastValidTxn = txn;
+
+                lastValidTxn = await validateAndBuildTxn(ix, true);
             }
         }
 
-        if (lastValidTxn) {
+        if (lastValidTxn && !transactions.includes(lastValidTxn)) {
             if (transactions.length >= 5) {
-                throw new Error('Failed to append last transaction - transaction limit reached (5)');
+                throw new Error(
+                    'Failed to append last transaction - transaction limit reached (5)'
+                );
             }
             transactions.push(lastValidTxn);
         }
