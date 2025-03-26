@@ -4,7 +4,7 @@ import {
     SystemProgram,
     TransactionInstruction,
     VersionedTransaction,
-    SYSVAR_INSTRUCTIONS_PUBKEY
+    SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js';
 import {
     getAssociatedTokenAddressSync,
@@ -25,7 +25,7 @@ import { TransactionBuilder } from '../transaction-builder';
 import { ComputeBudgetConfig } from '../compute-budget';
 
 export const MAX_SERIALIZED_LEN = 1644;
-const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 const WALLETS = {
     FEE: {
@@ -68,10 +68,14 @@ const WALLETS = {
 
 export interface DeployerResponse {
     pools: PublicKey[];
-    transactions: VersionedTransaction[];
+    vaultTransaction?: VersionedTransaction;
+    marketTransactions: VersionedTransaction[];
     lookupTable?: PublicKey;
 }
 
+/*
+/ For a vault only launch we set all flags but excludeVault to true
+ */
 export type DeployerOptions = {
     excludeLong?: boolean;
     excludeShort?: boolean;
@@ -79,8 +83,13 @@ export type DeployerOptions = {
     excludeSol?: boolean;
     excludeUsdc?: boolean;
     excludeAta?: boolean;
+    excludeVault?: boolean;
+    lookupOnly?: boolean;
 };
 
+/*
+/
+ */
 export class DeployerBuilder {
     private mint!: PublicKey;
     private name!: string;
@@ -151,6 +160,11 @@ export class DeployerBuilder {
         return this;
     }
 
+    setExcludeVault(): this {
+        this.options.excludeVault = true;
+        return this;
+    }
+
     setOptions(options: Partial<DeployerOptions>): this {
         this.options = { ...this.options, ...options };
         return this;
@@ -171,14 +185,16 @@ export class DeployerBuilder {
             this.program.provider.connection.getAccountInfo(this.mint).then((acc) => acc.owner)
         ]);
 
-        addresses.push(
-            ...[
-                this.mint,
-                lpVault,
-                getAssociatedTokenAddressSync(this.mint, lpVault, true, assetTokenProgram),
-                PDA.getSharesMint(lpVault, this.mint)
-            ]
-        );
+        if (!this.options.excludeVault) {
+            addresses.push(
+                ...[
+                    this.mint,
+                    lpVault,
+                    getAssociatedTokenAddressSync(this.mint, lpVault, true, assetTokenProgram),
+                    PDA.getSharesMint(lpVault, this.mint)
+                ]
+            );
+        }
 
         if (!this.options.excludeSol) {
             const solLpVault = PDA.getLpVault(NATIVE_MINT);
@@ -299,7 +315,7 @@ export class DeployerBuilder {
         lookupTableInstructions.push(createLookupTableIx);
 
         // 18 was the maximum number of accounts I found I could reliably fit in a transaction
-        const step = 21;
+        const step = 10;
         for (let i = 0; i <= addresses.length - 1; i += step) {
             const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
@@ -336,33 +352,64 @@ export class DeployerBuilder {
 
     private validateRequiredFields(): void {
         if (!this.mint) throw new Error('Mint is required');
-        if (!this.name) throw new Error('Name is required');
-        if (!this.symbol) throw new Error('Symbol is required');
-        if (!this.uri) throw new Error('URI is required');
         if (!this.program) throw new Error('Program is required');
+
+        if (!this.options.excludeVault && !this.options.lookupOnly) {
+            if (!this.name) throw new Error('Name is required');
+            if (!this.symbol) throw new Error('Symbol is required');
+            if (!this.uri) throw new Error('URI is required');
+        }
     }
 
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
 
+        const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
+            .blockhash;
+        const builder = new TransactionBuilder()
+            .setPayer(this.program.provider.publicKey)
+            .setConnection(this.program.provider.connection)
+            .setComputeBudgetConfig(this.computeBudget)
+            .setRecentBlockhash(latestBlockhash);
+
+        const response = <DeployerResponse>{};
+
+        if (!this.options.excludeVault && !this.options.lookupOnly) {
+            response.vaultTransaction = await this.buildVaultTransaction(builder);
+        }
+
+        const ixes: TransactionInstruction[] = [];
+
+        if (
+            (!this.options.excludeSol ||
+            !this.options.excludeUsdc ||
+            !this.options.excludeLong ||
+            !this.options.excludeShort) &&
+            !this.options.lookupOnly
+        ) {
+            const { pools, instructions } = await this.buildMarketInstructions();
+            response.pools = pools;
+            ixes.push(...instructions);
+        }
+
+        if (!this.options.excludeLookups) {
+            const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
+            ixes.push(...lookupTableInstructions);
+            response.lookupTable = lookupTable;
+        }
+
+        response.marketTransactions = await this.buildMarketTransactions(builder, ixes);
+
+        return response;
+    }
+
+    private async buildMarketInstructions(): Promise<{
+        pools: PublicKey[];
+        instructions: TransactionInstruction[];
+        lookupTable: PublicKey;
+    }> {
         const pools: PublicKey[] = [];
-
         const instructions: TransactionInstruction[] = [];
-
-        instructions.push(
-            ...(await createInitLpVaultInstruction(
-                this.program,
-                {
-                    name: this.name,
-                    symbol: this.symbol,
-                    uri: this.uri
-                },
-                {
-                    admin: this.program.provider.publicKey,
-                    assetMint: this.mint
-                }
-            ))
-        );
 
         if (!this.options.excludeSol) {
             if (!this.options.excludeLong) {
@@ -454,26 +501,24 @@ export class DeployerBuilder {
         let marketLookupTable: PublicKey | undefined = undefined;
 
         if (!this.options.excludeLookups) {
-            const { lookupTable, lookupTableInstructions } =
-                await this.createInitLookupTableInstructions(
-                    await this.program.provider.connection
-                        .getAccountInfo(this.mint)
-                        .then((acc) => acc.owner)
-                );
-
+            const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
             marketLookupTable = lookupTable;
             instructions.push(...lookupTableInstructions);
         }
 
-        let lastValidTxn: VersionedTransaction | undefined = undefined;
-        const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
-            .blockhash;
+        return {
+            pools,
+            instructions,
+            lookupTable: marketLookupTable
+        };
+    }
+
+    async buildMarketTransactions(
+        builder: TransactionBuilder,
+        instructions: TransactionInstruction[]
+    ): Promise<VersionedTransaction[]> {
         const transactions: VersionedTransaction[] = [];
-        const builder = new TransactionBuilder()
-            .setPayer(this.program.provider.publicKey)
-            .setConnection(this.program.provider.connection)
-            .setComputeBudgetConfig(this.computeBudget)
-            .setRecentBlockhash(latestBlockhash);
+        let lastValidTxn: VersionedTransaction | undefined = undefined;
 
         const validateAndBuildTxn = async (
             ixToAdd?: TransactionInstruction,
@@ -482,7 +527,7 @@ export class DeployerBuilder {
             try {
                 let txn;
 
-                builder.setStripLimitIx(transactions.length > 0)
+                builder.setStripLimitIx(transactions.length > 0 || this.options.excludeVault);
 
                 if (resetInstructions && ixToAdd) {
                     txn = await builder.setInstructions([ixToAdd]).build();
@@ -501,7 +546,9 @@ export class DeployerBuilder {
                 return txn;
             } catch (error) {
                 if (resetInstructions && ixToAdd) {
-                    throw new Error(`Single instruction is too large and cannot be processed: ${error}`);
+                    throw new Error(
+                        `Single instruction is too large and cannot be processed: ${error}`
+                    );
                 }
                 throw error;
             }
@@ -520,7 +567,7 @@ export class DeployerBuilder {
         }
 
         if (lastValidTxn && !transactions.includes(lastValidTxn)) {
-            if (transactions.length >= 5) {
+            if (transactions.length >= (this.options.excludeVault ? 5 : 4)) {
                 throw new Error(
                     'Failed to append last transaction - transaction limit reached (5)'
                 );
@@ -528,10 +575,36 @@ export class DeployerBuilder {
             transactions.push(lastValidTxn);
         }
 
-        return {
-            pools,
-            transactions,
-            lookupTable: marketLookupTable
-        };
+        return transactions;
+    }
+
+    private async buildLookupInstructions(): Promise<{
+        lookupTable: PublicKey;
+        lookupTableInstructions: TransactionInstruction[];
+    }> {
+        return await this.createInitLookupTableInstructions(
+            await this.program.provider.connection
+                .getAccountInfo(this.mint)
+                .then((acc) => acc.owner)
+        );
+    }
+
+    private async buildVaultTransaction(
+        builder: TransactionBuilder
+    ): Promise<VersionedTransaction> {
+        const instructions = await createInitLpVaultInstruction(
+            this.program,
+            {
+                name: this.name,
+                symbol: this.symbol,
+                uri: this.uri
+            },
+            {
+                admin: this.program.provider.publicKey,
+                assetMint: this.mint
+            }
+        );
+
+        return await builder.setInstructions(instructions).build();
     }
 }
