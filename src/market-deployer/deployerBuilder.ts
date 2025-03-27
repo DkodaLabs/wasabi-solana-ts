@@ -99,6 +99,7 @@ export class DeployerBuilder {
     private swapAuthority?: PublicKey;
     private options: DeployerOptions = {};
     private computeBudget?: ComputeBudgetConfig;
+    private lookupTable?: PublicKey;
 
     setMint(mint: PublicKey): this {
         this.mint = mint;
@@ -174,16 +175,26 @@ export class DeployerBuilder {
         this.computeBudget = computeBudget;
         return this;
     }
+    
+    setLookupTable(lookupTable: PublicKey): this {
+        this.lookupTable = lookupTable;
+        return this;
+    }
 
-    async createInitLookupTableInstructions(tokenProgram: PublicKey): Promise<{
+    async buildLookupInstructions(): Promise<{
         lookupTable: PublicKey;
         lookupTableInstructions: TransactionInstruction[];
     }> {
         const lpVault = PDA.getLpVault(this.mint);
-        const [addresses, assetTokenProgram] = await Promise.all([
+        // eslint-disable-next-line prefer-const
+        let [addresses, assetTokenProgram] = await Promise.all([
             this.getCommonLookupTableAddresses(),
             this.program.provider.connection.getAccountInfo(this.mint).then((acc) => acc.owner)
         ]);
+        
+        if (this.lookupTable) {
+            addresses = [];
+        }
 
         if (!this.options.excludeVault) {
             addresses.push(
@@ -220,7 +231,7 @@ export class DeployerBuilder {
                     this.mint,
                     solLongPool,
                     true,
-                    tokenProgram
+                    assetTokenProgram
                 );
 
                 addresses.push(...[solLongPool, solLongPoolQuoteVault, solLongPoolBaseVault]);
@@ -231,7 +242,7 @@ export class DeployerBuilder {
                     this.mint,
                     solShortPool,
                     true,
-                    tokenProgram
+                    assetTokenProgram
                 );
                 const solShortPoolBaseVault = getAssociatedTokenAddressSync(
                     NATIVE_MINT,
@@ -276,7 +287,7 @@ export class DeployerBuilder {
                     this.mint,
                     usdcLongPool,
                     true,
-                    tokenProgram
+                    assetTokenProgram
                 );
 
                 addresses.push(...[usdcLongPool, usdcLongPoolQuoteVault, usdcLongPoolBaseVault]);
@@ -288,7 +299,7 @@ export class DeployerBuilder {
                     this.mint,
                     usdcShortPool,
                     true,
-                    tokenProgram
+                    assetTokenProgram
                 );
                 const usdcShortPoolBaseVault = getAssociatedTokenAddressSync(
                     usdc,
@@ -305,23 +316,27 @@ export class DeployerBuilder {
 
         const lookupTableInstructions: TransactionInstruction[] = [];
 
-        const [createLookupTableIx, lookupTable] = AddressLookupTableProgram.createLookupTable({
-            authority: this.program.provider.publicKey,
-            payer: this.program.provider.publicKey,
-            recentSlot: await this.program.provider.connection
-                .getLatestBlockhashAndContext()
-                .then((bh) => bh.context.slot)
-        });
-        lookupTableInstructions.push(createLookupTableIx);
+        if (!this.lookupTable) {
+            const [createLookupTableIx, _lookupTable] = AddressLookupTableProgram.createLookupTable({
+                authority: this.program.provider.publicKey,
+                payer: this.program.provider.publicKey,
+                recentSlot: await this.program.provider.connection
+                    .getLatestBlockhashAndContext()
+                    .then((bh) => bh.context.slot)
+            });
+            this.lookupTable = _lookupTable;
+            lookupTableInstructions.push(createLookupTableIx);
+        }
 
         // 18 was the maximum number of accounts I found I could reliably fit in a transaction
-        const step = 10;
+        const step = 20;
         for (let i = 0; i <= addresses.length - 1; i += step) {
+            console.log(`Adding ${i} to ${i + step}`);
             const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
             lookupTableInstructions.push(
                 AddressLookupTableProgram.extendLookupTable({
-                    lookupTable,
+                    lookupTable: this.lookupTable,
                     authority: this.program.provider.publicKey,
                     payer: this.program.provider.publicKey,
                     addresses: addressesToAdd
@@ -330,7 +345,7 @@ export class DeployerBuilder {
         }
 
         return {
-            lookupTable,
+            lookupTable: this.lookupTable,
             lookupTableInstructions
         };
     }
@@ -363,7 +378,7 @@ export class DeployerBuilder {
 
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
-
+        
         const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
             .blockhash;
         const builder = new TransactionBuilder()
@@ -520,6 +535,7 @@ export class DeployerBuilder {
         const transactions: VersionedTransaction[] = [];
         let lastValidTxn: VersionedTransaction | undefined = undefined;
 
+        console.log('Building market transactions');
         const validateAndBuildTxn = async (
             ixToAdd?: TransactionInstruction,
             resetInstructions: boolean = false
@@ -545,6 +561,7 @@ export class DeployerBuilder {
 
                 return txn;
             } catch (error) {
+                console.error(error);
                 if (resetInstructions && ixToAdd) {
                     throw new Error(
                         `Single instruction is too large and cannot be processed: ${error}`
@@ -556,6 +573,7 @@ export class DeployerBuilder {
 
         for (const ix of instructions) {
             try {
+                console.log(ix);
                 lastValidTxn = await validateAndBuildTxn(ix);
             } catch (error) {
                 if ((transactions.length === 0 && !lastValidTxn) || !lastValidTxn)
@@ -576,17 +594,6 @@ export class DeployerBuilder {
         }
 
         return transactions;
-    }
-
-    private async buildLookupInstructions(): Promise<{
-        lookupTable: PublicKey;
-        lookupTableInstructions: TransactionInstruction[];
-    }> {
-        return await this.createInitLookupTableInstructions(
-            await this.program.provider.connection
-                .getAccountInfo(this.mint)
-                .then((acc) => acc.owner)
-        );
     }
 
     private async buildVaultTransaction(
