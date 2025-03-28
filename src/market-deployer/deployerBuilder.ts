@@ -4,7 +4,7 @@ import {
     SystemProgram,
     TransactionInstruction,
     VersionedTransaction,
-    SYSVAR_INSTRUCTIONS_PUBKEY,
+    SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import {
     getAssociatedTokenAddressSync,
@@ -66,6 +66,16 @@ const WALLETS = {
     }
 };
 
+/**
+ * Represents the response returned by the Deployer.
+ *
+ * @property {PublicKey[]} pools - Array of public keys representing the pools.
+ * @property {VersionedTransaction} [vaultTransaction] - Optional transaction for vault initialization.
+ * @property {VersionedTransaction[]} marketTransactions - Array of transactions for markets: pools, lookup tables, and token accounts.
+ * @property {PublicKey} [lookupTable] - Optional public key for the lookup table.
+ *
+ * Vault initialization is always in a separate bundle to market transactions.
+ */
 export interface DeployerResponse {
     pools: PublicKey[];
     vaultTransaction?: VersionedTransaction;
@@ -73,8 +83,58 @@ export interface DeployerResponse {
     lookupTable?: PublicKey;
 }
 
-/*
-/ For a vault only launch we set all flags but excludeVault to true
+/**
+ * Options available for configuring the Deployer.
+ *
+ * @property {boolean} [excludeLong] - Whether to exclude long pool creation.
+ * @property {boolean} [excludeShort] - Whether to exclude short pool creation.
+ * @property {boolean} [excludeLookups] - Whether to exclude lookup table creation.
+ * @property {boolean} [excludeSol] - Whether to exclude SOL markets.
+ * @property {boolean} [excludeUsdc] - Whether to exclude USDC markets.
+ * @property {boolean} [excludeAta] - Whether to exclude associated token account creation.
+ * @property {boolean} [excludeVault] - Whether to exclude vault creation.
+ * @property {boolean} [onlyLookups] - Whether to only generate lookup table transactions.
+ * @property {boolean} [onlyTokenAccounts] - Whether to only generate token account transactions.
+ *
+ * Example usages:
+ * Vault only:
+ * const options = {
+ *     excludeLong: true,
+ *     excludeShort: true,
+ *     excludeLookups: true,
+ * }
+ *
+ * Pools only:
+ * const options = {
+ *     excludeVault: true,
+ *     excludeLookups: true,
+ *     excludeAtas: true,
+ * }
+ *
+ * Only lookup /w long addresses:
+ * const options = {
+ *     excludeShort: true,
+ *     onlyLookup: true,
+ * }
+ *
+ * Extend a long pool's lookup table with short pool addresses:
+ * For example: If a long market has been initialized first and the short market later,
+ * the short market's addresses need to be added to the current market lookup table.
+ *
+ * const options = {
+ *     excludeLong: true,
+ *     onlyLookup: true,
+ * }
+ * DeployerBuilder.setLookupTable(lookupTable);
+ *
+ * Setting the lookup table will instruct the builder that there is no need to initialize a new
+ * lookup table, just extend the one provided.
+ *
+ * Only initialize a long USDC pool's wrapped sol token accounts:
+ * const options = {
+ *     excludeShort: true,
+ *     onlyTokenAccounts: true
+ * }
  */
 export type DeployerOptions = {
     excludeLong?: boolean;
@@ -84,12 +144,10 @@ export type DeployerOptions = {
     excludeUsdc?: boolean;
     excludeAta?: boolean;
     excludeVault?: boolean;
-    lookupOnly?: boolean;
+    onlyLookups?: boolean;
+    onlyTokenAccounts?: boolean;
 };
 
-/*
-/
- */
 export class DeployerBuilder {
     private mint!: PublicKey;
     private name!: string;
@@ -166,6 +224,11 @@ export class DeployerBuilder {
         return this;
     }
 
+    setOnlyLookups(): this {
+        this.options.onlyLookups = true;
+        return this;
+    }
+
     setOptions(options: Partial<DeployerOptions>): this {
         this.options = { ...this.options, ...options };
         return this;
@@ -175,7 +238,7 @@ export class DeployerBuilder {
         this.computeBudget = computeBudget;
         return this;
     }
-    
+
     setLookupTable(lookupTable: PublicKey): this {
         this.lookupTable = lookupTable;
         return this;
@@ -191,7 +254,8 @@ export class DeployerBuilder {
             this.getCommonLookupTableAddresses(),
             this.program.provider.connection.getAccountInfo(this.mint).then((acc) => acc.owner)
         ]);
-        
+
+        // If a lookup table is provided then it has already been initialized with the common addresses
         if (this.lookupTable) {
             addresses = [];
         }
@@ -317,21 +381,22 @@ export class DeployerBuilder {
         const lookupTableInstructions: TransactionInstruction[] = [];
 
         if (!this.lookupTable) {
-            const [createLookupTableIx, _lookupTable] = AddressLookupTableProgram.createLookupTable({
-                authority: this.program.provider.publicKey,
-                payer: this.program.provider.publicKey,
-                recentSlot: await this.program.provider.connection
-                    .getLatestBlockhashAndContext()
-                    .then((bh) => bh.context.slot)
-            });
+            const [createLookupTableIx, _lookupTable] = AddressLookupTableProgram.createLookupTable(
+                {
+                    authority: this.program.provider.publicKey,
+                    payer: this.program.provider.publicKey,
+                    recentSlot: await this.program.provider.connection
+                        .getLatestBlockhashAndContext()
+                        .then((bh) => bh.context.slot)
+                }
+            );
             this.lookupTable = _lookupTable;
             lookupTableInstructions.push(createLookupTableIx);
         }
 
-        // 18 was the maximum number of accounts I found I could reliably fit in a transaction
-        const step = 20;
+        // 20 addresses per `extendLookupTable` instruction
+        const step = 25;
         for (let i = 0; i <= addresses.length - 1; i += step) {
-            console.log(`Adding ${i} to ${i + step}`);
             const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
             lookupTableInstructions.push(
@@ -369,7 +434,7 @@ export class DeployerBuilder {
         if (!this.mint) throw new Error('Mint is required');
         if (!this.program) throw new Error('Program is required');
 
-        if (!this.options.excludeVault && !this.options.lookupOnly) {
+        if (!this.options.excludeVault && !this.options.onlyLookups) {
             if (!this.name) throw new Error('Name is required');
             if (!this.symbol) throw new Error('Symbol is required');
             if (!this.uri) throw new Error('URI is required');
@@ -378,7 +443,7 @@ export class DeployerBuilder {
 
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
-        
+
         const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
             .blockhash;
         const builder = new TransactionBuilder()
@@ -389,7 +454,7 @@ export class DeployerBuilder {
 
         const response = <DeployerResponse>{};
 
-        if (!this.options.excludeVault && !this.options.lookupOnly) {
+        if (!this.options.excludeVault && !this.options.onlyLookups && !this.options.onlyTokenAccounts) {
             response.vaultTransaction = await this.buildVaultTransaction(builder);
         }
 
@@ -397,10 +462,11 @@ export class DeployerBuilder {
 
         if (
             (!this.options.excludeSol ||
-            !this.options.excludeUsdc ||
-            !this.options.excludeLong ||
-            !this.options.excludeShort) &&
-            !this.options.lookupOnly
+                !this.options.excludeUsdc ||
+                !this.options.excludeLong ||
+                !this.options.excludeShort) &&
+            !this.options.onlyLookups &&
+            !this.options.onlyTokenAccounts
         ) {
             const { pools, instructions } = await this.buildMarketInstructions();
             response.pools = pools;
@@ -421,7 +487,6 @@ export class DeployerBuilder {
     private async buildMarketInstructions(): Promise<{
         pools: PublicKey[];
         instructions: TransactionInstruction[];
-        lookupTable: PublicKey;
     }> {
         const pools: PublicKey[] = [];
         const instructions: TransactionInstruction[] = [];
@@ -513,18 +578,9 @@ export class DeployerBuilder {
             }
         }
 
-        let marketLookupTable: PublicKey | undefined = undefined;
-
-        if (!this.options.excludeLookups) {
-            const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
-            marketLookupTable = lookupTable;
-            instructions.push(...lookupTableInstructions);
-        }
-
         return {
             pools,
             instructions,
-            lookupTable: marketLookupTable
         };
     }
 
@@ -535,9 +591,8 @@ export class DeployerBuilder {
         const transactions: VersionedTransaction[] = [];
         let lastValidTxn: VersionedTransaction | undefined = undefined;
 
-        console.log('Building market transactions');
         const validateAndBuildTxn = async (
-            ixToAdd?: TransactionInstruction,
+            ixToAdd: TransactionInstruction,
             resetInstructions: boolean = false
         ) => {
             try {
@@ -545,12 +600,10 @@ export class DeployerBuilder {
 
                 builder.setStripLimitIx(transactions.length > 0 || this.options.excludeVault);
 
-                if (resetInstructions && ixToAdd) {
+                if (resetInstructions) {
                     txn = await builder.setInstructions([ixToAdd]).build();
-                } else if (ixToAdd) {
-                    txn = await builder.addInstructions(ixToAdd).build();
                 } else {
-                    txn = await builder.build();
+                    txn = await builder.addInstructions(ixToAdd).build();
                 }
 
                 const serializedTxnLen = txn.serialize().length;
@@ -561,8 +614,7 @@ export class DeployerBuilder {
 
                 return txn;
             } catch (error) {
-                console.error(error);
-                if (resetInstructions && ixToAdd) {
+                if (resetInstructions) {
                     throw new Error(
                         `Single instruction is too large and cannot be processed: ${error}`
                     );
@@ -573,7 +625,6 @@ export class DeployerBuilder {
 
         for (const ix of instructions) {
             try {
-                console.log(ix);
                 lastValidTxn = await validateAndBuildTxn(ix);
             } catch (error) {
                 if ((transactions.length === 0 && !lastValidTxn) || !lastValidTxn)
