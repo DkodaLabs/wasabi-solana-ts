@@ -1,4 +1,4 @@
-export * from './claim.js';
+export * from './addCollateralToShortPosition.js';
 export * from './closeLongPosition.js';
 export * from './closeShortPosition.js';
 export * from './closePosition.js';

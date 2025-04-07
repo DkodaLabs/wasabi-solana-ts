@@ -8,94 +8,37 @@
   },
   "instructions": [
     {
-      "name": "claim_position",
+      "name": "add_collateral_to_short_position",
       "discriminator": [
-        168,
-        90,
-        89,
-        44,
-        203,
-        246,
-        210,
-        46
+        160,
+        157,
+        226,
+        209,
+        112,
+        148,
+        163,
+        22
       ],
       "accounts": [
         {
-          "name": "trader",
+          "name": "owner",
           "docs": [
-            "The wallet that owns the Position"
+            "The wallet that owns the assets"
           ],
           "writable": true,
-          "signer": true,
-          "relations": [
-            "position"
-          ]
+          "signer": true
         },
         {
-          "name": "trader_currency_account",
+          "name": "owner_target_currency_account",
+          "docs": [
+            "The account that holds the owner's target currency"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "trader"
-              },
-              {
-                "kind": "account",
-                "path": "currency_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "trader_collateral_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "trader"
+                "path": "owner"
               },
               {
                 "kind": "account",
@@ -150,10 +93,16 @@
           "writable": true
         },
         {
-          "name": "pool"
+          "name": "pool",
+          "docs": [
+            "The ShortPool that owns the Position"
+          ]
         },
         {
           "name": "collateral_vault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
           "writable": true,
           "relations": [
             "position",
@@ -164,52 +113,8 @@
           "name": "collateral"
         },
         {
-          "name": "currency"
-        },
-        {
-          "name": "lp_vault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lp_vault"
-          ]
-        },
-        {
           "name": "fee_wallet",
           "writable": true
-        },
-        {
-          "name": "debt_controller",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  98,
-                  116,
-                  95,
-                  99,
-                  111,
-                  110,
-                  116,
-                  114,
-                  111,
-                  108,
-                  108,
-                  101,
-                  114
-                ]
-              }
-            ]
-          }
         },
         {
           "name": "global_settings",
@@ -240,12 +145,22 @@
         },
         {
           "name": "collateral_token_program"
-        },
-        {
-          "name": "currency_token_program"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
     },
     {
       "name": "close_long_position_cleanup",
@@ -559,6 +474,10 @@
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "min_target_amount",
           "type": "u64"
@@ -889,6 +808,10 @@
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "min_target_amount",
           "type": "u64"
@@ -4894,6 +4817,10 @@
       ],
       "args": [
         {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
           "name": "min_target_amount",
           "type": "u64"
         },
@@ -5870,6 +5797,10 @@
       ],
       "args": [
         {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
           "name": "min_target_amount",
           "type": "u64"
         },
@@ -6326,6 +6257,19 @@
   ],
   "events": [
     {
+      "name": "CollateralAddedToPosition",
+      "discriminator": [
+        52,
+        209,
+        134,
+        206,
+        155,
+        109,
+        155,
+        243
+      ]
+    },
+    {
       "name": "Deposit",
       "discriminator": [
         62,
@@ -6391,19 +6335,6 @@
       ]
     },
     {
-      "name": "PositionClaimed",
-      "discriminator": [
-        149,
-        250,
-        141,
-        45,
-        210,
-        198,
-        94,
-        148
-      ]
-    },
-    {
       "name": "PositionClosed",
       "discriminator": [
         157,
@@ -6427,6 +6358,45 @@
         135,
         237,
         158
+      ]
+    },
+    {
+      "name": "PositionDecreased",
+      "discriminator": [
+        251,
+        151,
+        37,
+        204,
+        127,
+        87,
+        115,
+        232
+      ]
+    },
+    {
+      "name": "PositionDecreasedWithOrder",
+      "discriminator": [
+        174,
+        196,
+        21,
+        217,
+        36,
+        62,
+        214,
+        106
+      ]
+    },
+    {
+      "name": "PositionIncreased",
+      "discriminator": [
+        73,
+        58,
+        247,
+        181,
+        100,
+        237,
+        249,
+        81
       ]
     },
     {
@@ -6693,6 +6663,21 @@
       "code": 6036,
       "name": "VaultNotEmpty",
       "msg": "Strategy cannot be closed if the collateral vault is not empty"
+    },
+    {
+      "code": 6037,
+      "name": "TooMuchCollateralSpent",
+      "msg": "Too much collateral spent"
+    },
+    {
+      "code": 6038,
+      "name": "InvalidOrder",
+      "msg": "Invalid order"
+    },
+    {
+      "code": 6039,
+      "name": "IntegerOverflow",
+      "msg": "Failed to cast integer to original type"
     }
   ],
   "types": [
@@ -6772,10 +6757,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
             "name": "swap_cache",
             "type": {
               "defined": {
@@ -6805,6 +6786,42 @@
           },
           {
             "name": "execution_fee",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "fees_to_be_paid",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollateralAddedToPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "down_payment_added",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_added",
+            "type": "u64"
+          },
+          {
+            "name": "fees_added",
             "type": "u64"
           }
         ]
@@ -7137,6 +7154,18 @@
           {
             "name": "position",
             "type": "pubkey"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "down_payment",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
           }
         ]
       }
@@ -7249,42 +7278,6 @@
       }
     },
     {
-      "name": "PositionClaimed",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "side",
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "type": "pubkey"
-          },
-          {
-            "name": "trader",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount_claimed",
-            "type": "u64"
-          },
-          {
-            "name": "principal_repaid",
-            "type": "u64"
-          },
-          {
-            "name": "interest_paid",
-            "type": "u64"
-          },
-          {
-            "name": "fee_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "PositionClosed",
       "type": {
         "kind": "struct",
@@ -7355,6 +7348,130 @@
           },
           {
             "name": "fee_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionDecreased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "principal_repaid",
+            "type": "u64"
+          },
+          {
+            "name": "interest_paid",
+            "type": "u64"
+          },
+          {
+            "name": "close_fee",
+            "type": "u64"
+          },
+          {
+            "name": "past_fees",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_spent",
+            "type": "u64"
+          },
+          {
+            "name": "adj_down_payment",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionDecreasedWithOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "order_type",
+            "type": "u8"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "principal_repaid",
+            "type": "u64"
+          },
+          {
+            "name": "interest_paid",
+            "type": "u64"
+          },
+          {
+            "name": "close_fee",
+            "type": "u64"
+          },
+          {
+            "name": "past_fees",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_spent",
+            "type": "u64"
+          },
+          {
+            "name": "adj_down_payment",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionIncreased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "down_payment",
+            "type": "u64"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
             "type": "u64"
           }
         ]
