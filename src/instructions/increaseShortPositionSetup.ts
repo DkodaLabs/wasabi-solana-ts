@@ -1,23 +1,16 @@
-import { Program, BN } from '@coral-xyz/anchor';
-import {
-    TransactionInstruction,
-    PublicKey,
-    SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY
-} from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
-    OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
-    OpenPositionCleanupAccounts,
-    OpenShortPositionSetupInstructionAccounts, OpenShortPositionCleanupInstructionAccounts
+    OpenPositionSetupArgs,
+    OpenShortPositionSetupInstructionAccounts
 } from './openPosition';
-import { PDA, getPermission, handleMintsAndTokenProgram, handlePaymentTokenMint } from '../utils';
-import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import { getPermission, handlePaymentTokenMint, PDA } from '../utils';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import { BN, Program } from '@coral-xyz/anchor';
+import { WasabiSolana } from '../idl';
 
-const openShortPositionSetupConfig: BaseMethodConfig<
+const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenShortPositionSetupInstructionAccounts
@@ -37,10 +30,8 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee),
-            config.mintCache
+            Number(config.args.downPayment) + Number(config.args.fee)
         );
-
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
@@ -99,7 +90,6 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                nonce: config.args.nonce,
                 minTargetAmount: new BN(config.args.minTargetAmount),
                 downPayment: new BN(config.args.downPayment),
                 principal: new BN(config.args.principal),
@@ -111,8 +101,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openShortPositionSetup(
-            args.nonce,
+        program.methods.increaseShortPositionSetup(
             args.minTargetAmount,
             args.downPayment,
             args.principal,
@@ -121,81 +110,15 @@ const openShortPositionSetupConfig: BaseMethodConfig<
         )
 };
 
-const openShortPositionCleanupConfig: BaseMethodConfig<
-    void,
-    OpenPositionCleanupAccounts,
-    OpenShortPositionCleanupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
-            await handleMintsAndTokenProgram(
-                config.program.provider.connection,
-                config.accounts.currency,
-                config.accounts.collateral,
-                { owner: config.accounts.pool, mintCache: config.mintCache }
-            );
-
-        const lpVault = PDA.getLpVault(config.accounts.currency);
-
-        return {
-            accounts: {
-                owner: config.accounts.owner,
-                position: config.accounts.position,
-                pool: config.accounts.pool,
-                collateralVault: getAssociatedTokenAddressSync(
-                    collateralMint,
-                    config.accounts.pool,
-                    true,
-                    collateralTokenProgram
-                ),
-                currencyVault: getAssociatedTokenAddressSync(
-                    currencyMint,
-                    config.accounts.pool,
-                    true,
-                    currencyTokenProgram
-                ),
-                lpVault,
-                vault: getAssociatedTokenAddressSync(
-                    currencyMint,
-                    lpVault,
-                    true,
-                    currencyTokenProgram
-                ),
-                collateral: collateralMint,
-                currency: currencyMint,
-                openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                debtController: PDA.getDebtController(),
-                tokenProgram: currencyTokenProgram
-            }
-        };
-    },
-    getMethod: (program) => () => program.methods.openShortPositionCleanup()
-};
-
-export async function createOpenShortPositionSetupInstruction(
+export async function createIncreaseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: openShortPositionSetupConfig,
-        args,
-        mintCache
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createOpenShortPositionCleanupInstruction(
-    program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts,
-    mintCache?: MintCache
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: openShortPositionCleanupConfig,
-        mintCache
+        config: increaseShortPositionSetupConfig,
+        args
     }) as Promise<TransactionInstruction[]>;
 }
