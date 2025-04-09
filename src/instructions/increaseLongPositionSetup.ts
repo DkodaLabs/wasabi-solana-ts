@@ -1,32 +1,16 @@
-import { Program, BN } from '@coral-xyz/anchor';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
-    TransactionInstruction,
-    PublicKey,
-    SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY
-} from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    PDA,
-    handleMintsAndTokenProgram,
-    getPermission, handlePaymentTokenMint
-} from '../utils';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
-import {
-    OpenPositionSetupArgs,
+    OpenLongPositionSetupInstructionAccounts,
     OpenPositionSetupAccounts,
-    OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts,
-    OpenLongPositionSetupInstructionAccounts
+    OpenPositionSetupArgs
 } from './openPosition';
-import { WasabiSolana } from '../idl/wasabi_solana';
+import { getPermission, handlePaymentTokenMint, PDA } from '../utils';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import { BN, Program } from '@coral-xyz/anchor';
+import { WasabiSolana } from '../idl';
 
-
-const openLongPositionSetupConfig: BaseMethodConfig<
+const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenLongPositionSetupInstructionAccounts
@@ -107,7 +91,6 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                nonce: config.args.nonce,
                 minTargetAmount: new BN(config.args.minTargetAmount),
                 downPayment: new BN(config.args.downPayment),
                 principal: new BN(config.args.principal),
@@ -119,56 +102,16 @@ const openLongPositionSetupConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openLongPositionSetup(
-            args.nonce,
+        program.methods.increaseLongPositionSetup(
             args.minTargetAmount,
             args.downPayment,
             args.principal,
             args.fee,
             args.expiration
         )
-};
+}
 
-const openLongPositionCleanupConfig: BaseMethodConfig<
-    void,
-    OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
-            await handleMintsAndTokenProgram(
-                config.program.provider.connection,
-                config.accounts.currency,
-                config.accounts.collateral,
-                config.accounts.pool,
-            );
-
-        return {
-            accounts: {
-                owner: config.accounts.owner,
-                pool: config.accounts.pool,
-                collateralVault: getAssociatedTokenAddressSync(
-                    collateralMint,
-                    config.accounts.pool,
-                    true,
-                    collateralTokenProgram
-                ),
-                currencyVault: getAssociatedTokenAddressSync(
-                    currencyMint,
-                    config.accounts.pool,
-                    true,
-                    currencyTokenProgram
-                ),
-                openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: config.accounts.position,
-                tokenProgram: currencyTokenProgram
-            }
-        };
-    },
-    getMethod: (program) => () => program.methods.openLongPositionCleanup()
-};
-
-export async function createOpenLongPositionSetupInstruction(
+export async function createIncreaseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
@@ -176,18 +119,7 @@ export async function createOpenLongPositionSetupInstruction(
     return handleMethodCall({
         program,
         accounts,
-        config: openLongPositionSetupConfig,
+        config: increaseLongPositionSetupConfig,
         args
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createOpenLongPositionCleanupInstruction(
-    program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: openLongPositionCleanupConfig,
     }) as Promise<TransactionInstruction[]>;
 }

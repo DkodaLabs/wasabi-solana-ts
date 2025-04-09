@@ -77,3 +77,18 @@ export type OpenPositionSetupInstructionBaseAccounts = {
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
 };
+
+export type OpenLongPositionSetupInstructionAccounts = {
+    tokenProgram: PublicKey;
+    debtController: PublicKey;
+} & OpenPositionSetupInstructionBaseAccounts;
+
+export type OpenShortPositionSetupInstructionAccounts = {
+    collateralTokenProgram: PublicKey;
+    currencyTokenProgram: PublicKey;
+} & OpenPositionSetupInstructionBaseAccounts;
+
+export type OpenShortPositionCleanupInstructionAccounts = {
+    vault: PublicKey;
+    debtController: PublicKey;
+} & OpenPositionCleanupInstructionAccounts;
