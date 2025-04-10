@@ -9,9 +9,9 @@ export type OpenPositionParams = {
 
 export type OpenPositionSetupArgs = {
     /// The nonce of the position
-    nonce: number; // u16
+    nonce?: number; // u16
     /// The position's address
-    positionId: string;
+    positionId?: string;
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
     /// The initial down payment amount required to open the position
