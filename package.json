@@ -1,6 +1,6 @@
 {
   "name": "wasabi-solana-ts",
-  "version": "1.0.52",
+  "version": "1.0.53",
   "description": "Typescript library for the Wasabi program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +11,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./dist/instructions/increaseLongPositionSetup": {
+      "types": "./dist/instructions/increaseLongPositionSetup.d.ts",
+      "default": "./dist/instructions/increaseLongPositionSetup.js"
+    },
+    "./dist/instructions/*": {
+      "types": "./dist/instructions/*.d.ts",
+      "default": "./dist/instructions/*.js"
     }
   },
   "files": [

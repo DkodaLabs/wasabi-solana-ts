@@ -1571,7 +1571,8 @@
           }
         },
         {
-          "name": "position"
+          "name": "position",
+          "writable": true
         },
         {
           "name": "authority",
@@ -1834,7 +1835,8 @@
           }
         },
         {
-          "name": "position"
+          "name": "position",
+          "writable": true
         },
         {
           "name": "authority",
@@ -7105,8 +7107,8 @@
     },
     {
       "code": 6024,
-      "name": "U64Overflow",
-      "msg": "Amount exceeds u64"
+      "name": "IntegerOverflow",
+      "msg": "Failed to cast integer to original type"
     },
     {
       "code": 6025,
@@ -7180,8 +7182,8 @@
     },
     {
       "code": 6039,
-      "name": "IntegerOverflow",
-      "msg": "Failed to cast integer to original type"
+      "name": "InsufficientPrincipalRepaid",
+      "msg": "Insufficient principal repaid"
     }
   ],
   "types": [
@@ -7309,7 +7311,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position_id",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7863,7 +7865,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position_id",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7907,16 +7909,16 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position_id",
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
             "type": "pubkey"
           },
           {
             "name": "order_type",
             "type": "u8"
-          },
-          {
-            "name": "trader",
-            "type": "pubkey"
           },
           {
             "name": "payout",
@@ -7955,7 +7957,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position_id",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7963,19 +7965,19 @@
             "type": "pubkey"
           },
           {
-            "name": "down_payment",
+            "name": "down_payment_added",
             "type": "u64"
           },
           {
-            "name": "principal",
+            "name": "principal_added",
             "type": "u64"
           },
           {
-            "name": "collateral_amount",
+            "name": "collateral_added",
             "type": "u64"
           },
           {
-            "name": "fee",
+            "name": "fees_added",
             "type": "u64"
           }
         ]

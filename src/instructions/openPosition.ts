@@ -29,6 +29,7 @@ export type OpenPositionSetupArgs = {
 export type OpenPositionSetupAccounts = {
     /// Needs to be passed in as we construct the instruction for the user
     owner: PublicKey; // required
+    authority?: PublicKey; // mostly used for testing only
     /// Backend authority - this should be program.provider.publicKey since we always
     /// construct the instruction for the user
     //authority: PublicKey,

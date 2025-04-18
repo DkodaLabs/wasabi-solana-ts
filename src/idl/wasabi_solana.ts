@@ -1577,7 +1577,8 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "position"
+          "name": "position",
+          "writable": true
         },
         {
           "name": "authority",
@@ -1840,7 +1841,8 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "position"
+          "name": "position",
+          "writable": true
         },
         {
           "name": "authority",
@@ -7111,8 +7113,8 @@ export type WasabiSolana = {
     },
     {
       "code": 6024,
-      "name": "u64Overflow",
-      "msg": "Amount exceeds u64"
+      "name": "integerOverflow",
+      "msg": "Failed to cast integer to original type"
     },
     {
       "code": 6025,
@@ -7186,8 +7188,8 @@ export type WasabiSolana = {
     },
     {
       "code": 6039,
-      "name": "integerOverflow",
-      "msg": "Failed to cast integer to original type"
+      "name": "insufficientPrincipalRepaid",
+      "msg": "Insufficient principal repaid"
     }
   ],
   "types": [
@@ -7315,7 +7317,7 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionId",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7869,7 +7871,7 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionId",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7913,16 +7915,16 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionId",
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
             "type": "pubkey"
           },
           {
             "name": "orderType",
             "type": "u8"
-          },
-          {
-            "name": "trader",
-            "type": "pubkey"
           },
           {
             "name": "payout",
@@ -7961,7 +7963,7 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionId",
+            "name": "id",
             "type": "pubkey"
           },
           {
@@ -7969,19 +7971,19 @@ export type WasabiSolana = {
             "type": "pubkey"
           },
           {
-            "name": "downPayment",
+            "name": "downPaymentAdded",
             "type": "u64"
           },
           {
-            "name": "principal",
+            "name": "principalAdded",
             "type": "u64"
           },
           {
-            "name": "collateralAmount",
+            "name": "collateralAdded",
             "type": "u64"
           },
           {
-            "name": "fee",
+            "name": "feesAdded",
             "type": "u64"
           }
         ]

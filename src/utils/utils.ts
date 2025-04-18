@@ -4,7 +4,6 @@ import {
     SystemProgram,
     TransactionInstruction,
     LAMPORTS_PER_SOL,
-    AddressLookupTableAccount
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
