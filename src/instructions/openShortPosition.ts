@@ -1,7 +1,6 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
-    PublicKey,
     SystemProgram,
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';

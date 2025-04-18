@@ -12,6 +12,8 @@ export * from './closeStopLossOrder.js';
 export * from './closeTakeProfitOrder.js';
 export * from './deposit.js';
 export * from './donate.js';
+export * from './increaseLongPositionSetup.js';
+export * from './increaseShortPositionSetup.js';
 export * from './initLongPool.js';
 export * from './initPool.js';
 export * from './initLpVault.js';

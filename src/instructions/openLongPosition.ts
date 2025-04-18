@@ -96,7 +96,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
-                authority: config.program.provider.publicKey,
+                authority: config.accounts.authority || config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(

@@ -35,18 +35,25 @@ const addCollateralConfig: BaseMethodConfig<
     AddCollateralInstructionAccounts
 > = {
     process: async (config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>) => {
-        const pool = (
-            await config.program.provider.connection.getAccountInfo(config.accounts.position)
-        ).owner;
-        if (!pool) throw new Error('Failed to retrieve position');
-        const poolState = await config.program.account.basePool.fetchNullable(pool);
+        const position = await config.program.account.position.fetchNullable(
+            config.accounts.position
+        );
+        if (!position) throw new Error('Position not found');
 
+        const pool = PDA.getShortPool(position.collateral, position.currency);
         const collateralTokenProgram = (
-            await config.program.provider.connection.getAccountInfo(poolState.collateral)
+            await config.program.provider.connection.getAccountInfo(position.collateral)
         ).owner;
+
+        const collateralVault = getAssociatedTokenAddressSync(
+            position.collateral,
+            pool,
+            true,
+            collateralTokenProgram
+        );
 
         const ownerTargetCurrencyAccount = getAssociatedTokenAddressSync(
-            poolState.collateral,
+            position.collateral,
             config.accounts.owner,
             false,
             collateralTokenProgram
@@ -57,11 +64,16 @@ const addCollateralConfig: BaseMethodConfig<
                 ownerTargetCurrencyAccount,
                 position: config.accounts.position,
                 pool,
-                collateralVault: poolState.collateralVault,
-                collateral: poolState.collateral,
+                collateralVault: collateralVault,
+                collateral: position.collateral,
                 feeWallet: config.accounts.feeWallet,
                 globalSettings: PDA.getGlobalSettings(),
                 collateralTokenProgram
+            },
+            args: {
+                downPayment: config.args.downPayment,
+                feesToPaid: config.args.fee,
+                expiration: config.args.expiration
             }
         };
     },

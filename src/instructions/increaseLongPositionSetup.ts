@@ -6,9 +6,9 @@ import {
 } from './openPosition';
 import { getPermission, handlePaymentTokenMint, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
-import { WasabiSolana } from '../idl';
+import { WasabiSolana } from '../idl/wasabi_solana';
 
 const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -74,7 +74,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+                position: new PublicKey(config.args.positionId),
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,
