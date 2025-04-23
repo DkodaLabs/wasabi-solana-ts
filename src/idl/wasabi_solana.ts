@@ -7269,6 +7269,10 @@ export type WasabiSolana = {
         "kind": "struct",
         "fields": [
           {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
             "name": "swapCache",
             "type": {
               "defined": {
@@ -7899,11 +7903,11 @@ export type WasabiSolana = {
             "type": "u64"
           },
           {
-            "name": "collateralSpent",
+            "name": "collateralReduced",
             "type": "u64"
           },
           {
-            "name": "adjDownPayment",
+            "name": "downPaymentReduced",
             "type": "u64"
           }
         ]
@@ -7947,11 +7951,11 @@ export type WasabiSolana = {
             "type": "u64"
           },
           {
-            "name": "collateralSpent",
+            "name": "collateralReduced",
             "type": "u64"
           },
           {
-            "name": "adjDownPayment",
+            "name": "downPaymentReduced",
             "type": "u64"
           }
         ]

@@ -7263,6 +7263,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
             "name": "swap_cache",
             "type": {
               "defined": {
@@ -7893,11 +7897,11 @@
             "type": "u64"
           },
           {
-            "name": "collateral_spent",
+            "name": "collateral_reduced",
             "type": "u64"
           },
           {
-            "name": "adj_down_payment",
+            "name": "down_payment_reduced",
             "type": "u64"
           }
         ]
@@ -7941,11 +7945,11 @@
             "type": "u64"
           },
           {
-            "name": "collateral_spent",
+            "name": "collateral_reduced",
             "type": "u64"
           },
           {
-            "name": "adj_down_payment",
+            "name": "down_payment_reduced",
             "type": "u64"
           }
         ]
