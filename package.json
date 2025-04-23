@@ -1,6 +1,6 @@
 {
   "name": "wasabi-solana-ts",
-  "version": "1.0.53-position-editing",
+  "version": "1.0.54-position-editing",
   "description": "Typescript library for the Wasabi program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
