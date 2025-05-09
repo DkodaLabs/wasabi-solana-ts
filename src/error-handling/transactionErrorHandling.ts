@@ -26,6 +26,7 @@ const wasabiProgramId = "spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c";
 const wasabiExpectedErrors = [
     6026, // LiquidationThresholdNotReached
     6017, // PriceTargetNotReached
+    6004, // MinTokensNotMet
 ];
 
 const jupiterProgramId = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
