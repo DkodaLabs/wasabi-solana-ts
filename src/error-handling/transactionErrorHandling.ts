@@ -222,13 +222,6 @@ export const matchError = (error: Error): ErrorObject | undefined => {
             name: 'AccountNotFound',
             msg: 'Account Error: Account does not exist',
             expected: false,
-            program: 'Wasabi'
-        },
-        '.*account does not exist or has no data.*': {
-            code: 0,
-            name: 'AccountNotFound',
-            msg: 'Account Error: Account does not exist',
-            expected: false,
             program: 'System'
         },
         '.*simple AMMs are not supported with shared accounts.*': {
