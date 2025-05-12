@@ -4,6 +4,7 @@ import {
     VersionedTransaction,
     TransactionInstruction
 } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
 import { WasabiSolana } from '../index';
 
@@ -153,8 +154,8 @@ const parseSystemError = (code: number, programId: string): ErrorObject | undefi
         programId === wasabiProgramId
             ? 'Wasabi'
             : programId === jupiterProgramId
-            ? 'Jupiter'
-            : 'System';
+                ? 'Jupiter'
+                : 'System';
 
     if (code === 1) {
         return {
@@ -228,7 +229,7 @@ export const matchError = (error: Error): ErrorObject | undefined => {
             name: 'AccountNotFound',
             msg: 'Account Error: Account does not exist',
             expected: false,
-            program: 'Wasabi'
+            program: 'System'
         },
         '.*simple AMMs are not supported with shared accounts.*': {
             code: 0,
@@ -277,6 +278,12 @@ export const getFailingSwapProgram = (instructions: TransactionInstruction[]): s
             break;
         }
     }
+
     const failingProgram = instructions[failingProgramIdx].programId.toBase58();
-    return failingProgram === wasabiProgramId ? 'Wasabi' : jupiterProgramId ? 'Jupiter' : 'Raydium';
+    return failingProgram === jupiterProgramId
+        ? 'Jupiter'
+        : failingProgram === TOKEN_PROGRAM_ID.toBase58()
+            ? 'Token'
+            : failingProgram === TOKEN_2022_PROGRAM_ID.toBase58()
+                ? 'Token2022' : 'Raydium';
 };
