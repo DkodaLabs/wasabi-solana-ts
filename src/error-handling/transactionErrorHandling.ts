@@ -30,6 +30,7 @@ type ErrorObject = {
 
 const wasabiProgramId = 'spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c';
 const wasabiExpectedErrors = [
+    6004, // MinTokensNotMet
     6015, // PrincipalTooHigh
     6017, // PriceTargetNotReached
     6026 // LiquidationThresholdNotReached
