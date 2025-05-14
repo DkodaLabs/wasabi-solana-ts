@@ -157,7 +157,15 @@ const parseSystemError = (code: number, programId: string): ErrorObject | undefi
                 ? 'Jupiter'
                 : 'System';
 
-    if (code === 1) {
+    if (code === 0) {
+        return {
+            code,
+            name: 'InsufficientFundsForRent',
+            msg: 'Insufficient SOL to pay for rent',
+            expected: true,
+            program
+        };
+    } else if (code === 1) {
         return {
             code,
             name: 'InsufficientFunds',
