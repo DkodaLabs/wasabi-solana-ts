@@ -1,5 +1,10 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionInstruction, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
+import {
+    TransactionInstruction,
+    PublicKey,
+    SystemProgram,
+    SYSVAR_INSTRUCTIONS_PUBKEY
+} from '@solana/web3.js';
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
@@ -29,10 +34,13 @@ type InitLpVaultInstructionAccounts = {
     vault: PublicKey;
     assetMint: PublicKey;
     sharesMint: PublicKey;
+    sharesMetadata: PublicKey;
     assetTokenProgram: PublicKey;
     sharesTokenProgram: PublicKey;
+    tokenMetadataProgram: PublicKey;
     associatedTokenProgram: PublicKey;
     systemProgram: PublicKey;
+    sysvarInstructions: PublicKey;
 };
 
 export const initLpVaultConfig: BaseMethodConfig<
@@ -56,8 +64,8 @@ export const initLpVaultConfig: BaseMethodConfig<
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.accounts.admin),
                 lpVault,
-                assetMint: config.accounts.assetMint,
                 vault,
+                assetMint: config.accounts.assetMint,
                 sharesMint,
                 sharesMetadata,
                 assetTokenProgram: tokenProgram,
@@ -65,7 +73,7 @@ export const initLpVaultConfig: BaseMethodConfig<
                 tokenMetadataProgram: METADATA_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
-                sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+                sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: config.args,
             setup: [

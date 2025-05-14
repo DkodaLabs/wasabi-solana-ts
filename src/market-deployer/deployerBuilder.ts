@@ -395,7 +395,7 @@ export class DeployerBuilder {
         }
 
         // 20 addresses per `extendLookupTable` instruction
-        const step = 25;
+        const step = 27;
         for (let i = 0; i <= addresses.length - 1; i += step) {
             const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
@@ -454,12 +454,8 @@ export class DeployerBuilder {
 
         const response = <DeployerResponse>{};
 
-        if (!this.options.excludeVault && !this.options.onlyLookups && !this.options.onlyTokenAccounts) {
-            response.vaultTransaction = await this.buildVaultTransaction(builder);
-        }
-
-        const ixes: TransactionInstruction[] = [];
-
+        const vaultIxes: TransactionInstruction[] = [];
+        const marketIxes: TransactionInstruction[] = [];
         if (
             (!this.options.excludeSol ||
                 !this.options.excludeUsdc ||
@@ -470,16 +466,31 @@ export class DeployerBuilder {
         ) {
             const { pools, instructions } = await this.buildMarketInstructions();
             response.pools = pools;
-            ixes.push(...instructions);
+            marketIxes.push(...instructions);
+        }
+
+        if (
+            !this.options.excludeVault &&
+            !this.options.onlyLookups &&
+            !this.options.onlyTokenAccounts
+        ) {
+            vaultIxes.push(...(await this.buildVaultInstruction()));
         }
 
         if (!this.options.excludeLookups) {
             const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
-            ixes.push(...lookupTableInstructions);
+            if (!this.lookupTable) {
+                vaultIxes.push(lookupTableInstructions[0]);
+                marketIxes.push(...lookupTableInstructions.slice(1));
+            } else {
+                marketIxes.push(...lookupTableInstructions);
+            }
+
             response.lookupTable = lookupTable;
         }
 
-        response.marketTransactions = await this.buildMarketTransactions(builder, ixes);
+        response.vaultTransaction = await builder.setInstructions(vaultIxes).build();
+        response.marketTransactions = await this.buildMarketTransactions(builder, marketIxes);
 
         return response;
     }
@@ -580,7 +591,7 @@ export class DeployerBuilder {
 
         return {
             pools,
-            instructions,
+            instructions
         };
     }
 
@@ -598,7 +609,7 @@ export class DeployerBuilder {
             try {
                 let txn;
 
-                builder.setStripLimitIx(transactions.length > 0 || this.options.excludeVault);
+                builder.setStripLimitIx(transactions.length > 0 || !this.options.excludeVault);
 
                 if (resetInstructions) {
                     txn = await builder.setInstructions([ixToAdd]).build();
@@ -636,7 +647,10 @@ export class DeployerBuilder {
         }
 
         if (lastValidTxn && !transactions.includes(lastValidTxn)) {
-            if (transactions.length >= (this.options.excludeVault ? 5 : 4)) {
+            if (
+                transactions.length >=
+                (this.options.excludeVault || this.options.excludeLookups ? 5 : 4)
+            ) {
                 throw new Error(
                     'Failed to append last transaction - transaction limit reached (5)'
                 );
@@ -647,10 +661,8 @@ export class DeployerBuilder {
         return transactions;
     }
 
-    private async buildVaultTransaction(
-        builder: TransactionBuilder
-    ): Promise<VersionedTransaction> {
-        const instructions = await createInitLpVaultInstruction(
+    private async buildVaultInstruction(): Promise<TransactionInstruction[]> {
+        return await createInitLpVaultInstruction(
             this.program,
             {
                 name: this.name,
@@ -662,7 +674,5 @@ export class DeployerBuilder {
                 assetMint: this.mint
             }
         );
-
-        return await builder.setInstructions(instructions).build();
     }
 }
