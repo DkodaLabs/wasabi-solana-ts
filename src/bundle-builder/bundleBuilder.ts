@@ -152,7 +152,6 @@ export class BundleBuilder {
         }
 
         const maxTransactionCount = this.numExpectedTxns || transactions.length;
-        console.log(transactions);
 
         return {
             maxTransactionCount,
