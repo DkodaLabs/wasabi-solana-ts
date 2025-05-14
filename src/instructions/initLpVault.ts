@@ -1,5 +1,5 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.js';
+import { TransactionInstruction, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
@@ -8,7 +8,7 @@ import {
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { PDA, getPermission, handleMint } from '../utils';
+import { METADATA_PROGRAM_ID, PDA, getPermission, handleMint } from '../utils';
 
 export type InitLpVaultArgs = {
     name: string;
@@ -47,6 +47,8 @@ export const initLpVaultConfig: BaseMethodConfig<
         );
         const lpVault = PDA.getLpVault(mint);
         const vault = getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram);
+        const sharesMint = PDA.getSharesMint(lpVault, config.accounts.assetMint);
+        const sharesMetadata = PDA.getSharesMetadata(sharesMint);
 
         return {
             accounts: {
@@ -56,11 +58,14 @@ export const initLpVaultConfig: BaseMethodConfig<
                 lpVault,
                 assetMint: config.accounts.assetMint,
                 vault,
-                sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
+                sharesMint,
+                sharesMetadata,
                 assetTokenProgram: tokenProgram,
                 sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                tokenMetadataProgram: METADATA_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
+                systemProgram: SystemProgram.programId,
+                sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             },
             args: config.args,
             setup: [

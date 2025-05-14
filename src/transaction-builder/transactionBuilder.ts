@@ -50,6 +50,7 @@ export class TransactionBuilder {
     }
 
     setInstructions(instructions: TransactionInstruction[]): this {
+        this.instructions = [];
         this.instructions = instructions;
         return this;
     }

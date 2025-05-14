@@ -4,7 +4,6 @@ import {
     SystemProgram,
     TransactionInstruction,
     LAMPORTS_PER_SOL,
-    AddressLookupTableAccount
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -26,6 +25,7 @@ import { Metaplex } from '@metaplex-foundation/js';
 export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 
 export const WASABI_PROGRAM_ID = new PublicKey('spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c');
+export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
 export const SEED_PREFIX = {
     LONG_POOL: 'long_pool',
@@ -148,6 +148,14 @@ export const PDA = {
 
     getSharesMint(lpVault: PublicKey, mint: PublicKey): PublicKey {
         return findProgramAddress([lpVault.toBuffer(), mint.toBuffer()], WASABI_PROGRAM_ID);
+    },
+
+    getSharesMetadata(sharesMint: PublicKey): PublicKey {
+        return findProgramAddress([
+            Buffer.from('metadata'),
+            METADATA_PROGRAM_ID.toBuffer(),
+            sharesMint.toBuffer()
+        ], METADATA_PROGRAM_ID);
     },
 
     getPosition(owner: PublicKey, pool: PublicKey, lpVault: PublicKey, nonce: number): PublicKey {
@@ -742,7 +750,6 @@ export async function handlePaymentTokenMintWithAuthority(
     wrapMode: WrapMode,
     amount?: number | bigint
 ): Promise<TokenProgramsWithSetupResult> {
-
     let instructions = { setupIx: [], cleanupIx: [] };
 
     if (paymentToken.equals(NATIVE_MINT)) {

@@ -68,9 +68,19 @@ export class BundleBuilder {
         this.transactions.push(...transactions);
         return this;
     }
+    
+    setTransactions(transactions: VersionedTransaction[]): this {
+        this.transactions = transactions;
+        return this;
+    }
 
     addInstructions(...instructions: InstructionGroup[]): this {
         this.instructions.push(...instructions);
+        return this;
+    }
+    
+    setInstructions(instructions: InstructionGroup[]): this {
+        this.instructions = instructions;
         return this;
     }
 
