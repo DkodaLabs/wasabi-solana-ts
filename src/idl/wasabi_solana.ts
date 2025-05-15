@@ -2918,6 +2918,283 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "openLongPosition",
+      "discriminator": [
+        246,
+        23,
+        177,
+        9,
+        228,
+        202,
+        219,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCurrencyAccount",
+          "docs": [
+            "The account that holds the owner's quote currency"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault",
+          "docs": [
+            "The LP Vault that the user will borrow from",
+            "For long positions, this is the `currency` i.e. the `quote`"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account."
+          ],
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateralVault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "lpVault"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "feeWallet",
+          "writable": true
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u16"
+        },
+        {
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "openLongPositionCleanup",
       "discriminator": [
         11,
@@ -6699,6 +6976,11 @@ export type WasabiSolana = {
       "code": 6036,
       "name": "vaultNotEmpty",
       "msg": "Strategy cannot be closed if the collateral vault is not empty"
+    },
+    {
+      "code": 6037,
+      "name": "integerOverflow",
+      "msg": "Integer overflow"
     }
   ],
   "types": [
@@ -6927,6 +7209,34 @@ export type WasabiSolana = {
               "Bit mapping of enabled features. Status allow disabling trading, lping, etc."
             ],
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "hop",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "pubkey"
+          },
+          {
+            "name": "dataStartIdx",
+            "type": "u8"
+          },
+          {
+            "name": "dataSize",
+            "type": "u8"
+          },
+          {
+            "name": "accountStartIdx",
+            "type": "u8"
+          },
+          {
+            "name": "numAccounts",
+            "type": "u8"
           }
         ]
       }
@@ -7442,6 +7752,24 @@ export type WasabiSolana = {
           {
             "name": "feesToBePaid",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "route",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hops",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "hop"
+                }
+              }
+            }
           }
         ]
       }
