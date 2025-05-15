@@ -1,26 +1,37 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
-    PublicKey,
     SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY
+    SYSVAR_INSTRUCTIONS_PUBKEY, PublicKey,
+    AccountMeta
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, handleMintsAndTokenProgram, getPermission, handlePaymentTokenMint } from '../utils';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
+import {
+    PDA,
+    handleMintsAndTokenProgram,
+    getPermission, handlePaymentTokenMint,
+    createWrapSolInstruction,
+    getTokenProgram
+} from '../utils';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall
+} from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts
+    OpenPositionCleanupInstructionAccounts, OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
 
 type OpenLongPositionSetupInstructionAccounts = {
-    tokenProgram: PublicKey;
+    ownerCollateralAccount: PublicKey;
+    openPositionRequest: PublicKey;
     debtController: PublicKey;
+    tokenProgram: PublicKey;
 } & OpenPositionSetupInstructionBaseAccounts;
 
 const openLongPositionSetupConfig: BaseMethodConfig<
