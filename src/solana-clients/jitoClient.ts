@@ -237,7 +237,7 @@ export class JitoClient implements SolanaClient {
         const tipInstruction = await this.createTipInstruction(payer, computeBudgetConfig);
         instructions.push(tipInstruction);
 
-        const ixes = transactions.length === 1 ? instructions.slice(2) : instructions;
+        const ixes = transactions.length === 1 ? instructions.slice(2) : instructions.slice(1);
 
         const newTx = await new TransactionBuilder()
             .setPayer(payer)
