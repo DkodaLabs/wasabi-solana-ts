@@ -45,6 +45,7 @@ const stopLossSetupConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.stopLossSetup(
+            args.amount,
             args.minTargetAmount,
             args.interest,
             args.executionFee,

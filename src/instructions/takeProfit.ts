@@ -45,6 +45,7 @@ const takeProfitSetupConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.takeProfitSetup(
+            args.amount,
             args.minTargetAmount,
             args.interest,
             args.executionFee,
