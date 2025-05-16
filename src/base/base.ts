@@ -48,7 +48,7 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
 
     let builder = methodBuilder.accountsStrict(accounts);
 
-    if (processed.remainingAccounts.length > 0) {
+    if (processed.remainingAccounts) {
         builder = builder.remainingAccounts(processed.remainingAccounts);
     }
 
