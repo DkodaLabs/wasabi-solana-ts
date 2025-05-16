@@ -237,15 +237,21 @@ export class JitoClient implements SolanaClient {
         const tipInstruction = await this.createTipInstruction(payer, computeBudgetConfig);
         instructions.push(tipInstruction);
 
+        const ixes = transactions.length === 1 ? instructions.slice(2) : instructions.slice(1);
+
         const newTx = await new TransactionBuilder()
             .setPayer(payer)
             .setConnection(connection)
-            .addInstructions(...instructions)
-            .setComputeBudgetConfig({
-                destination: 'PRIORITY_FEE',
-                type: 'FIXED',
-                price: 0
-            })
+            .addInstructions(...ixes)
+            .setComputeBudgetConfig(
+                transactions.length === 1
+                    ? computeBudgetConfig
+                    : {
+                          destination: 'PRIORITY_FEE',
+                          type: 'FIXED',
+                          price: 0
+                      }
+            )
             .setStripLimitIx(true)
             .build();
 

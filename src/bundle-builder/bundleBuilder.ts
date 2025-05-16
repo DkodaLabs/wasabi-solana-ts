@@ -127,7 +127,7 @@ export class BundleBuilder {
             case 'IX':
                 if (
                     this.transactions[this.transactions.length - 1].serialize().length <=
-                    MAX_SERIALIZED_LEN - 24 // Compute budget ixes require ~24bytes
+                    MAX_SERIALIZED_LEN - 48 // Compute budget ixes require ~24bytes
                 ) {
                     transactions = await this.client.appendTipInstruction(
                         this.connection,

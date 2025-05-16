@@ -244,10 +244,233 @@ export class DeployerBuilder {
         return this;
     }
 
+    private validateRequiredFields(): void {
+        if (!this.mint) throw new Error('Mint is required');
+        if (!this.program) throw new Error('Program is required');
+
+        if (!this.options.excludeVault && !this.options.onlyLookups) {
+            if (!this.name) throw new Error('Name is required');
+            if (!this.symbol) throw new Error('Symbol is required');
+            if (!this.uri) throw new Error('URI is required');
+        }
+    }
+
+    async build(): Promise<DeployerResponse> {
+        this.validateRequiredFields();
+
+        const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
+            .blockhash;
+        const builder = new TransactionBuilder()
+            .setPayer(this.program.provider.publicKey)
+            .setConnection(this.program.provider.connection)
+            .setComputeBudgetConfig(this.computeBudget)
+            .setRecentBlockhash(latestBlockhash);
+
+        const response = <DeployerResponse>{};
+
+        const vaultIxes: TransactionInstruction[] = [];
+        const longIxes: TransactionInstruction[] = [];
+        const shortIxes: TransactionInstruction[] = [];
+        const lookupIxes: TransactionInstruction[] = [];
+
+        if (
+            (!this.options.excludeSol ||
+                !this.options.excludeUsdc ||
+                !this.options.excludeLong ||
+                !this.options.excludeShort) &&
+            !this.options.onlyLookups &&
+            !this.options.onlyTokenAccounts
+        ) {
+            const { pools, long, short } = await this.buildMarketInstructions();
+            response.pools = pools;
+            longIxes.push(...long);
+            shortIxes.push(...short);
+        }
+
+        if (
+            !this.options.excludeVault &&
+            !this.options.onlyLookups &&
+            !this.options.onlyTokenAccounts
+        ) {
+            vaultIxes.push(...(await this.buildVaultInstruction()));
+        }
+
+        if (!this.options.excludeLookups) {
+            const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
+            vaultIxes.push(...lookupTableInstructions.slice(0, 1));
+            lookupIxes.push(...lookupTableInstructions.slice(1));
+
+            response.lookupTable = lookupTable;
+        }
+
+        response.vaultTransaction = await builder.setInstructions(vaultIxes).build();
+        response.marketTransactions = await this.buildMarketTransactions(
+            builder,
+            longIxes,
+            shortIxes,
+            lookupIxes
+        );
+
+        return response;
+    }
+
+    private async buildMarketInstructions(): Promise<{
+        pools: PublicKey[];
+        long: TransactionInstruction[];
+        short: TransactionInstruction[];
+    }> {
+        const pools: PublicKey[] = [];
+        const longIxes: TransactionInstruction[] = [];
+        const shortIxes: TransactionInstruction[] = [];
+
+        if (!this.options.excludeSol) {
+            if (!this.options.excludeLong) {
+                pools.push(PDA.getLongPool(this.mint, NATIVE_MINT));
+                longIxes.push(
+                    ...(await createInitLongPoolInstruction(this.program, {
+                        currency: NATIVE_MINT,
+                        collateral: this.mint,
+                        admin: this.program.provider.publicKey
+                    }))
+                );
+            }
+            if (!this.options.excludeShort) {
+                pools.push(PDA.getShortPool(NATIVE_MINT, this.mint));
+                shortIxes.push(
+                    ...(await createInitShortPoolInstruction(this.program, {
+                        currency: this.mint,
+                        collateral: NATIVE_MINT,
+                        admin: this.program.provider.publicKey
+                    }))
+                );
+            }
+        }
+
+        if (!this.options.excludeUsdc) {
+            const usdc = new PublicKey(USDC_MINT);
+
+            if (!this.options.excludeLong) {
+                pools.push(PDA.getLongPool(this.mint, usdc));
+                longIxes.push(
+                    ...(await createInitLongPoolInstruction(this.program, {
+                        currency: usdc,
+                        collateral: this.mint,
+                        admin: this.program.provider.publicKey
+                    }))
+                );
+
+                if (!this.options.excludeAta) {
+                    const longPool = PDA.getLongPool(this.mint, usdc);
+
+                    longIxes.push(
+                        createAssociatedTokenAccountIdempotentInstruction(
+                            this.program.provider.publicKey,
+                            getAssociatedTokenAddressSync(
+                                NATIVE_MINT,
+                                longPool,
+                                true,
+                                TOKEN_PROGRAM_ID
+                            ),
+                            longPool,
+                            NATIVE_MINT,
+                            TOKEN_PROGRAM_ID
+                        )
+                    );
+                }
+            }
+
+            if (!this.options.excludeShort) {
+                pools.push(PDA.getShortPool(usdc, this.mint));
+                shortIxes.push(
+                    ...(await createInitShortPoolInstruction(this.program, {
+                        currency: this.mint,
+                        collateral: usdc,
+                        admin: this.program.provider.publicKey
+                    }))
+                );
+
+                if (!this.options.excludeAta) {
+                    const shortPool = PDA.getShortPool(usdc, this.mint);
+
+                    shortIxes.push(
+                        createAssociatedTokenAccountIdempotentInstruction(
+                            this.program.provider.publicKey,
+                            getAssociatedTokenAddressSync(
+                                NATIVE_MINT,
+                                shortPool,
+                                true,
+                                TOKEN_PROGRAM_ID
+                            ),
+                            shortPool,
+                            NATIVE_MINT,
+                            TOKEN_PROGRAM_ID
+                        )
+                    );
+                }
+            }
+        }
+
+        return {
+            pools,
+            long: longIxes,
+            short: shortIxes
+        };
+    }
+
+    async buildMarketTransactions(
+        builder: TransactionBuilder,
+        longIxes: TransactionInstruction[],
+        shortIxes: TransactionInstruction[],
+        lookupIxes: TransactionInstruction[]
+    ): Promise<VersionedTransaction[]> {
+        const transactions: VersionedTransaction[] = [];
+
+        const validateAndBuildTxn = async (ixes: TransactionInstruction[]) => {
+            let txn;
+
+            builder.setStripLimitIx(transactions.length > 0 || !this.options.excludeVault);
+
+            txn = await builder.setInstructions(ixes).build();
+
+            return txn;
+        };
+
+        if (lookupIxes.length > 0) {
+            transactions.push(await validateAndBuildTxn(lookupIxes.slice(1)));
+            transactions.push(await validateAndBuildTxn(lookupIxes.slice(0, 1)));
+        }
+
+        if (longIxes.length > 0) {
+            transactions.push(await validateAndBuildTxn(longIxes));
+        }
+
+        if (shortIxes.length > 0) {
+            transactions.push(await validateAndBuildTxn(shortIxes));
+        }
+
+        return transactions;
+    }
+
+    private async buildVaultInstruction(): Promise<TransactionInstruction[]> {
+        return await createInitLpVaultInstruction(
+            this.program,
+            {
+                name: this.name,
+                symbol: this.symbol,
+                uri: this.uri
+            },
+            {
+                admin: this.program.provider.publicKey,
+                assetMint: this.mint
+            }
+        );
+    }
+
     async buildLookupInstructions(): Promise<{
         lookupTable: PublicKey;
         lookupTableInstructions: TransactionInstruction[];
     }> {
+        // Asset Vault
         const lpVault = PDA.getLpVault(this.mint);
         // eslint-disable-next-line prefer-const
         let [addresses, assetTokenProgram] = await Promise.all([
@@ -255,128 +478,107 @@ export class DeployerBuilder {
             this.program.provider.connection.getAccountInfo(this.mint).then((acc) => acc.owner)
         ]);
 
-        // If a lookup table is provided then it has already been initialized with the common addresses
-        if (this.lookupTable) {
-            addresses = [];
-        }
+        addresses.push(
+            ...[
+                this.mint,
+                lpVault,
+                getAssociatedTokenAddressSync(this.mint, lpVault, true, assetTokenProgram),
+                PDA.getSharesMint(lpVault, this.mint)
+            ]
+        );
 
-        if (!this.options.excludeVault) {
-            addresses.push(
-                ...[
-                    this.mint,
-                    lpVault,
-                    getAssociatedTokenAddressSync(this.mint, lpVault, true, assetTokenProgram),
-                    PDA.getSharesMint(lpVault, this.mint)
-                ]
-            );
-        }
+        // SOL Vault
+        const solLpVault = PDA.getLpVault(NATIVE_MINT);
+        const solVault = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            solLpVault,
+            true,
+            TOKEN_PROGRAM_ID
+        );
+        const solSharesMint = PDA.getSharesMint(solLpVault, NATIVE_MINT);
 
-        if (!this.options.excludeSol) {
-            const solLpVault = PDA.getLpVault(NATIVE_MINT);
-            const solVault = getAssociatedTokenAddressSync(
-                NATIVE_MINT,
-                solLpVault,
-                true,
-                TOKEN_PROGRAM_ID
-            );
-            const solSharesMint = PDA.getSharesMint(solLpVault, NATIVE_MINT);
+        addresses.push(...[solLpVault, solVault, solSharesMint]);
 
-            addresses.push(...[solLpVault, solVault, solSharesMint]);
+        // SOL Long
+        const solLongPool = PDA.getLongPool(this.mint, NATIVE_MINT);
+        const solLongPoolQuoteVault = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            solLongPool,
+            true,
+            TOKEN_PROGRAM_ID
+        );
+        const solLongPoolBaseVault = getAssociatedTokenAddressSync(
+            this.mint,
+            solLongPool,
+            true,
+            assetTokenProgram
+        );
+        addresses.push(...[solLongPool, solLongPoolQuoteVault, solLongPoolBaseVault]);
 
-            if (!this.options.excludeLong) {
-                const solLongPool = PDA.getLongPool(this.mint, NATIVE_MINT);
-                const solLongPoolQuoteVault = getAssociatedTokenAddressSync(
-                    NATIVE_MINT,
-                    solLongPool,
-                    true,
-                    TOKEN_PROGRAM_ID
-                );
-                const solLongPoolBaseVault = getAssociatedTokenAddressSync(
-                    this.mint,
-                    solLongPool,
-                    true,
-                    assetTokenProgram
-                );
+        // SOL Short
+        const solShortPool = PDA.getShortPool(NATIVE_MINT, this.mint);
+        const solShortPoolQuoteVault = getAssociatedTokenAddressSync(
+            this.mint,
+            solShortPool,
+            true,
+            assetTokenProgram
+        );
+        const solShortPoolBaseVault = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            solShortPool,
+            true,
+            TOKEN_PROGRAM_ID
+        );
 
-                addresses.push(...[solLongPool, solLongPoolQuoteVault, solLongPoolBaseVault]);
-            }
-            if (!this.options.excludeShort) {
-                const solShortPool = PDA.getShortPool(NATIVE_MINT, this.mint);
-                const solShortPoolQuoteVault = getAssociatedTokenAddressSync(
-                    this.mint,
-                    solShortPool,
-                    true,
-                    assetTokenProgram
-                );
-                const solShortPoolBaseVault = getAssociatedTokenAddressSync(
-                    NATIVE_MINT,
-                    solShortPool,
-                    true,
-                    TOKEN_PROGRAM_ID
-                );
+        addresses.push(...[solShortPool, solShortPoolQuoteVault, solShortPoolBaseVault]);
 
-                addresses.push(...[solShortPool, solShortPoolQuoteVault, solShortPoolBaseVault]);
-            }
+        // USDC Vault
+        const usdc = new PublicKey(USDC_MINT);
+        const usdcLpVault = PDA.getLpVault(usdc);
+        const usdcVault = getAssociatedTokenAddressSync(usdc, usdcLpVault, true, TOKEN_PROGRAM_ID);
+        const usdcSharesMint = PDA.getSharesMint(usdcLpVault, usdc);
+        addresses.push(...[usdc, usdcLpVault, usdcVault, usdcSharesMint]);
 
-            addresses.push(
-                ...[
-                    ...WALLETS.FEE[NATIVE_MINT.toBase58()],
-                    ...WALLETS.LIQUIDATION[NATIVE_MINT.toBase58()]
-                ]
-            );
-        }
+        // USDC Long
+        const usdcLongPool = PDA.getLongPool(this.mint, usdc);
+        const usdcLongPoolQuoteVault = getAssociatedTokenAddressSync(
+            usdc,
+            usdcLongPool,
+            true,
+            TOKEN_PROGRAM_ID
+        );
+        const usdcLongPoolBaseVault = getAssociatedTokenAddressSync(
+            this.mint,
+            usdcLongPool,
+            true,
+            assetTokenProgram
+        );
+        addresses.push(...[usdcLongPool, usdcLongPoolQuoteVault, usdcLongPoolBaseVault]);
 
-        if (!this.options.excludeUsdc) {
-            const usdc = new PublicKey(USDC_MINT);
-            const usdcLpVault = PDA.getLpVault(usdc);
-            const usdcVault = getAssociatedTokenAddressSync(
-                usdc,
-                usdcLpVault,
-                true,
-                TOKEN_PROGRAM_ID
-            );
-            const usdcSharesMint = PDA.getSharesMint(usdcLpVault, usdc);
+        // USDC Short
+        const usdcShortPool = PDA.getShortPool(this.mint, usdc);
+        const usdcShortPoolQuoteVault = getAssociatedTokenAddressSync(
+            this.mint,
+            usdcShortPool,
+            true,
+            assetTokenProgram
+        );
+        const usdcShortPoolBaseVault = getAssociatedTokenAddressSync(
+            usdc,
+            usdcShortPool,
+            true,
+            TOKEN_PROGRAM_ID
+        );
+        addresses.push(...[usdcShortPool, usdcShortPoolQuoteVault, usdcShortPoolBaseVault]);
 
-            addresses.push(...[usdc, usdcLpVault, usdcVault, usdcSharesMint]);
-
-            if (!this.options.excludeShort) {
-                const usdcLongPool = PDA.getLongPool(this.mint, usdc);
-                const usdcLongPoolQuoteVault = getAssociatedTokenAddressSync(
-                    usdc,
-                    usdcLongPool,
-                    true,
-                    TOKEN_PROGRAM_ID
-                );
-                const usdcLongPoolBaseVault = getAssociatedTokenAddressSync(
-                    this.mint,
-                    usdcLongPool,
-                    true,
-                    assetTokenProgram
-                );
-
-                addresses.push(...[usdcLongPool, usdcLongPoolQuoteVault, usdcLongPoolBaseVault]);
-            }
-
-            if (!this.options.excludeLong) {
-                const usdcShortPool = PDA.getShortPool(this.mint, usdc);
-                const usdcShortPoolQuoteVault = getAssociatedTokenAddressSync(
-                    this.mint,
-                    usdcShortPool,
-                    true,
-                    assetTokenProgram
-                );
-                const usdcShortPoolBaseVault = getAssociatedTokenAddressSync(
-                    usdc,
-                    usdcShortPool,
-                    true,
-                    TOKEN_PROGRAM_ID
-                );
-
-                addresses.push(...[usdcShortPool, usdcShortPoolQuoteVault, usdcShortPoolBaseVault]);
-            }
-
-            addresses.push(...[...WALLETS.FEE[USDC_MINT], ...WALLETS.LIQUIDATION[USDC_MINT]]);
-        }
+        // Protocol wallets
+        addresses.push(
+            ...[
+                ...WALLETS.FEE[NATIVE_MINT.toBase58()],
+                ...WALLETS.LIQUIDATION[NATIVE_MINT.toBase58()]
+            ]
+        );
+        addresses.push(...[...WALLETS.FEE[USDC_MINT], ...WALLETS.LIQUIDATION[USDC_MINT]]);
 
         const lookupTableInstructions: TransactionInstruction[] = [];
 
@@ -386,7 +588,7 @@ export class DeployerBuilder {
                     authority: this.program.provider.publicKey,
                     payer: this.program.provider.publicKey,
                     recentSlot: await this.program.provider.connection
-                        .getLatestBlockhashAndContext()
+                        .getLatestBlockhashAndContext('finalized')
                         .then((bh) => bh.context.slot)
                 }
             );
@@ -394,8 +596,10 @@ export class DeployerBuilder {
             lookupTableInstructions.push(createLookupTableIx);
         }
 
-        // 20 addresses per `extendLookupTable` instruction
-        const step = 25;
+        // 29 is the maximum number of addresses one transaction can hold
+        // These should not be at the end of the bundle as adding a tip IX may become problematic
+        // We typically generate 53 addresses
+        const step = 27;
         for (let i = 0; i <= addresses.length - 1; i += step) {
             const addressesToAdd = addresses.slice(i, Math.min(i + step, addresses.length));
 
@@ -428,241 +632,5 @@ export class DeployerBuilder {
             this.swapAuthority!,
             PDA.getAdmin(this.swapAuthority!)
         ];
-    }
-
-    private validateRequiredFields(): void {
-        if (!this.mint) throw new Error('Mint is required');
-        if (!this.program) throw new Error('Program is required');
-
-        if (!this.options.excludeVault && !this.options.onlyLookups) {
-            if (!this.name) throw new Error('Name is required');
-            if (!this.symbol) throw new Error('Symbol is required');
-            if (!this.uri) throw new Error('URI is required');
-        }
-    }
-
-    async build(): Promise<DeployerResponse> {
-        this.validateRequiredFields();
-
-        const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
-            .blockhash;
-        const builder = new TransactionBuilder()
-            .setPayer(this.program.provider.publicKey)
-            .setConnection(this.program.provider.connection)
-            .setComputeBudgetConfig(this.computeBudget)
-            .setRecentBlockhash(latestBlockhash);
-
-        const response = <DeployerResponse>{};
-
-        if (!this.options.excludeVault && !this.options.onlyLookups && !this.options.onlyTokenAccounts) {
-            response.vaultTransaction = await this.buildVaultTransaction(builder);
-        }
-
-        const ixes: TransactionInstruction[] = [];
-
-        if (
-            (!this.options.excludeSol ||
-                !this.options.excludeUsdc ||
-                !this.options.excludeLong ||
-                !this.options.excludeShort) &&
-            !this.options.onlyLookups &&
-            !this.options.onlyTokenAccounts
-        ) {
-            const { pools, instructions } = await this.buildMarketInstructions();
-            response.pools = pools;
-            ixes.push(...instructions);
-        }
-
-        if (!this.options.excludeLookups) {
-            const { lookupTable, lookupTableInstructions } = await this.buildLookupInstructions();
-            ixes.push(...lookupTableInstructions);
-            response.lookupTable = lookupTable;
-        }
-
-        response.marketTransactions = await this.buildMarketTransactions(builder, ixes);
-
-        return response;
-    }
-
-    private async buildMarketInstructions(): Promise<{
-        pools: PublicKey[];
-        instructions: TransactionInstruction[];
-    }> {
-        const pools: PublicKey[] = [];
-        const instructions: TransactionInstruction[] = [];
-
-        if (!this.options.excludeSol) {
-            if (!this.options.excludeLong) {
-                pools.push(PDA.getLongPool(this.mint, NATIVE_MINT));
-                instructions.push(
-                    ...(await createInitLongPoolInstruction(this.program, {
-                        currency: NATIVE_MINT,
-                        collateral: this.mint,
-                        admin: this.program.provider.publicKey
-                    }))
-                );
-            }
-            if (!this.options.excludeShort) {
-                pools.push(PDA.getShortPool(NATIVE_MINT, this.mint));
-                instructions.push(
-                    ...(await createInitShortPoolInstruction(this.program, {
-                        currency: this.mint,
-                        collateral: NATIVE_MINT,
-                        admin: this.program.provider.publicKey
-                    }))
-                );
-            }
-        }
-
-        if (!this.options.excludeUsdc) {
-            const usdc = new PublicKey(USDC_MINT);
-
-            if (!this.options.excludeLong) {
-                pools.push(PDA.getLongPool(this.mint, usdc));
-                instructions.push(
-                    ...(await createInitLongPoolInstruction(this.program, {
-                        currency: usdc,
-                        collateral: this.mint,
-                        admin: this.program.provider.publicKey
-                    }))
-                );
-
-                if (!this.options.excludeAta) {
-                    const longPool = PDA.getLongPool(this.mint, usdc);
-
-                    instructions.push(
-                        createAssociatedTokenAccountIdempotentInstruction(
-                            this.program.provider.publicKey,
-                            getAssociatedTokenAddressSync(
-                                NATIVE_MINT,
-                                longPool,
-                                true,
-                                TOKEN_PROGRAM_ID
-                            ),
-                            longPool,
-                            NATIVE_MINT,
-                            TOKEN_PROGRAM_ID
-                        )
-                    );
-                }
-            }
-
-            if (!this.options.excludeShort) {
-                pools.push(PDA.getShortPool(usdc, this.mint));
-                instructions.push(
-                    ...(await createInitShortPoolInstruction(this.program, {
-                        currency: this.mint,
-                        collateral: usdc,
-                        admin: this.program.provider.publicKey
-                    }))
-                );
-
-                if (!this.options.excludeAta) {
-                    const shortPool = PDA.getShortPool(usdc, this.mint);
-
-                    instructions.push(
-                        createAssociatedTokenAccountIdempotentInstruction(
-                            this.program.provider.publicKey,
-                            getAssociatedTokenAddressSync(
-                                NATIVE_MINT,
-                                shortPool,
-                                true,
-                                TOKEN_PROGRAM_ID
-                            ),
-                            shortPool,
-                            NATIVE_MINT,
-                            TOKEN_PROGRAM_ID
-                        )
-                    );
-                }
-            }
-        }
-
-        return {
-            pools,
-            instructions,
-        };
-    }
-
-    async buildMarketTransactions(
-        builder: TransactionBuilder,
-        instructions: TransactionInstruction[]
-    ): Promise<VersionedTransaction[]> {
-        const transactions: VersionedTransaction[] = [];
-        let lastValidTxn: VersionedTransaction | undefined = undefined;
-
-        const validateAndBuildTxn = async (
-            ixToAdd: TransactionInstruction,
-            resetInstructions: boolean = false
-        ) => {
-            try {
-                let txn;
-
-                builder.setStripLimitIx(transactions.length > 0 || this.options.excludeVault);
-
-                if (resetInstructions) {
-                    txn = await builder.setInstructions([ixToAdd]).build();
-                } else {
-                    txn = await builder.addInstructions(ixToAdd).build();
-                }
-
-                const serializedTxnLen = txn.serialize().length;
-
-                if (serializedTxnLen >= MAX_SERIALIZED_LEN) {
-                    throw new Error(`Transaction is too large: ${serializedTxnLen}`);
-                }
-
-                return txn;
-            } catch (error) {
-                if (resetInstructions) {
-                    throw new Error(
-                        `Single instruction is too large and cannot be processed: ${error}`
-                    );
-                }
-                throw error;
-            }
-        };
-
-        for (const ix of instructions) {
-            try {
-                lastValidTxn = await validateAndBuildTxn(ix);
-            } catch (error) {
-                if ((transactions.length === 0 && !lastValidTxn) || !lastValidTxn)
-                    throw new Error('Transaction is too large and cannot be broken down');
-                transactions.push(lastValidTxn);
-
-                lastValidTxn = await validateAndBuildTxn(ix, true);
-            }
-        }
-
-        if (lastValidTxn && !transactions.includes(lastValidTxn)) {
-            if (transactions.length >= (this.options.excludeVault ? 5 : 4)) {
-                throw new Error(
-                    'Failed to append last transaction - transaction limit reached (5)'
-                );
-            }
-            transactions.push(lastValidTxn);
-        }
-
-        return transactions;
-    }
-
-    private async buildVaultTransaction(
-        builder: TransactionBuilder
-    ): Promise<VersionedTransaction> {
-        const instructions = await createInitLpVaultInstruction(
-            this.program,
-            {
-                name: this.name,
-                symbol: this.symbol,
-                uri: this.uri
-            },
-            {
-                admin: this.program.provider.publicKey,
-                assetMint: this.mint
-            }
-        );
-
-        return await builder.setInstructions(instructions).build();
     }
 }
