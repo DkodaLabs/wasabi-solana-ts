@@ -9,20 +9,16 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PDA,
     handleMintsAndTokenProgram,
-    getPermission, handlePaymentTokenMint,
-    createWrapSolInstruction,
-    getTokenProgram
+    getPermission,
+    handlePaymentTokenMint,
 } from '../utils';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts, OpenPositionSetupInstructionBaseAccounts
+    OpenPositionCleanupInstructionAccounts,
+    OpenPositionSetupInstructionBaseAccounts,
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';

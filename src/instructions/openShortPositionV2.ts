@@ -98,7 +98,7 @@ const openShortPositionConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openShortPosition(
+        program.methods.openLongPosition(
             args.nonce || 0,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
