@@ -2,27 +2,23 @@ import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
     SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY, PublicKey,
-    AccountMeta
+    SYSVAR_INSTRUCTIONS_PUBKEY,
+    PublicKey,
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PDA,
     handleMintsAndTokenProgram,
-    getPermission, handlePaymentTokenMint,
-    createWrapSolInstruction,
-    getTokenProgram
+    getPermission,
+    handlePaymentTokenMint,
 } from '../utils';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts, OpenPositionSetupInstructionBaseAccounts
+    OpenPositionCleanupInstructionAccounts,
+    OpenPositionSetupInstructionBaseAccounts,
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -196,172 +192,5 @@ export async function createOpenLongPositionCleanupInstruction(
         program,
         accounts,
         config: openLongPositionCleanupConfig
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export type Hop = {
-    programId: PublicKey,
-    dataStartIdx: number,
-    dataSize: number,
-    accountStartIdx: number,
-    accountSize: number,
-};
-
-export type OpenPositionArgs = {
-    nonce?: number,
-    positionId?: string,
-    minTargetAmount: number | bigint,
-    downPayment: number | bigint,
-    principal: number | bigint,
-    fee: number | bigint,
-    expiration: number | bigint,
-    instructions: TransactionInstruction[],
-}
-export type OpenPositionAccounts = {
-    owner: PublicKey,
-    currency: PublicKey,
-    collateral: PublicKey,
-    authority: PublicKey,
-    feeWallet: PublicKey,
-};
-
-export type OpenPositionInstructionAccounts = {
-    owner: PublicKey,
-    ownerCurrencyAccount: PublicKey,
-    lpVault: PublicKey,
-    vault: PublicKey,
-    pool: PublicKey,
-    currencyVault: PublicKey,
-    collateralVault: PublicKey,
-    currency: PublicKey,
-    collateral: PublicKey,
-    authority: PublicKey,
-    permission: PublicKey,
-    feeWallet: PublicKey,
-    debtController: PublicKey,
-    globalSettings: PublicKey,
-    tokenProgram: PublicKey,
-    systemProgram: PublicKey,
-};
-
-const openLongPositionConfig: BaseMethodConfig<OpenPositionArgs, OpenPositionAccounts, OpenPositionInstructionAccounts> = {
-    process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
-        let accountIdx = 0;
-        let dataIdx = 0;
-        let data = Buffer.alloc(0);
-
-        const hops = [];
-        const remainingAccounts = [];
-
-        for (const ix of config.args.instructions) {
-            const hop: Hop = {
-                programId: ix.programId,
-                dataStartIdx: dataIdx,
-                dataSize: ix.data.length,
-                accountStartIdx: accountIdx + 1,
-                accountSize: ix.keys.length
-            };
-
-            const programAccount: AccountMeta = {
-                pubkey: ix.programId,
-                isSigner: false,
-                isWritable: false
-            };
-
-            hops.push(hop);
-            data = Buffer.concat([data, ix.data]);
-            dataIdx += ix.data.length;
-            accountIdx += ix.keys.length;
-            remainingAccounts.push(programAccount, ...ix.keys);
-        }
-
-        const [wSolIx, tokenProgram, collateralTokenProgram] = await Promise.all([
-            createWrapSolInstruction(
-                config.program.provider.connection,
-                config.accounts.owner,
-                (config.args.downPayment as bigint) + (config.args.fee as bigint),
-                false
-            ),
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral)
-        ]);
-
-        const lpVault = PDA.getLpVault(config.accounts.currency);
-        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
-
-        if (!config.args.nonce) {
-            throw new Error('Nonce is required for `OpenLongPosition`');
-        }
-
-        return {
-            accounts: {
-                owner: config.accounts.owner,
-                ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                    config.accounts.currency,
-                    config.accounts.owner,
-                    false,
-                    tokenProgram
-                ),
-                lpVault,
-                vault: getAssociatedTokenAddressSync(
-                    config.accounts.currency,
-                    lpVault,
-                    true,
-                    tokenProgram
-                ),
-                pool,
-                currencyVault: getAssociatedTokenAddressSync(
-                    config.accounts.currency,
-                    pool,
-                    true,
-                    tokenProgram
-                ),
-                collateralVault: getAssociatedTokenAddressSync(
-                    config.accounts.collateral,
-                    pool,
-                    true,
-                    collateralTokenProgram
-                ),
-                currency: config.accounts.currency,
-                collateral: config.accounts.collateral,
-                authority: config.accounts.authority,
-                permission: PDA.getAdmin(config.accounts.authority),
-                feeWallet: config.accounts.feeWallet,
-                tokenProgram,
-                debtController: PDA.getDebtController(),
-                globalSettings: PDA.getGlobalSettings(),
-                systemProgram: SystemProgram.programId,
-            },
-            args: {
-                ...config.args,
-                hops,
-                data,
-            },
-            remainingAccounts,
-            setup: wSolIx.setupIx,
-        };
-    },
-    getMethod: (program) => (args) => program.methods.openLongPosition(
-        args.nonce || 0,
-        new BN(args.minTargetAmount),
-        new BN(args.downPayment),
-        new BN(args.principal),
-        new BN(args.fee),
-        new BN(args.expiration),
-        { hops: args.hops },
-        args.data
-    )
-};
-
-export async function createOpenLongPositionInstruction(
-    program: Program<WasabiSolana>,
-    args: OpenPositionArgs,
-    accounts: OpenPositionAccounts
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: openLongPositionConfig,
-        args
     }) as Promise<TransactionInstruction[]>;
 }

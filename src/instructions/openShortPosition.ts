@@ -6,17 +6,13 @@ import {
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
     OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts
+    OpenPositionSetupInstructionBaseAccounts,
 } from './openPosition';
 import {
     PDA,
@@ -149,7 +145,7 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
                 config.program.provider.connection,
                 config.accounts.currency,
                 config.accounts.collateral,
-                config.accounts.pool,
+                config.accounts.pool
             );
         const lpVault = PDA.getLpVault(config.accounts.currency);
 
@@ -191,7 +187,7 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
 export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
-    accounts: OpenPositionSetupAccounts,
+    accounts: OpenPositionSetupAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -208,6 +204,6 @@ export async function createOpenShortPositionCleanupInstruction(
     return handleMethodCall({
         program,
         accounts,
-        config: openShortPositionCleanupConfig,
+        config: openShortPositionCleanupConfig
     }) as Promise<TransactionInstruction[]>;
 }
