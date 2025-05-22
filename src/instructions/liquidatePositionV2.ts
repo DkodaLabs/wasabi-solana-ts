@@ -2,7 +2,7 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     ClosePositionAccounts,
     ClosePositionArgs,
-    ClosePositionInstructionAccounts, ClosePositionInternalInstructionAccounts
+    ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
