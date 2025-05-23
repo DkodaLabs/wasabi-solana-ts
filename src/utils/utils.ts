@@ -3,7 +3,7 @@ import {
     Connection,
     SystemProgram,
     TransactionInstruction,
-    LAMPORTS_PER_SOL,
+    LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -21,7 +21,7 @@ import {
     createAssociatedTokenAccountIdempotentInstruction
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
-import MintCache from './mintCache';
+import { MintCache } from './mintCache';
 
 export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 
@@ -163,11 +163,10 @@ export const PDA = {
     },
 
     getSharesMetadata(sharesMint: PublicKey): PublicKey {
-        return findProgramAddress([
-            Buffer.from('metadata'),
-            METADATA_PROGRAM_ID.toBuffer(),
-            sharesMint.toBuffer()
-        ], METADATA_PROGRAM_ID);
+        return findProgramAddress(
+            [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), sharesMint.toBuffer()],
+            METADATA_PROGRAM_ID
+        );
     },
 
     getPosition(owner: PublicKey, pool: PublicKey, lpVault: PublicKey, nonce: number): PublicKey {
@@ -635,10 +634,10 @@ export async function handleMint(
     connection: Connection,
     mint: PublicKey,
     options: {
-        owner?: PublicKey,
-        wrapMode?: WrapMode,
-        amount?: number | bigint,
-        mintCache?: MintCache,
+        owner?: PublicKey;
+        wrapMode?: WrapMode;
+        amount?: number | bigint;
+        mintCache?: MintCache;
     }
 ): Promise<MintResult> {
     let instructions = { setupIx: [], cleanupIx: [] };
@@ -690,8 +689,8 @@ export async function handleMintsAndTokenProgram(
     currency: PublicKey,
     collateral: PublicKey,
     options: {
-        owner?: PublicKey,
-        mintCache?: MintCache
+        owner?: PublicKey;
+        mintCache?: MintCache;
     }
 ): Promise<TokenProgramsResult> {
     if (currency.equals(collateral)) {
@@ -747,7 +746,7 @@ export async function handlePaymentTokenMint(
     collateral: PublicKey,
     wrapMode: WrapMode,
     amount?: number | bigint,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TokenProgramsWithSetupResult> {
     return await handlePaymentTokenMintWithAuthority(
         connection,
@@ -758,7 +757,7 @@ export async function handlePaymentTokenMint(
         collateral,
         wrapMode,
         amount,
-        mintCache,
+        mintCache
     );
 }
 
