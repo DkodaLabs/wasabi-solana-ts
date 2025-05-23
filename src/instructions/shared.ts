@@ -5,7 +5,7 @@ export type Hop = {
     dataStartIdx: number;
     dataSize: number;
     accountStartIdx: number;
-    accountSize: number;
+    numAccounts: number;
 };
 
 // Program accounts still need to be loaded despite them not being used in the CPI.
@@ -29,7 +29,7 @@ export function extractInstructionData(instructions: TransactionInstruction[]): 
             dataStartIdx: dataIdx,
             dataSize: ix.data.length,
             accountStartIdx: accountIdx + 1,
-            accountSize: ix.keys.length
+            numAccounts: ix.keys.length
         };
 
         const programAccount: AccountMeta = {

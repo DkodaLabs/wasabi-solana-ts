@@ -4,7 +4,7 @@ import {
     ClosePositionArgs,
     ClosePositionInstructionAccounts, ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
@@ -12,24 +12,16 @@ import { PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
-type LiquidatePositionAccounts = ClosePositionAccounts & {
-    liquidationWallet: PublicKey;
+type LiquidateInstructionAccounts = {
+    closePosition: ClosePositionInternalInstructionAccounts;
 };
-
-type LiquidatePositionInternalInstructionAccounts = ClosePositionInternalInstructionAccounts & {
-    liquidationWallet: PublicKey;
-};
-
-type LiquidatePositionInstructionAccounts = {
-    closePosition: LiquidatePositionInternalInstructionAccounts;
-}
 
 const liquidatePositionConfig: BaseMethodConfig<
     ClosePositionArgs,
-    LiquidatePositionAccounts,
-    LiquidatePositionInstructionAccounts
+    ClosePositionAccounts,
+    LiquidateInstructionAccounts
 > = {
-    process: async (config: ConfigArgs<ClosePositionArgs, LiquidatePositionAccounts>) => {
+    process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
@@ -45,6 +37,7 @@ const liquidatePositionConfig: BaseMethodConfig<
                 poolAccount.collateral
             ]);
 
+        const lpVault = PDA.getLpVault(poolAccount.currency);
         const currencyTokenProgram = currencyAccount.owner;
         const collateralTokenProgram = collateralAccount.owner;
 
@@ -54,21 +47,21 @@ const liquidatePositionConfig: BaseMethodConfig<
                     owner: config.accounts.owner,
                     ownerPayoutAccount: poolAccount.isLongPool
                         ? getAssociatedTokenAddressSync(
-                            poolAccount.currency,
-                            config.accounts.owner,
-                            false,
-                            currencyTokenProgram
-                        )
+                              poolAccount.currency,
+                              config.accounts.owner,
+                              false,
+                              currencyTokenProgram
+                          )
                         : getAssociatedTokenAddressSync(
-                            poolAccount.collateral,
-                            config.accounts.owner,
-                            false,
-                            collateralTokenProgram
-                        ),
-                    lpVault: PDA.getLpVault(poolAccount.currency),
+                              poolAccount.collateral,
+                              config.accounts.owner,
+                              false,
+                              collateralTokenProgram
+                          ),
+                    lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
-                        config.accounts.pool,
+                        lpVault,
                         true,
                         currencyTokenProgram
                     ),
@@ -111,7 +104,7 @@ const liquidatePositionConfig: BaseMethodConfig<
 export async function createLiquidatePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: LiquidatePositionAccounts
+    accounts: ClosePositionAccounts
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

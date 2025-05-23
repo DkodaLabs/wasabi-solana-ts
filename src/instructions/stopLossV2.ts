@@ -39,6 +39,7 @@ const stopLossConfig: BaseMethodConfig<
                 poolAccount.collateral
             ]);
 
+        const lpVault = PDA.getLpVault(poolAccount.currency);
         const currencyTokenProgram = currencyAccount.owner;
         const collateralTokenProgram = collateralAccount.owner;
 
@@ -63,7 +64,7 @@ const stopLossConfig: BaseMethodConfig<
                     lpVault: PDA.getLpVault(poolAccount.currency),
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
-                        config.accounts.pool,
+                        lpVault,
                         true,
                         currencyTokenProgram
                     ),
@@ -76,6 +77,7 @@ const stopLossConfig: BaseMethodConfig<
                     authority: config.accounts.authority,
                     permission: PDA.getAdmin(config.accounts.authority),
                     feeWallet: config.accounts.feeWallet,
+                    liquidationWallet: config.accounts.liquidationWallet,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
@@ -91,14 +93,15 @@ const stopLossConfig: BaseMethodConfig<
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) => program.methods.stopLoss(
-        new BN(args.minTargetAmount),
-        new BN(args.interest),
-        new BN(args.executionFee),
-        new BN(args.expiration),
-        { hops: args.hops },
-        args.data
-    )
+    getMethod: (program) => (args) =>
+        program.methods.stopLoss(
+            new BN(args.minTargetAmount),
+            new BN(args.interest),
+            new BN(args.executionFee),
+            new BN(args.expiration),
+            { hops: args.hops },
+            args.data
+        )
 };
 
 export async function createStopLossInstruction(

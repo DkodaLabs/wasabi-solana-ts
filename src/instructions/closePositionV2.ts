@@ -21,6 +21,7 @@ export type ClosePositionAccounts = {
     position: PublicKey;
     pool: PublicKey;
     feeWallet: PublicKey;
+    liquidationWallet: PublicKey;
 };
 
 export type ClosePositionInstructionAccounts = {
@@ -42,6 +43,7 @@ export type ClosePositionInternalInstructionAccounts = {
     authority: PublicKey;
     permission: PublicKey;
     feeWallet: PublicKey;
+    liquidationWallet: PublicKey;
     debtController: PublicKey;
     globalSettings: PublicKey;
     currencyTokenProgram: PublicKey;
@@ -70,6 +72,7 @@ const closePostionConfig: BaseMethodConfig<
                 poolAccount.collateral
             ]);
 
+        const lpVault = PDA.getLpVault(poolAccount.currency);
         const currencyTokenProgram = currencyAccount.owner;
         const collateralTokenProgram = collateralAccount.owner;
 
@@ -91,10 +94,10 @@ const closePostionConfig: BaseMethodConfig<
                               false,
                               collateralTokenProgram
                           ),
-                    lpVault: PDA.getLpVault(poolAccount.currency),
+                    lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
-                        config.accounts.pool,
+                        lpVault,
                         true,
                         currencyTokenProgram
                     ),
@@ -107,6 +110,7 @@ const closePostionConfig: BaseMethodConfig<
                     authority: config.accounts.authority,
                     permission: PDA.getAdmin(config.accounts.authority),
                     feeWallet: config.accounts.feeWallet,
+                    liquidationWallet: config.accounts.liquidationWallet,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,

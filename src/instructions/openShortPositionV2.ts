@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl';
 
 export type OpenShortPositionInstructionAccounts = {
     owner: PublicKey;
-    ownerCurrencyAccount: PublicKey;
+    ownerTargetCurrencyAccount: PublicKey;
     lpVault: PublicKey;
     vault: PublicKey;
     pool: PublicKey;
@@ -42,7 +42,7 @@ const openShortPositionConfig: BaseMethodConfig<
         ]);
 
         const lpVault = PDA.getLpVault(config.accounts.currency);
-        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
+        const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
         if (!config.args.nonce) {
             throw new Error('Nonce is required for `OpenLongPosition`');
@@ -51,11 +51,11 @@ const openShortPositionConfig: BaseMethodConfig<
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                    config.accounts.currency,
+                ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
+                    config.accounts.collateral,
                     config.accounts.owner,
                     false,
-                    currencyTokenProgram
+                    collateralTokenProgram
                 ),
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
@@ -98,7 +98,7 @@ const openShortPositionConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openLongPosition(
+        program.methods.openShortPosition(
             args.nonce || 0,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
