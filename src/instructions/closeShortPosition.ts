@@ -12,12 +12,9 @@ import {
     getClosePositionCleanupInstructionAccounts,
     transformArgs
 } from './closePosition';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils';
 
 type CloseShortPositionSetupInstructionAccounts = {
     owner: PublicKey;
@@ -100,22 +97,26 @@ export async function createCloseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeShortPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createCloseShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts
+    accounts: ClosePositionCleanupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeShortPositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

@@ -6,11 +6,7 @@ import {
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
@@ -18,14 +14,9 @@ import {
     OpenPositionCleanupInstructionAccounts,
     OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
-import {
-    PDA,
-    getPermission,
-    handleMintsAndTokenProgram,
-    handlePaymentTokenMint
-} from '../utils';
+import { PDA, getPermission, handleMintsAndTokenProgram, handlePaymentTokenMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import MintCache from '../utils/mintCache';
+import { MintCache } from '../utils/mintCache';
 
 type OpenShortPositionSetupInstructionAccounts = {
     collateralTokenProgram: PublicKey;
@@ -58,7 +49,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee),
-            config.mintCache,
+            config.mintCache
         );
 
         const lpVault = PDA.getLpVault(currencyMint);
@@ -196,26 +187,26 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openShortPositionSetupConfig,
         args,
-        mintCache,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openShortPositionCleanupConfig,
-        mintCache,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

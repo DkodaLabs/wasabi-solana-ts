@@ -6,7 +6,7 @@ import {
     AccountMeta
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import MintCache from '../utils/mintCache';
+import { MintCache } from '../utils/mintCache';
 
 export type ProcessResult<T> = {
     accounts: T;
@@ -42,7 +42,8 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     const processed = await args.config.process({
         program: args.program,
         accounts: args.accounts,
-        args: args.args
+        args: args.args,
+        mintCache: args.mintCache,
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 

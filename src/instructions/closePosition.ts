@@ -17,7 +17,7 @@ import {
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import MintCache from '../utils/mintCache';
+import { MintCache } from '../utils/mintCache';
 
 export type CloseType = 'MARKET' | 'LIQUIDATION' | 'TAKE_PROFIT' | 'STOP_LOSS';
 
@@ -143,7 +143,7 @@ export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts,
     closeType?: CloseType,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<CpsuAndIx> {
     const [
         { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram },
@@ -231,13 +231,13 @@ async function handleOrdersCheck(
     const [stopLoss, takeProfit] = await Promise.all([
         shouldCheckStopLoss
             ? program.account.stopLossOrder
-                .fetch(PDA.getStopLossOrder(positionAddress))
-                .catch(() => null)
+                  .fetch(PDA.getStopLossOrder(positionAddress))
+                  .catch(() => null)
             : null,
         shouldCheckTakeProfit
             ? program.account.takeProfitOrder
-                .fetch(PDA.getTakeProfitOrder(positionAddress))
-                .catch(() => null)
+                  .fetch(PDA.getTakeProfitOrder(positionAddress))
+                  .catch(() => null)
             : null
     ]);
 
