@@ -21,9 +21,12 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
-            config.program.provider.publicKey,
-            'wrap',
-            config.args.amount
+            {
+                owner: config.program.provider.publicKey,
+                wrapMode: 'wrap',
+                amount: config.args.amount,
+                mintCache: config.mintCache
+            }
         );
 
         setup.push(...setupIx);

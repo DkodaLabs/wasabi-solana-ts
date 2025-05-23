@@ -23,8 +23,11 @@ export const withdrawConfig: BaseMethodConfig<
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
-            config.program.provider.publicKey,
-            'unwrap'
+            {
+                owner: config.program.provider.publicKey,
+                wrapMode: 'unwrap',
+                mintCache: config.mintCache
+            }
         );
 
         return {

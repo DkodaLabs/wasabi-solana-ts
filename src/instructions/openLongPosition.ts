@@ -6,16 +6,8 @@ import {
     SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    PDA,
-    handleMintsAndTokenProgram,
-    getPermission, handlePaymentTokenMint
-} from '../utils';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { PDA, handleMintsAndTokenProgram, getPermission, handlePaymentTokenMint } from '../utils';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
@@ -24,6 +16,7 @@ import {
     OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
 
 type OpenLongPositionSetupInstructionAccounts = {
     tokenProgram: PublicKey;
@@ -43,8 +36,10 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee)
+            Number(config.args.downPayment) + Number(config.args.fee),
+            config.mintCache
         );
+
         const {
             currencyMint,
             collateralMint,
@@ -144,7 +139,7 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
                 config.program.provider.connection,
                 config.accounts.currency,
                 config.accounts.collateral,
-                config.accounts.pool,
+                { owner: config.accounts.pool, mintCache: config.mintCache }
             );
 
         return {
@@ -176,22 +171,26 @@ export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts
+    accounts: OpenPositionCleanupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

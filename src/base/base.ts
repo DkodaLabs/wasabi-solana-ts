@@ -5,6 +5,7 @@ import {
     PublicKey
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
 
 export type ProcessResult<T> = {
     accounts: T;
@@ -17,6 +18,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
     program: Program<WasabiSolana>;
     accounts: TAccounts;
     args?: TArgs;
+    mintCache?: MintCache;
 };
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
@@ -38,7 +40,8 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     const processed = await args.config.process({
         program: args.program,
         accounts: args.accounts,
-        args: args.args
+        args: args.args,
+        mintCache: args.mintCache,
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 

@@ -3,6 +3,7 @@ import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PDA, getPermission, handleMintsAndTokenProgram } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
 
 export type InitPoolAccounts = {
     currency: PublicKey;
@@ -28,13 +29,15 @@ export type InitPoolInstructionAccounts = {
 export async function getInitPoolInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
-    pool_type: 'long' | 'short'
+    pool_type: 'long' | 'short',
+    mintCache?: MintCache
 ): Promise<InitPoolInstructionAccounts> {
     const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
         await handleMintsAndTokenProgram(
             program.provider.connection,
             accounts.currency,
-            accounts.collateral
+            accounts.collateral,
+            { mintCache }
         );
 
     const pool =
