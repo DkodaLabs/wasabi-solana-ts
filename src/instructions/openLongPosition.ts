@@ -1,32 +1,34 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
-    SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY,
     PublicKey,
+    SystemProgram,
+    SYSVAR_INSTRUCTIONS_PUBKEY
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PDA,
     handleMintsAndTokenProgram,
-    getPermission,
-    handlePaymentTokenMint,
+    getPermission, handlePaymentTokenMint
 } from '../utils';
-import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
+import {
+    BaseMethodConfig,
+    ConfigArgs,
+    handleMethodCall,
+} from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts,
     OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupInstructionBaseAccounts
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import MintCache from '../utils/mintCache';
 
 type OpenLongPositionSetupInstructionAccounts = {
-    ownerCollateralAccount: PublicKey;
-    openPositionRequest: PublicKey;
-    debtController: PublicKey;
     tokenProgram: PublicKey;
+    debtController: PublicKey;
 } & OpenPositionSetupInstructionBaseAccounts;
 
 const openLongPositionSetupConfig: BaseMethodConfig<
@@ -42,8 +44,10 @@ const openLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee)
+            Number(config.args.downPayment) + Number(config.args.fee),
+            config.mintCache,
         );
+
         const {
             currencyMint,
             collateralMint,
@@ -143,7 +147,7 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
                 config.program.provider.connection,
                 config.accounts.currency,
                 config.accounts.collateral,
-                config.accounts.pool
+                { owner: config.accounts.pool, mintCache: config.mintCache }
             );
 
         return {
@@ -174,23 +178,27 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
 export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
-    accounts: OpenPositionSetupAccounts
+    accounts: OpenPositionSetupAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionSetupConfig,
-        args
+        args,
+        mintCache,
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts
+    accounts: OpenPositionCleanupAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: openLongPositionCleanupConfig
+        config: openLongPositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

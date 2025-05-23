@@ -51,7 +51,8 @@ export const initLpVaultConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
         const { mint, tokenProgram } = await handleMint(
             config.program.provider.connection,
-            config.accounts.assetMint
+            config.accounts.assetMint,
+            { mintCache: config.mintCache }
         );
         const lpVault = PDA.getLpVault(mint);
         const vault = getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram);

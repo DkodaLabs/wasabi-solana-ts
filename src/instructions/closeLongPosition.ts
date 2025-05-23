@@ -36,7 +36,8 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'MARKET'
+            'MARKET',
+            config.mintCache
         );
 
         return {

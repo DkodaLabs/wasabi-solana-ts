@@ -6,6 +6,7 @@ import {
     AccountMeta
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import MintCache from '../utils/mintCache';
 
 export type ProcessResult<T> = {
     accounts: T;
@@ -19,6 +20,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
     program: Program<WasabiSolana>;
     accounts: TAccounts;
     args?: TArgs;
+    mintCache?: MintCache;
 };
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
