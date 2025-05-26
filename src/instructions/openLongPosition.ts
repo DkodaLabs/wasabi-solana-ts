@@ -3,7 +3,6 @@ import {
     TransactionInstruction,
     SystemProgram,
     SYSVAR_INSTRUCTIONS_PUBKEY, PublicKey,
-    AccountMeta
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
