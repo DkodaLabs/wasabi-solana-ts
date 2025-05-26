@@ -2,7 +2,8 @@ import { Program } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
     TransactionSignature,
-    PublicKey
+    PublicKey,
+    AccountMeta
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
@@ -10,6 +11,7 @@ import { MintCache } from '../utils/mintCache';
 export type ProcessResult<T> = {
     accounts: T;
     args?: any;
+    remainingAccounts?: AccountMeta[];
     setup?: TransactionInstruction[];
     cleanup?: TransactionInstruction[];
 };
@@ -45,7 +47,13 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 
-    const builder = methodBuilder.accountsStrict(processed.accounts);
+    const accounts = methodBuilder.accounts(processed.accounts);
+
+    let builder = methodBuilder.accountsStrict(accounts);
+
+    if (processed.remainingAccounts.length > 0) {
+        builder = builder.remainingAccounts(processed.remainingAccounts);
+    }
 
     return builder.instruction().then((ix: TransactionInstruction) => {
         const ixes = [

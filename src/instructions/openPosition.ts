@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 // `owner` == `userPubkey` passed in via request
 export type OpenPositionParams = {
@@ -75,3 +75,23 @@ export type OpenPositionSetupInstructionBaseAccounts = {
     systemProgram: PublicKey;
     sysvarInfo: PublicKey;
 };
+
+
+export type OpenPositionArgs = {
+    nonce?: number,
+    positionId?: string,
+    minTargetAmount: number | bigint,
+    downPayment: number | bigint,
+    principal: number | bigint,
+    fee: number | bigint,
+    expiration: number | bigint,
+    instructions: TransactionInstruction[],
+}
+export type OpenPositionAccounts = {
+    owner: PublicKey,
+    currency: PublicKey,
+    collateral: PublicKey,
+    authority: PublicKey,
+    feeWallet: PublicKey,
+};
+
