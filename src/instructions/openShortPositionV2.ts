@@ -3,7 +3,14 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
 import { getTokenProgram, PDA } from '../utils';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import {
+    createAssociatedTokenAccountIdempotentInstruction,
+    createCloseAccountInstruction,
+    createSyncNativeInstruction,
+    getAssociatedTokenAddressSync,
+    NATIVE_MINT,
+    TOKEN_PROGRAM_ID
+} from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 
@@ -36,10 +43,74 @@ const openShortPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const [currencyTokenProgram, collateralTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral)
-        ]);
+        const accountsToFetch = [config.accounts.currency, config.accounts.collateral];
+
+        let setupIx: TransactionInstruction[] = [];
+
+        if (config.accounts.collateral.equals(NATIVE_MINT)) {
+            const ownerWrapped = getAssociatedTokenAddressSync(
+                NATIVE_MINT,
+                config.accounts.owner,
+                false,
+                TOKEN_PROGRAM_ID
+            );
+
+            accountsToFetch.push(ownerWrapped);
+
+            setupIx.push(
+                SystemProgram.transfer({
+                    fromPubkey: config.accounts.owner,
+                    toPubkey: ownerWrapped,
+                    lamports: Number(config.args.downPayment) + Number(config.args.fee)
+                })
+            );
+
+            setupIx.push(createSyncNativeInstruction(ownerWrapped, TOKEN_PROGRAM_ID));
+        }
+
+        const fetchedAccounts = await config.program.provider.connection.getMultipleAccountsInfo(
+            accountsToFetch
+        );
+
+        const currencyTokenProgram = fetchedAccounts[0].owner;
+        const collateralTokenProgram = fetchedAccounts[1].owner;
+        const ownerPaymentCurrencyAccount = fetchedAccounts[2]
+            ? getAssociatedTokenAddressSync(
+                  NATIVE_MINT,
+                  config.accounts.owner,
+                  false,
+                  TOKEN_PROGRAM_ID
+              )
+            : getAssociatedTokenAddressSync(
+                  config.accounts.collateral,
+                  config.accounts.owner,
+                  false,
+                  collateralTokenProgram
+              );
+
+        const cleanupIx: TransactionInstruction[] = [];
+
+        if (!fetchedAccounts[2]) {
+            setupIx = [
+                createAssociatedTokenAccountIdempotentInstruction(
+                    config.accounts.owner,
+                    ownerPaymentCurrencyAccount,
+                    config.accounts.owner,
+                    NATIVE_MINT,
+                    TOKEN_PROGRAM_ID
+                ),
+                ...setupIx
+            ];
+            cleanupIx.push(
+                createCloseAccountInstruction(
+                    ownerPaymentCurrencyAccount,
+                    config.accounts.owner,
+                    config.accounts.owner,
+                    [],
+                    collateralTokenProgram
+                )
+            );
+        }
 
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
@@ -94,6 +165,8 @@ const openShortPositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: setupIx,
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },

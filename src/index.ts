@@ -1,3 +1,12 @@
+import {
+    ClosePositionAccounts,
+    ClosePositionArgs,
+    createClosePositionInstruction,
+    createLiquidatePositionInstruction,
+    createOpenLongPositionInstruction, createOpenShortPositionInstruction, createStopLossInstruction,
+    createTakeProfitInstruction, OpenPositionAccounts, OpenPositionArgs
+} from './instructions';
+
 export * from './utils/index.js';
 export * from './base/index.js';
 export * from './instructions/index.js';
@@ -63,63 +72,162 @@ export class Wasabi {
         this.mintCache = mintCache;
     }
 
+    async createOpenLongPositionInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createOpenLongPositionInstruction(
+            this.program,
+            args,
+            accounts,
+        );
+    }
+
+    async createOpenShortPositionInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createOpenShortPositionInstruction(
+            this.program,
+            args,
+            accounts,
+        );
+    }
+
+    async createClosePositionInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createClosePositionInstruction(this.program, args, accounts);
+    }
+
+    async createTakeProfitInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createTakeProfitInstruction(this.program, args, accounts);
+    }
+
+    async createStopLossInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts,
+    ): Promise<TransactionInstruction[]> {
+        return await createStopLossInstruction(this.program, args, accounts);
+    }
+
+    async createLiquidatePositionInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts,
+    ): Promise<TransactionInstruction[]> {
+        return await createLiquidatePositionInstruction(
+            this.program,
+            args,
+            accounts,
+        );
+    }
+
     async createOpenLongPositionSetupInstruction(
         args: OpenPositionSetupArgs,
         accounts: OpenPositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createOpenLongPositionSetupInstruction(this.program, args, accounts, this.mintCache);
+        return await createOpenLongPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createOpenLongPositionCleanupInstruction(
         accounts: OpenPositionCleanupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createOpenLongPositionCleanupInstruction(this.program, accounts, this.mintCache);
+        return await createOpenLongPositionCleanupInstruction(
+            this.program,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createOpenShortPositionSetupInstruction(
         args: OpenPositionSetupArgs,
         accounts: OpenPositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createOpenShortPositionSetupInstruction(this.program, args, accounts, this.mintCache);
+        return await createOpenShortPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createOpenShortPositionCleanupInstruction(accounts: OpenPositionCleanupAccounts) {
-        return await createOpenShortPositionCleanupInstruction(this.program, accounts, this.mintCache);
+        return await createOpenShortPositionCleanupInstruction(
+            this.program,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createCloseLongPositionSetupInstruction(
         args: ClosePositionSetupArgs,
         accounts: ClosePositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createCloseLongPositionSetupInstruction(this.program, args, accounts, this.mintCache);
+        return await createCloseLongPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createCloseLongPositionCleanupInstruction(
         accounts: ClosePositionCleanupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createCloseLongPositionCleanupInstruction(this.program, accounts, this.mintCache);
+        return await createCloseLongPositionCleanupInstruction(
+            this.program,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createCloseShortPositionSetupInstruction(
         args: ClosePositionSetupArgs,
         accounts: ClosePositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createCloseShortPositionSetupInstruction(this.program, args, accounts, this.mintCache);
+        return await createCloseShortPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createCloseShortPositionCleanupInstruction(accounts: ClosePositionCleanupAccounts) {
-        return await createCloseShortPositionCleanupInstruction(this.program, accounts, this.mintCache);
+        return await createCloseShortPositionCleanupInstruction(
+            this.program,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createLiquidatePositionSetupInstruction(
         args: ClosePositionSetupArgs,
         accounts: ClosePositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createLiquidatePositionSetupInstruction(this.program, args, accounts, this.mintCache);
+        return await createLiquidatePositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createLiquidatePositionCleanupInstruction(accounts: ClosePositionCleanupAccounts) {
-        return await createLiquidatePositionCleanupInstruction(this.program, accounts, this.mintCache);
+        return await createLiquidatePositionCleanupInstruction(
+            this.program,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createTakeProfitSetupInstruction(

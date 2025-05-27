@@ -781,8 +781,10 @@ export async function handlePaymentTokenMintWithAuthority(
                 : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
-    const currencyTokenProgram = await getTokenProgram(connection, currency, mintCache);
-    const collateralTokenProgram = await getTokenProgram(connection, collateral, mintCache);
+    const [currencyTokenProgram, collateralTokenProgram] = await Promise.all([
+        getTokenProgram(connection, currency, mintCache),
+        getTokenProgram(connection, collateral, mintCache)
+    ]);
 
     return {
         currencyMint: currency,
