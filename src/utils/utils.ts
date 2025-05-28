@@ -848,7 +848,7 @@ export async function handleCloseTokenAccounts(
     }
 
     const results = await Promise.all(promises);
-    const mints = results[0] as Array<{ owner: PublicKey }>;
+    const mints = results[0];
     const ownerPayoutAtaInfo = results.length > 1 ? results[1] : undefined;
 
     const setupIx: TransactionInstruction[] = [];
@@ -881,7 +881,7 @@ export async function handleCloseTokenAccounts(
         fetchOwnerPayoutAtaPromise,
         setupIx,
         cleanupIx,
-        currencyTokenProgram: mints[0].owner,
-        collateralTokenProgram: mints[1].owner
+        currencyTokenProgram: mints.get(poolAccount.currency)!.owner,
+        collateralTokenProgram: mints.get(poolAccount.collateral)!.owner
     };
 }

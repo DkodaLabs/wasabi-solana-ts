@@ -80,11 +80,11 @@ const openLongPositionConfig: BaseMethodConfig<
         }
 
         const results = await Promise.all(promises);
-        const mints = results[0] as Array<{ owner: PublicKey }>;
+        const mints = results[0];
         const ownerCurrencyAtaInfo = results.length > 1 ? results[1] : null;
 
-        const tokenProgram = mints[0].owner;
-        const collateralTokenProgram = mints[1].owner;
+        const tokenProgram = mints.get(config.accounts.currency).owner;
+        const collateralTokenProgram = mints.get(config.accounts.collateral).owner;
 
         if (currencyIsSol && ownerCurrencyAta && !ownerCurrencyAtaInfo) {
             setupIx = [
@@ -118,7 +118,12 @@ const openLongPositionConfig: BaseMethodConfig<
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerCurrencyAccount: ownerCurrencyAta,
+                ownerCurrencyAccount: ownerCurrencyAta ?? getAssociatedTokenAddressSync(
+                    config.accounts.currency,
+                    config.accounts.owner,
+                    false,
+                    tokenProgram
+                ),
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
                     config.accounts.currency,

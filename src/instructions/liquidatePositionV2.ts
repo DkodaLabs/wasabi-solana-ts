@@ -48,7 +48,12 @@ const liquidatePositionConfig: BaseMethodConfig<
             accounts: {
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta,
+                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
+                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                        config.accounts.owner,
+                        false,
+                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                    ),
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,

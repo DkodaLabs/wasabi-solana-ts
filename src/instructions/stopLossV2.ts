@@ -50,7 +50,12 @@ const stopLossConfig: BaseMethodConfig<
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta,
+                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
+                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                        config.accounts.owner,
+                        false,
+                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                    ),
                     lpVault: PDA.getLpVault(poolAccount.currency),
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
