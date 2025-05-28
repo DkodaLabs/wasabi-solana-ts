@@ -2,10 +2,11 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
-import { getTokenProgram, PDA } from '../utils';
+import { MintCache, PDA } from '../utils';
 import {
     createAssociatedTokenAccountIdempotentInstruction,
-    createCloseAccountInstruction, createSyncNativeInstruction,
+    createCloseAccountInstruction,
+    createSyncNativeInstruction,
     getAssociatedTokenAddressSync,
     NATIVE_MINT,
     TOKEN_PROGRAM_ID
@@ -41,67 +42,64 @@ const openLongPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const accountsToFetch = [config.accounts.currency, config.accounts.collateral];
-
         let setupIx: TransactionInstruction[] = [];
+        const cleanupIx: TransactionInstruction[] = [];
 
-        if (config.accounts.currency.equals(NATIVE_MINT)) {
-            const ownerWrapped = getAssociatedTokenAddressSync(
+        let ownerCurrencyAta: PublicKey | undefined = undefined;
+        let fetchOwnerCurrencyAtaPromise: Promise<any> | undefined = undefined;
+
+        const currencyIsSol = config.accounts.currency.equals(NATIVE_MINT);
+        if (currencyIsSol) {
+            ownerCurrencyAta = getAssociatedTokenAddressSync(
                 NATIVE_MINT,
                 config.accounts.owner,
                 false,
                 TOKEN_PROGRAM_ID
             );
 
-            accountsToFetch.push(ownerWrapped);
-
             setupIx.push(
                 SystemProgram.transfer({
                     fromPubkey: config.accounts.owner,
-                    toPubkey: ownerWrapped,
+                    toPubkey: ownerCurrencyAta,
                     lamports: Number(config.args.downPayment) + Number(config.args.fee)
                 })
             );
 
-            setupIx.push(createSyncNativeInstruction(ownerWrapped, TOKEN_PROGRAM_ID));
+            setupIx.push(createSyncNativeInstruction(ownerCurrencyAta, TOKEN_PROGRAM_ID));
+
+            fetchOwnerCurrencyAtaPromise =
+                config.program.provider.connection.getAccountInfo(ownerCurrencyAta);
         }
 
-        const fetchedAccounts = await config.program.provider.connection.getMultipleAccountsInfo(
-            accountsToFetch
-        );
+        const promises: Promise<any>[] = [
+            config.mintCache.getMintInfos([config.accounts.currency, config.accounts.collateral])
+        ];
 
-        const tokenProgram = fetchedAccounts[0].owner;
-        const collateralTokenProgram = fetchedAccounts[1].owner;
-        const ownerCurrencyAccount = fetchedAccounts[2]
-            ? getAssociatedTokenAddressSync(
-                  NATIVE_MINT,
-                  config.accounts.owner,
-                  false,
-                  TOKEN_PROGRAM_ID
-              )
-            : getAssociatedTokenAddressSync(
-                  config.accounts.currency,
-                  config.accounts.owner,
-                  false,
-                  tokenProgram
-              );
+        if (fetchOwnerCurrencyAtaPromise) {
+            promises.push(fetchOwnerCurrencyAtaPromise);
+        }
 
-        const cleanupIx: TransactionInstruction[] = [];
+        const results = await Promise.all(promises);
+        const mints = results[0] as Array<{ owner: PublicKey }>;
+        const ownerCurrencyAtaInfo = results.length > 1 ? results[1] : null;
 
-        if (!fetchedAccounts[2]) {
+        const tokenProgram = mints[0].owner;
+        const collateralTokenProgram = mints[1].owner;
+
+        if (currencyIsSol && ownerCurrencyAta && !ownerCurrencyAtaInfo) {
             setupIx = [
                 createAssociatedTokenAccountIdempotentInstruction(
                     config.accounts.owner,
-                    ownerCurrencyAccount,
+                    ownerCurrencyAta,
                     config.accounts.owner,
                     NATIVE_MINT,
-                    TOKEN_PROGRAM_ID,
+                    TOKEN_PROGRAM_ID
                 ),
                 ...setupIx
             ];
             cleanupIx.push(
                 createCloseAccountInstruction(
-                    ownerCurrencyAccount,
+                    ownerCurrencyAta,
                     config.accounts.owner,
                     config.accounts.owner,
                     [],
@@ -120,7 +118,7 @@ const openLongPositionConfig: BaseMethodConfig<
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerCurrencyAccount,
+                ownerCurrencyAccount: ownerCurrencyAta,
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
@@ -178,12 +176,14 @@ const openLongPositionConfig: BaseMethodConfig<
 export async function createOpenLongPositionInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
-    accounts: OpenPositionAccounts
+    accounts: OpenPositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

@@ -2,11 +2,10 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import {
     createAssociatedTokenAccountIdempotentInstruction,
     createCloseAccountInstruction,
-    getAccount,
     getAssociatedTokenAddressSync,
     NATIVE_MINT,
     TOKEN_PROGRAM_ID
@@ -74,62 +73,15 @@ const closePostionConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const payoutMint = poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral;
-        const accountsToFetch = [poolAccount.currency, poolAccount.collateral];
-
-        if (payoutMint.equals(NATIVE_MINT)) {
-            const ownerWrapped = getAssociatedTokenAddressSync(
-                NATIVE_MINT,
-                config.accounts.owner,
-                false,
-                TOKEN_PROGRAM_ID
+        const { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
+            await handleCloseTokenAccounts(
+                {
+                    program: config.program,
+                    accounts: { owner: config.accounts.owner },
+                    mintCache: config.mintCache
+                },
+                poolAccount
             );
-
-            accountsToFetch.push(ownerWrapped);
-        }
-
-        const fetchedAccounts = await config.program.provider.connection.getMultipleAccountsInfo(
-            accountsToFetch
-        );
-
-        const currencyTokenProgram = fetchedAccounts[0].owner;
-        const collateralTokenProgram = fetchedAccounts[1].owner;
-        const ownerPayoutAccount = fetchedAccounts[2]
-            ? getAssociatedTokenAddressSync(
-                  NATIVE_MINT,
-                  config.accounts.owner,
-                  false,
-                  TOKEN_PROGRAM_ID
-              )
-            : getAssociatedTokenAddressSync(
-                  payoutMint,
-                  config.accounts.owner,
-                  false,
-                  poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-              );
-
-        const setupIx: TransactionInstruction[] = [];
-        const cleanupIx: TransactionInstruction[] = [];
-        if (!fetchedAccounts[2]) {
-            setupIx.push(
-                createAssociatedTokenAccountIdempotentInstruction(
-                    config.accounts.owner,
-                    ownerPayoutAccount,
-                    config.accounts.owner,
-                    NATIVE_MINT,
-                    TOKEN_PROGRAM_ID
-                )
-            );
-            cleanupIx.push(
-                createCloseAccountInstruction(
-                    ownerPayoutAccount,
-                    config.accounts.owner,
-                    config.accounts.owner,
-                    [],
-                    TOKEN_PROGRAM_ID
-                )
-            );
-        }
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -138,7 +90,7 @@ const closePostionConfig: BaseMethodConfig<
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount,
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -187,12 +139,14 @@ const closePostionConfig: BaseMethodConfig<
 export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closePostionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
