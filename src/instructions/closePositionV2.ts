@@ -2,8 +2,14 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { PDA } from '../utils';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
+import {
+    createAssociatedTokenAccountIdempotentInstruction,
+    createCloseAccountInstruction,
+    getAssociatedTokenAddressSync,
+    NATIVE_MINT,
+    TOKEN_PROGRAM_ID
+} from '@solana/spl-token';
 import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 import { extractInstructionData } from './shared';
 
@@ -58,42 +64,33 @@ const closePostionConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
-        const [currencyAccount, collateralAccount] =
-            await config.program.provider.connection.getMultipleAccountsInfo([
-                poolAccount.currency,
-                poolAccount.collateral
-            ]);
+        const { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
+            await handleCloseTokenAccounts(
+                {
+                    program: config.program,
+                    accounts: { owner: config.accounts.owner },
+                    mintCache: config.mintCache
+                },
+                poolAccount
+            );
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
-        const currencyTokenProgram = currencyAccount.owner;
-        const collateralTokenProgram = collateralAccount.owner;
 
         return {
             accounts: {
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: poolAccount.isLongPool
-                        ? getAssociatedTokenAddressSync(
-                              poolAccount.currency,
-                              config.accounts.owner,
-                              false,
-                              currencyTokenProgram
-                          )
-                        : getAssociatedTokenAddressSync(
-                              poolAccount.collateral,
-                              config.accounts.owner,
-                              false,
-                              collateralTokenProgram
-                          ),
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -123,6 +120,8 @@ const closePostionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: setupIx,
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },
@@ -140,12 +139,14 @@ const closePostionConfig: BaseMethodConfig<
 export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closePostionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
