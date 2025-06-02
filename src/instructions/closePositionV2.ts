@@ -1,10 +1,9 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 import { extractInstructionData } from './shared';
 
 export type ClosePositionArgs = {
@@ -115,7 +114,7 @@ const closePostionConfig: BaseMethodConfig<
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
                     collateralTokenProgram,
-                    systemProgram: SYSTEM_PROGRAM_ID
+                    systemProgram: SystemProgram.programId
                 }
             },
             args: {
