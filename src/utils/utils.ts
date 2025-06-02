@@ -318,11 +318,19 @@ export async function getMaxWithdraw(
     program: Program<WasabiSolana>,
     mint: PublicKey
 ): Promise<bigint> {
+    return getMaxWithdrawForUser(program, mint, program.provider.publicKey);
+}
+
+export async function getMaxWithdrawForUser(
+    program: Program<WasabiSolana>,
+    mint: PublicKey,
+    userAddress: PublicKey
+): Promise<bigint> {
     const lpVaultAddress = PDA.getLpVault(mint);
     const sharesMintAddress = PDA.getSharesMint(lpVaultAddress, mint);
     const userSharesAddress = getAssociatedTokenAddressSync(
         sharesMintAddress,
-        program.provider.publicKey,
+        userAddress,
         false,
         TOKEN_2022_PROGRAM_ID
     );
