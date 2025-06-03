@@ -4,13 +4,12 @@ import {
     ClosePositionArgs,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 type StopLossInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -77,7 +76,7 @@ const stopLossConfig: BaseMethodConfig<
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
                     collateralTokenProgram,
-                    systemProgram: SYSTEM_PROGRAM_ID
+                    systemProgram: SystemProgram.programId
                 }
             },
             args: {

@@ -4,13 +4,12 @@ import {
     ClosePositionArgs,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
 import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 type TakeProfitInstructionAccounts = {
     takeProfitOrder: PublicKey;
@@ -77,7 +76,7 @@ const takeProfitConfig: BaseMethodConfig<
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
                     collateralTokenProgram,
-                    systemProgram: SYSTEM_PROGRAM_ID
+                    systemProgram: SystemProgram.programId
                 }
             },
             args: {

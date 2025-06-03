@@ -5,13 +5,12 @@ import {
     ClosePositionInstructionAccounts,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
 import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
 import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 type LiquidateInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -75,7 +74,7 @@ const liquidatePositionConfig: BaseMethodConfig<
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
                     collateralTokenProgram,
-                    systemProgram: SYSTEM_PROGRAM_ID
+                    systemProgram: SystemProgram.programId
                 }
             },
             args: {
