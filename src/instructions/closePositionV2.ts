@@ -1,8 +1,8 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 
@@ -57,42 +57,41 @@ const closePostionConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
-        const [currencyAccount, collateralAccount] =
-            await config.program.provider.connection.getMultipleAccountsInfo([
-                poolAccount.currency,
-                poolAccount.collateral
-            ]);
+        const { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
+            await handleCloseTokenAccounts(
+                {
+                    program: config.program,
+                    accounts: { owner: config.accounts.owner },
+                    mintCache: config.mintCache
+                },
+                poolAccount
+            );
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
-        const currencyTokenProgram = currencyAccount.owner;
-        const collateralTokenProgram = collateralAccount.owner;
 
         return {
             accounts: {
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: poolAccount.isLongPool
-                        ? getAssociatedTokenAddressSync(
-                              poolAccount.currency,
-                              config.accounts.owner,
-                              false,
-                              currencyTokenProgram
-                          )
-                        : getAssociatedTokenAddressSync(
-                              poolAccount.collateral,
-                              config.accounts.owner,
-                              false,
-                              collateralTokenProgram
-                          ),
+                    ownerPayoutAccount:
+                        ownerPayoutAta ??
+                        getAssociatedTokenAddressSync(
+                            poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                            config.accounts.owner,
+                            false,
+                            poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                        ),
+
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -122,6 +121,8 @@ const closePostionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: setupIx,
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },
@@ -139,12 +140,14 @@ const closePostionConfig: BaseMethodConfig<
 export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closePostionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
