@@ -1,16 +1,9 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
-import {
-    createAssociatedTokenAccountIdempotentInstruction,
-    createCloseAccountInstruction,
-    getAssociatedTokenAddressSync,
-    NATIVE_MINT,
-    TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 
 export type ClosePositionArgs = {
@@ -90,12 +83,14 @@ const closePostionConfig: BaseMethodConfig<
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
-                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
-                        config.accounts.owner,
-                        false,
-                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-                    ),
+                    ownerPayoutAccount:
+                        ownerPayoutAta ??
+                        getAssociatedTokenAddressSync(
+                            poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                            config.accounts.owner,
+                            false,
+                            poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                        ),
 
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
@@ -118,7 +113,7 @@ const closePostionConfig: BaseMethodConfig<
                     globalSettings: PDA.getGlobalSettings(),
                     currencyTokenProgram,
                     collateralTokenProgram,
-                    systemProgram: SYSTEM_PROGRAM_ID
+                    systemProgram: SystemProgram.programId
                 }
             },
             args: {

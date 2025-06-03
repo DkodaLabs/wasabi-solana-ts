@@ -2,11 +2,12 @@ import { IDL as JupiterIDL } from './jupiter';
 import {
     SendTransactionError,
     VersionedTransaction,
-    TransactionInstruction
+    TransactionInstruction, SystemProgram
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
 import { WasabiSolana } from '../index';
+import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 const WasabiIDL = idl as WasabiSolana;
 
@@ -40,6 +41,10 @@ const jupiterProgramId = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 const jupiterExpectedErrors = [
     6001 // SlippageToleranceExceeded
 ];
+
+const raydiumErrors = [
+    6028, // Invalid first tick array
+]
 
 // Index errors by code for quick lookup
 const wasabiErrorIndex: Record<number, ErrorObject> = WasabiIDL.errors.reduce(
@@ -145,6 +150,41 @@ const matchComputeError = (message: string): ErrorObject | undefined => {
             expected: false,
             program: 'ComputeBudget'
         };
+    }
+
+    return undefined;
+};
+
+export const parseErrorLogs = (logs: string[] | undefined): ErrorObject | undefined => {
+    if (!logs || logs.length < 1) {
+        return undefined;
+    }
+
+    for (const log of logs) {
+        const panicRegex = /panicked at/;
+
+        const didPanic = panicRegex.test(log);
+
+        if (didPanic) {
+            return {
+                code: 0,
+                name: 'TokenAccountNotInitialized',
+                msg: 'An intermediary token account is not initialized',
+                expected: false,
+                program: 'Wasabi'
+            }
+        }
+
+        const match = log.match(/^Program ([a-zA-Z0-9]+) failed: (?:.*?): (0x[0-9a-fA-F]+)$/);
+        if (match) {
+            if (match[1].localeCompare(jupiterProgramId) === 0) {
+                return findJupiterError(parseInt(match[2]));
+            } else if (match[1].localeCompare(wasabiProgramId) === 0) {
+                return findWasabiError(parseInt(match[2]));
+            } else if (match[1].localeCompare(SystemProgram.programId.toBase58())) {
+                return parseSystemError(parseInt(match[2]), SystemProgram.programId.toBase58());
+            }
+        }
     }
 
     return undefined;
@@ -281,11 +321,16 @@ export const getFailingSwapProgram = (instructions: TransactionInstruction[]): s
         }
     }
 
-    const failingProgram = instructions[failingProgramIdx].programId.toBase58();
-    return failingProgram === jupiterProgramId
-        ? 'Jupiter'
-        : failingProgram === TOKEN_PROGRAM_ID.toBase58()
+    try {
+        const failingProgram = instructions[failingProgramIdx].programId.toBase58();
+        return failingProgram === jupiterProgramId
+            ? 'Jupiter'
+            : failingProgram === TOKEN_PROGRAM_ID.toBase58()
             ? 'Token'
             : failingProgram === TOKEN_2022_PROGRAM_ID.toBase58()
-                ? 'Token2022' : 'Raydium';
+            ? 'Token2022'
+            : 'Raydium';
+    } catch (error: any) {
+        return 'Unknown';
+    }
 };
