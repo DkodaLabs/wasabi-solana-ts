@@ -8,7 +8,7 @@ import {SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { PDA } from '../utils';
+import { MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 
 type LiquidateInstructionAccounts = {
@@ -103,12 +103,14 @@ const liquidatePositionConfig: BaseMethodConfig<
 export async function createLiquidatePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionConfig,
-        args
+        args,
+        mintCache,
     }) as Promise<TransactionInstruction[]>;
 }

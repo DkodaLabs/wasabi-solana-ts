@@ -2,7 +2,7 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
-import { getTokenProgram, PDA } from '../utils';
+import { getTokenProgram, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
@@ -111,12 +111,14 @@ const openLongPositionConfig: BaseMethodConfig<
 export async function createOpenLongPositionInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
-    accounts: OpenPositionAccounts
+    accounts: OpenPositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openLongPositionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

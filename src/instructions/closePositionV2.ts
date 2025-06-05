@@ -2,11 +2,12 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { PDA } from '../utils';
+import { MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 
 export type ClosePositionArgs = {
+    amount: number | bigint;
     minTargetAmount: number | bigint;
     interest: number | bigint;
     executionFee: number | bigint;
@@ -139,12 +140,14 @@ const closePostionConfig: BaseMethodConfig<
 export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closePostionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

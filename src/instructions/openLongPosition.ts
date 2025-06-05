@@ -22,7 +22,7 @@ import {
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
 
-type OpenLongPositionSetupInstructionAccounts = {
+export type OpenLongPositionSetupInstructionAccounts = {
     ownerCollateralAccount: PublicKey;
     openPositionRequest: PublicKey;
     debtController: PublicKey;

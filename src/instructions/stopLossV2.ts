@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA } from '../utils';
+import { MintCache, PDA } from '../utils';
 
 type StopLossInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -106,12 +106,14 @@ const stopLossConfig: BaseMethodConfig<
 export async function createStopLossInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: stopLossConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

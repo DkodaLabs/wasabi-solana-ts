@@ -6,43 +6,23 @@ import { getTokenProgram, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
+import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
 
-export type OpenShortPositionInstructionAccounts = {
-    owner: PublicKey;
-    ownerTargetCurrencyAccount: PublicKey;
-    lpVault: PublicKey;
-    vault: PublicKey;
-    pool: PublicKey;
-    currencyVault: PublicKey;
-    collateralVault: PublicKey;
-    currency: PublicKey;
-    collateral: PublicKey;
-    position: PublicKey;
-    authority: PublicKey;
-    permission: PublicKey;
-    feeWallet: PublicKey;
-    debtController: PublicKey;
-    globalSettings: PublicKey;
-    currencyTokenProgram: PublicKey;
-    collateralTokenProgram: PublicKey;
-    systemProgram: PublicKey;
-};
-
-const openShortPositionConfig: BaseMethodConfig<
+const updateLongPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
     OpenPositionAccounts,
-    OpenShortPositionInstructionAccounts
+    OpenLongPositionInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const [currencyTokenProgram, collateralTokenProgram] = await Promise.all([
+        const [tokenProgram, collateralTokenProgram] = await Promise.all([
             getTokenProgram(config.program.provider.connection, config.accounts.currency),
             getTokenProgram(config.program.provider.connection, config.accounts.collateral)
         ]);
 
         const lpVault = PDA.getLpVault(config.accounts.currency);
-        const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
+        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
 
         if (!config.args.nonce) {
             throw new Error('Nonce is required for `OpenLongPosition`');
@@ -51,25 +31,25 @@ const openShortPositionConfig: BaseMethodConfig<
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
-                    config.accounts.collateral,
+                ownerCurrencyAccount: getAssociatedTokenAddressSync(
+                    config.accounts.currency,
                     config.accounts.owner,
                     false,
-                    collateralTokenProgram
+                    tokenProgram
                 ),
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
                     lpVault,
                     true,
-                    currencyTokenProgram
+                    tokenProgram
                 ),
                 pool,
                 currencyVault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
                     pool,
                     true,
-                    currencyTokenProgram
+                    tokenProgram
                 ),
                 collateralVault: getAssociatedTokenAddressSync(
                     config.accounts.collateral,
@@ -79,14 +59,13 @@ const openShortPositionConfig: BaseMethodConfig<
                 ),
                 currency: config.accounts.currency,
                 collateral: config.accounts.collateral,
-                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+                position: new PublicKey(config.args.positionId),
                 authority: config.accounts.authority,
                 permission: PDA.getAdmin(config.accounts.authority),
                 feeWallet: config.accounts.feeWallet,
+                tokenProgram,
                 debtController: PDA.getDebtController(),
                 globalSettings: PDA.getGlobalSettings(),
-                currencyTokenProgram,
-                collateralTokenProgram,
                 systemProgram: SystemProgram.programId
             },
             args: {
@@ -98,8 +77,9 @@ const openShortPositionConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openShortPosition(
+        program.methods.updateLongPosition(
             args.nonce || 0,
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
@@ -110,16 +90,16 @@ const openShortPositionConfig: BaseMethodConfig<
         )
 };
 
-export async function createOpenShortPositionInstruction(
+export async function createUpdateLongPositionInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
     accounts: OpenPositionAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: openShortPositionConfig,
+        config: updateLongPositionConfig,
         args,
         mintCache
     }) as Promise<TransactionInstruction[]>;

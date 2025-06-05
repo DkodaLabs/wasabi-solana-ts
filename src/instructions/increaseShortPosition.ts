@@ -6,29 +6,9 @@ import { getTokenProgram, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
+import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
 
-export type OpenShortPositionInstructionAccounts = {
-    owner: PublicKey;
-    ownerTargetCurrencyAccount: PublicKey;
-    lpVault: PublicKey;
-    vault: PublicKey;
-    pool: PublicKey;
-    currencyVault: PublicKey;
-    collateralVault: PublicKey;
-    currency: PublicKey;
-    collateral: PublicKey;
-    position: PublicKey;
-    authority: PublicKey;
-    permission: PublicKey;
-    feeWallet: PublicKey;
-    debtController: PublicKey;
-    globalSettings: PublicKey;
-    currencyTokenProgram: PublicKey;
-    collateralTokenProgram: PublicKey;
-    systemProgram: PublicKey;
-};
-
-const openShortPositionConfig: BaseMethodConfig<
+const increaseShortPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
     OpenPositionAccounts,
     OpenShortPositionInstructionAccounts
@@ -79,7 +59,7 @@ const openShortPositionConfig: BaseMethodConfig<
                 ),
                 currency: config.accounts.currency,
                 collateral: config.accounts.collateral,
-                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+                position: new PublicKey(config.args.positionId),
                 authority: config.accounts.authority,
                 permission: PDA.getAdmin(config.accounts.authority),
                 feeWallet: config.accounts.feeWallet,
@@ -98,7 +78,7 @@ const openShortPositionConfig: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openShortPosition(
+        program.methods.increaseShortPosition(
             args.nonce || 0,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
@@ -110,16 +90,16 @@ const openShortPositionConfig: BaseMethodConfig<
         )
 };
 
-export async function createOpenShortPositionInstruction(
+export async function createIncreaseShortPositionInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
     accounts: OpenPositionAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: openShortPositionConfig,
+        config: increaseShortPositionConfig,
         args,
         mintCache
     }) as Promise<TransactionInstruction[]>;

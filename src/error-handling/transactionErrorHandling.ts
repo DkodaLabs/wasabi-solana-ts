@@ -2,7 +2,8 @@ import { IDL as JupiterIDL } from './jupiter';
 import {
     SendTransactionError,
     VersionedTransaction,
-    TransactionInstruction
+    TransactionInstruction,
+    SystemProgram
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
@@ -145,6 +146,41 @@ const matchComputeError = (message: string): ErrorObject | undefined => {
             expected: false,
             program: 'ComputeBudget'
         };
+    }
+
+    return undefined;
+};
+
+export const parseErrorLogs = (logs: string[] | undefined): ErrorObject | undefined => {
+    if (!logs || logs.length < 1) {
+        return undefined;
+    }
+
+    for (const log of logs) {
+        const panicRegex = /panicked at/;
+
+        const didPanic = panicRegex.test(log);
+
+        if (didPanic) {
+            return {
+                code: 0,
+                name: 'TokenAccountNotInitialized',
+                msg: 'An intermediary token account is not initialized',
+                expected: false,
+                program: 'Wasabi'
+            }
+        }
+
+        const match = log.match(/^Program ([a-zA-Z0-9]+) failed: (?:.*?): (0x[0-9a-fA-F]+)$/);
+        if (match) {
+            if (match[1].localeCompare(jupiterProgramId) === 0) {
+                return findJupiterError(parseInt(match[2]));
+            } else if (match[1].localeCompare(wasabiProgramId) === 0) {
+                return findWasabiError(parseInt(match[2]));
+            } else if (match[1].localeCompare(SystemProgram.programId.toBase58())) {
+                return parseSystemError(parseInt(match[2]), SystemProgram.programId.toBase58());
+            }
+        }
     }
 
     return undefined;

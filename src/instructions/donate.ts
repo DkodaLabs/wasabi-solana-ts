@@ -6,7 +6,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA, handleMint, getPermission } from '../utils';
+import { PDA, handleMint, getPermission, MintCache } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -79,11 +79,13 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: donateConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

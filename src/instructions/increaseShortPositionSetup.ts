@@ -2,9 +2,8 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupAccounts,
     OpenPositionSetupArgs,
-    OpenShortPositionSetupInstructionAccounts
 } from './openPosition';
-import { getPermission, handlePaymentTokenMint, PDA } from '../utils';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PublicKey,
@@ -14,6 +13,7 @@ import {
 } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { OpenShortPositionSetupInstructionAccounts } from './openShortPosition';
 
 const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -118,12 +118,14 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
 export async function createIncreaseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
-    accounts: OpenPositionSetupAccounts
+    accounts: OpenPositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: increaseShortPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
