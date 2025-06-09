@@ -11,6 +11,7 @@ import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
 import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
 import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { handleOrdersCheck } from './closePosition';
 
 type LiquidateInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -31,15 +32,18 @@ const liquidatePositionConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
-            await handleCloseTokenAccounts(
-                {
-                    program: config.program,
-                    accounts: { owner: config.accounts.owner },
-                    mintCache: config.mintCache
-                },
-                poolAccount
-            );
+        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
+            await Promise.all([
+                handleCloseTokenAccounts(
+                    {
+                        program: config.program,
+                        accounts: { owner: config.accounts.owner },
+                        mintCache: config.mintCache
+                    },
+                    poolAccount
+                ),
+                handleOrdersCheck(config.program, config.accounts.position, 'LIQUIDATION')
+            ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -82,7 +86,7 @@ const liquidatePositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: setupIx,
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx,
             remainingAccounts
         };

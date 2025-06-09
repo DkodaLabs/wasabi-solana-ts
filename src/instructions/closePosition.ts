@@ -218,7 +218,7 @@ async function fetchVaultAddress(
 }
 
 // Close order when exiting positions if they exist
-async function handleOrdersCheck(
+export async function handleOrdersCheck(
     program: Program<WasabiSolana>,
     positionAddress: PublicKey,
     closeType?: CloseType

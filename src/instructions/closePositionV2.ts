@@ -5,6 +5,7 @@ import { BN, Program } from '@coral-xyz/anchor';
 import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
+import { handleOrdersCheck, CloseType } from './closePosition';
 
 export type ClosePositionArgs = {
     minTargetAmount: number | bigint;
@@ -66,15 +67,21 @@ const closePostionConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
-            await handleCloseTokenAccounts(
+        const [
+            { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram },
+            orderIxes
+        ] = await Promise.all([
+            handleCloseTokenAccounts(
                 {
                     program: config.program,
                     accounts: { owner: config.accounts.owner },
                     mintCache: config.mintCache
                 },
                 poolAccount
-            );
+            ),
+            handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
+        ]);
+
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -121,7 +128,7 @@ const closePostionConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: setupIx,
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx,
             remainingAccounts
         };
