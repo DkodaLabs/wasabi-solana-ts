@@ -2,14 +2,16 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     ClosePositionAccounts,
     ClosePositionArgs,
-    ClosePositionInstructionAccounts, ClosePositionInternalInstructionAccounts
+    ClosePositionInstructionAccounts,
+    ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import {SystemProgram, TransactionInstruction} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { PDA } from '../utils';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
+import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { handleOrdersCheck } from './closePosition';
 
 type LiquidateInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -27,36 +29,34 @@ const liquidatePositionConfig: BaseMethodConfig<
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
-        const [currencyAccount, collateralAccount] =
-            await config.program.provider.connection.getMultipleAccountsInfo([
-                poolAccount.currency,
-                poolAccount.collateral
+        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
+            await Promise.all([
+                handleCloseTokenAccounts(
+                    {
+                        program: config.program,
+                        accounts: { owner: config.accounts.owner },
+                        mintCache: config.mintCache
+                    },
+                    poolAccount
+                ),
+                handleOrdersCheck(config.program, config.accounts.position, 'LIQUIDATION')
             ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
-        const currencyTokenProgram = currencyAccount.owner;
-        const collateralTokenProgram = collateralAccount.owner;
 
         return {
             accounts: {
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: poolAccount.isLongPool
-                        ? getAssociatedTokenAddressSync(
-                              poolAccount.currency,
-                              config.accounts.owner,
-                              false,
-                              currencyTokenProgram
-                          )
-                        : getAssociatedTokenAddressSync(
-                              poolAccount.collateral,
-                              config.accounts.owner,
-                              false,
-                              collateralTokenProgram
-                          ),
+                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
+                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                        config.accounts.owner,
+                        false,
+                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                    ),
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -86,6 +86,8 @@ const liquidatePositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },
@@ -103,12 +105,14 @@ const liquidatePositionConfig: BaseMethodConfig<
 export async function createLiquidatePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

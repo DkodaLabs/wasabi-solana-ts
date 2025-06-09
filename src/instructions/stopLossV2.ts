@@ -4,12 +4,13 @@ import {
     ClosePositionArgs,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import {PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA } from '../utils';
+import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
+import { handleOrdersCheck } from './closePosition';
 
 type StopLossInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -29,37 +30,35 @@ const stopLossConfig: BaseMethodConfig<
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
-        const [currencyAccount, collateralAccount] =
-            await config.program.provider.connection.getMultipleAccountsInfo([
-                poolAccount.currency,
-                poolAccount.collateral
+        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
+            await Promise.all([
+                handleCloseTokenAccounts(
+                    {
+                        program: config.program,
+                        accounts: { owner: config.accounts.owner },
+                        mintCache: config.mintCache
+                    },
+                    poolAccount
+                ),
+                handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS')
             ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
-        const currencyTokenProgram = currencyAccount.owner;
-        const collateralTokenProgram = collateralAccount.owner;
 
         return {
             accounts: {
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: poolAccount.isLongPool
-                        ? getAssociatedTokenAddressSync(
-                              poolAccount.currency,
-                              config.accounts.owner,
-                              false,
-                              currencyTokenProgram
-                          )
-                        : getAssociatedTokenAddressSync(
-                              poolAccount.collateral,
-                              config.accounts.owner,
-                              false,
-                              collateralTokenProgram
-                          ),
+                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
+                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                        config.accounts.owner,
+                        false,
+                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                    ),
                     lpVault: PDA.getLpVault(poolAccount.currency),
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -89,6 +88,8 @@ const stopLossConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },
@@ -106,12 +107,14 @@ const stopLossConfig: BaseMethodConfig<
 export async function createStopLossInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
-    accounts: ClosePositionAccounts
+    accounts: ClosePositionAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: stopLossConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
