@@ -95,6 +95,7 @@ const takeProfitConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.takeProfit(
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.interest),
             new BN(args.executionFee),

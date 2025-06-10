@@ -134,6 +134,7 @@ const closePostionConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.closePosition(
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.interest),
             new BN(args.executionFee),
