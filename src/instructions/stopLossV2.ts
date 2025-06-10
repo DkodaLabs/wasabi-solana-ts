@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { MintCache, PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { handleOrdersCheck } from './closePosition';
 
 type StopLossInstructionAccounts = {
@@ -33,37 +33,32 @@ const stopLossConfig: BaseMethodConfig<
             throw new Error('Position does not exist');
         }
 
-        const [[currencyAccount, collateralAccount], orderIxes] =
+        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
             await Promise.all([
-                config.program.provider.connection.getMultipleAccountsInfo([
-                    poolAccount.currency,
-                    poolAccount.collateral
-                ]),
+                handleCloseTokenAccounts(
+                    {
+                        program: config.program,
+                        accounts: { owner: config.accounts.owner },
+                        mintCache: config.mintCache
+                    },
+                    poolAccount
+                ),
                 handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS')
             ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
-        const currencyTokenProgram = currencyAccount.owner;
-        const collateralTokenProgram = collateralAccount.owner;
 
         return {
             accounts: {
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: poolAccount.isLongPool
-                        ? getAssociatedTokenAddressSync(
-                            poolAccount.currency,
-                            config.accounts.owner,
-                            false,
-                            currencyTokenProgram
-                        )
-                        : getAssociatedTokenAddressSync(
-                            poolAccount.collateral,
-                            config.accounts.owner,
-                            false,
-                            collateralTokenProgram
-                        ),
+                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
+                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
+                        config.accounts.owner,
+                        false,
+                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
+                    ),
                     lpVault: PDA.getLpVault(poolAccount.currency),
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -93,7 +88,8 @@ const stopLossConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: orderIxes,
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },

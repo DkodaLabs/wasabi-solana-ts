@@ -24,8 +24,8 @@ const updateLongPositionConfig: BaseMethodConfig<
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
 
-        if (!config.args.nonce) {
-            throw new Error('Nonce is required for `OpenLongPosition`');
+        if (!config.args.positionId) {
+            throw new Error('positionId is required for `IncreaseLongPosition`');
         }
 
         return {
@@ -78,8 +78,6 @@ const updateLongPositionConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.updateLongPosition(
-            args.nonce || 0,
-            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),

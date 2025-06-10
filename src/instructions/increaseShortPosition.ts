@@ -24,8 +24,8 @@ const increaseShortPositionConfig: BaseMethodConfig<
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
-        if (!config.args.nonce) {
-            throw new Error('Nonce is required for `OpenLongPosition`');
+        if (!config.args.positionId) {
+            throw new Error('positionId is required for `IncreaseShortPosition`');
         }
 
         return {
@@ -79,7 +79,6 @@ const increaseShortPositionConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.increaseShortPosition(
-            args.nonce || 0,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
