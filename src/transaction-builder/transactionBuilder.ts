@@ -1,13 +1,13 @@
 import {
+    AddressLookupTableAccount,
+    Blockhash,
     Commitment,
     ComputeBudgetProgram,
     Connection,
     PublicKey,
     TransactionInstruction,
     TransactionMessage,
-    VersionedTransaction,
-    AddressLookupTableAccount,
-    Blockhash
+    VersionedTransaction
 } from '@solana/web3.js';
 import {
     ComputeBudgetConfig,
@@ -16,6 +16,7 @@ import {
     DEFAULT_CONFIG
 } from '../compute-budget';
 import { SimulationError } from '../error-handling';
+import { NozomiClient } from '../solana-clients/nozomiClient';
 
 export class TransactionBuilder {
     private payerKey!: PublicKey;
@@ -111,7 +112,7 @@ export class TransactionBuilder {
 
     private createVersionedTransaction(
         recentBlockhash: Blockhash,
-        instructions: TransactionInstruction[],
+        instructions: TransactionInstruction[]
     ): VersionedTransaction {
         return new VersionedTransaction(
             new TransactionMessage({
@@ -140,10 +141,7 @@ export class TransactionBuilder {
             ? this.recentBlockhash
             : (await this.connection.getLatestBlockhash(this.commitment)).blockhash;
 
-        let transaction = this.createVersionedTransaction(
-            blockhash,
-            ixesWithComputeBudget,
-        );
+        let transaction = this.createVersionedTransaction(blockhash, ixesWithComputeBudget);
 
         // Strip limit from tip transactions
         if (this.stripLimit) {
@@ -164,17 +162,21 @@ export class TransactionBuilder {
             // Adjust compute limit unless specified
             if (this.computeBudgetConfig?.limit === undefined && simResult.value.unitsConsumed) {
                 const actualUnitsConsumed = simResult.value.unitsConsumed;
-                const actualUnitsConsumedWithBuffer = Math.ceil(actualUnitsConsumed * this.limitBuffer);
+                const actualUnitsConsumedWithBuffer = Math.ceil(
+                    actualUnitsConsumed * this.limitBuffer
+                );
                 ixesWithComputeBudget[0] = ComputeBudgetProgram.setComputeUnitLimit({
                     units: actualUnitsConsumedWithBuffer
                 });
 
-                transaction = this.createVersionedTransaction(
-                    blockhash,
-                    ixesWithComputeBudget,
-                );
+                transaction = this.createVersionedTransaction(blockhash, ixesWithComputeBudget);
             }
-        } 
+
+            if (this.computeBudgetConfig?.destination === 'NOZOMI') {
+                const ixesWithTip = NozomiClient.prepareInstructions(ixesWithComputeBudget, this.payerKey);
+                transaction = this.createVersionedTransaction(blockhash, ixesWithTip);
+            }
+        }
 
         return transaction;
     }
