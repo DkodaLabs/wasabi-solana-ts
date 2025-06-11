@@ -1,14 +1,14 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
-    OpenLongPositionSetupInstructionAccounts,
     OpenPositionSetupAccounts,
     OpenPositionSetupArgs
 } from './openPosition';
-import { getPermission, handlePaymentTokenMint, PDA } from '../utils';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { OpenLongPositionSetupInstructionAccounts } from './openLongPosition';
 
 const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -115,11 +115,13 @@ export async function createIncreaseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: increaseLongPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

@@ -2,27 +2,58 @@ import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
     SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY
+    SYSVAR_INSTRUCTIONS_PUBKEY,
+    PublicKey
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
-    OpenPositionCleanupAccounts,
-    OpenShortPositionSetupInstructionAccounts, OpenShortPositionCleanupInstructionAccounts
+    OpenPositionCleanupAccounts
 } from './openPosition';
-import {
-    PDA,
-    getPermission,
-    handleMintsAndTokenProgram,
-    handlePaymentTokenMint
-} from '../utils';
+import { PDA, getPermission, handleMintsAndTokenProgram, handlePaymentTokenMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
+
+export type OpenShortPositionSetupInstructionAccounts = {
+    owner: PublicKey;
+    ownerCurrencyAccount: PublicKey;
+    ownerTargetCurrencyAccount: PublicKey;
+    lpVault: PublicKey;
+    vault: PublicKey;
+    pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    currency: PublicKey;
+    collateral: PublicKey;
+    openPositionRequest: PublicKey;
+    position: PublicKey;
+    authority: PublicKey;
+    permission: PublicKey;
+    feeWallet: PublicKey;
+    feeWalletAta: PublicKey;
+    globalSettings: PublicKey;
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+    systemProgram: PublicKey;
+    sysvarInfo: PublicKey;
+};
+
+export type OpenShortPositionCleanupInstructionAccounts = {
+    owner: PublicKey;
+    position: PublicKey;
+    pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    lpVault: PublicKey;
+    vault: PublicKey;
+    collateral: PublicKey;
+    currency: PublicKey;
+    openPositionRequest: PublicKey;
+    debtController: PublicKey;
+    tokenProgram: PublicKey;
+};
 
 const openShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -44,8 +75,10 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee)
+            Number(config.args.downPayment) + Number(config.args.fee),
+            config.mintCache
         );
+
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
@@ -137,8 +170,9 @@ const openShortPositionCleanupConfig: BaseMethodConfig<
                 config.program.provider.connection,
                 config.accounts.currency,
                 config.accounts.collateral,
-                config.accounts.pool,
+                { owner: config.accounts.pool, mintCache: config.mintCache }
             );
+
         const lpVault = PDA.getLpVault(config.accounts.currency);
 
         return {
@@ -180,22 +214,26 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openShortPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts
+    accounts: OpenPositionCleanupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: openShortPositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

@@ -1,5 +1,10 @@
 import { Program } from '@coral-xyz/anchor';
-import { TransactionInstruction, PublicKey, SystemProgram } from '@solana/web3.js';
+import {
+    TransactionInstruction,
+    PublicKey,
+    SystemProgram,
+    SYSVAR_INSTRUCTIONS_PUBKEY
+} from '@solana/web3.js';
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID,
@@ -8,7 +13,7 @@ import {
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { PDA, getPermission, handleMint } from '../utils';
+import { METADATA_PROGRAM_ID, PDA, getPermission, handleMint } from '../utils';
 
 export type InitLpVaultArgs = {
     name: string;
@@ -29,10 +34,13 @@ type InitLpVaultInstructionAccounts = {
     vault: PublicKey;
     assetMint: PublicKey;
     sharesMint: PublicKey;
+    sharesMetadata: PublicKey;
     assetTokenProgram: PublicKey;
     sharesTokenProgram: PublicKey;
+    tokenMetadataProgram: PublicKey;
     associatedTokenProgram: PublicKey;
     systemProgram: PublicKey;
+    sysvarInstructions: PublicKey;
 };
 
 export const initLpVaultConfig: BaseMethodConfig<
@@ -43,10 +51,13 @@ export const initLpVaultConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
         const { mint, tokenProgram } = await handleMint(
             config.program.provider.connection,
-            config.accounts.assetMint
+            config.accounts.assetMint,
+            { mintCache: config.mintCache }
         );
         const lpVault = PDA.getLpVault(mint);
         const vault = getAssociatedTokenAddressSync(mint, lpVault, true, tokenProgram);
+        const sharesMint = PDA.getSharesMint(lpVault, config.accounts.assetMint);
+        const sharesMetadata = PDA.getSharesMetadata(sharesMint);
 
         return {
             accounts: {
@@ -54,13 +65,16 @@ export const initLpVaultConfig: BaseMethodConfig<
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.accounts.admin),
                 lpVault,
-                assetMint: config.accounts.assetMint,
                 vault,
-                sharesMint: PDA.getSharesMint(lpVault, config.accounts.assetMint),
+                assetMint: config.accounts.assetMint,
+                sharesMint,
+                sharesMetadata,
                 assetTokenProgram: tokenProgram,
                 sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                tokenMetadataProgram: METADATA_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
+                systemProgram: SystemProgram.programId,
+                sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: config.args,
             setup: [

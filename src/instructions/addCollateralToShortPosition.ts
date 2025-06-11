@@ -3,15 +3,15 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA } from '../utils';
+import { MintCache, PDA } from '../utils';
 
-type AddCollateralArgs = {
+export type AddCollateralArgs = {
     downPayment: number;
     fee: number;
     expiration: number;
 };
 
-type AddCollateralAccounts = {
+export type AddCollateralAccounts = {
     owner: PublicKey;
     position: PublicKey;
     feeWallet: PublicKey;
@@ -88,12 +88,14 @@ const addCollateralConfig: BaseMethodConfig<
 export async function createAddCollateralToShortPositionInstruction(
     program: Program<WasabiSolana>,
     args: AddCollateralArgs,
-    accounts: AddCollateralAccounts
+    accounts: AddCollateralAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: addCollateralConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

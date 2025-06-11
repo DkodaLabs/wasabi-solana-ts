@@ -10,12 +10,9 @@ import {
     getClosePositionCleanupInstructionAccounts,
     transformArgs
 } from './closePosition';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils';
 
 type CloseLongPositionSetupInstructionAccounts = {
     owner: PublicKey;
@@ -36,7 +33,8 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'MARKET'
+            'MARKET',
+            config.mintCache
         );
 
         return {
@@ -88,22 +86,26 @@ export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeLongPositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createCloseLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts
+    accounts: ClosePositionCleanupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: closeLongPositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

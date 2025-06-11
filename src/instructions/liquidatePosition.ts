@@ -1,10 +1,6 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import { TransactionInstruction } from '@solana/web3.js';
-import {
-    BaseMethodConfig,
-    ConfigArgs,
-    handleMethodCall,
-} from '../base';
+import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     ClosePositionSetupArgs,
     ClosePositionSetupAccounts,
@@ -16,6 +12,7 @@ import {
     transformArgs
 } from './closePosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils';
 
 type LiquidatePositionSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts;
@@ -84,22 +81,26 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionSetupConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }
 
 export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
-    accounts: ClosePositionCleanupAccounts
+    accounts: ClosePositionCleanupAccounts,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionCleanupConfig,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

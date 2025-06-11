@@ -6,7 +6,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA, handleMint, getPermission } from '../utils';
+import { PDA, handleMint, getPermission, MintCache } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -35,14 +35,18 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
-        const [{ mint, tokenProgram, setupIx, cleanupIx }, permission] = await Promise.all([handleMint(
-            config.program.provider.connection,
-            config.accounts.currency,
-            config.program.provider.publicKey,
-            'wrap',
-            config.args.amount
-        ),
-        getPermission(config.program, config.program.provider.publicKey),
+        const [{ mint, tokenProgram, setupIx, cleanupIx }, permission] = await Promise.all([
+            handleMint(
+                config.program.provider.connection,
+                config.accounts.currency,
+                {
+                    owner: config.program.provider.publicKey,
+                    wrapMode: 'wrap',
+                    amount: config.args.amount,
+                    mintCache: config.mintCache
+                }
+            ),
+            getPermission(config.program, config.program.provider.publicKey),
         ]);
 
         const lpVault = PDA.getLpVault(mint);
@@ -75,11 +79,13 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: donateConfig,
-        args
+        args,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

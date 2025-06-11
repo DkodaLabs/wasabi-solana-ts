@@ -497,6 +497,201 @@
       ]
     },
     {
+      "name": "close_position",
+      "discriminator": [
+        123,
+        134,
+        81,
+        0,
+        49,
+        68,
+        98,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "close_position",
+          "accounts": [
+            {
+              "name": "owner",
+              "writable": true,
+              "relations": [
+                "owner_payout_account"
+              ]
+            },
+            {
+              "name": "owner_payout_account",
+              "writable": true
+            },
+            {
+              "name": "lp_vault",
+              "writable": true,
+              "relations": [
+                "position"
+              ]
+            },
+            {
+              "name": "vault",
+              "writable": true,
+              "relations": [
+                "lp_vault"
+              ]
+            },
+            {
+              "name": "pool"
+            },
+            {
+              "name": "currency_vault",
+              "writable": true,
+              "relations": [
+                "pool"
+              ]
+            },
+            {
+              "name": "collateral_vault",
+              "writable": true,
+              "relations": [
+                "pool",
+                "position"
+              ]
+            },
+            {
+              "name": "currency"
+            },
+            {
+              "name": "collateral"
+            },
+            {
+              "name": "position",
+              "writable": true
+            },
+            {
+              "name": "authority",
+              "writable": true,
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
+              "name": "fee_wallet",
+              "writable": true
+            },
+            {
+              "name": "liquidation_wallet",
+              "writable": true
+            },
+            {
+              "name": "debt_controller",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "global_settings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "currency_token_program"
+            },
+            {
+              "name": "collateral_token_program"
+            },
+            {
+              "name": "system_program",
+              "address": "11111111111111111111111111111111"
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "close_short_position_cleanup",
       "discriminator": [
         10,
@@ -1919,6 +2114,739 @@
       ]
     },
     {
+      "name": "increase_long_position_setup",
+      "discriminator": [
+        192,
+        83,
+        234,
+        53,
+        87,
+        233,
+        121,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_currency_account",
+          "docs": [
+            "The account that holds the owner's quote currency"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault",
+          "docs": [
+            "The LP Vault that the user will borrow from",
+            "For long positions, this is the `currency` i.e. the `quote`"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account."
+          ],
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The LongPool that owns the Position"
+          ]
+        },
+        {
+          "name": "collateral_vault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "open_position_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  101,
+                  110,
+                  95,
+                  112,
+                  111,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "increase_short_position",
+      "discriminator": [
+        197,
+        22,
+        116,
+        176,
+        227,
+        104,
+        20,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_target_currency_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "collateral_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currency_token_program"
+        },
+        {
+          "name": "collateral_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "increase_short_position_setup",
+      "discriminator": [
+        91,
+        77,
+        250,
+        204,
+        185,
+        50,
+        57,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_target_currency_account",
+          "docs": [
+            "The account that holds the owner's target currency"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "collateral_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault",
+          "docs": [
+            "The LP Vault that the user will borrow from"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account."
+          ],
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The ShortPool that owns the Position"
+          ]
+        },
+        {
+          "name": "collateral_vault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "open_position_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  101,
+                  110,
+                  95,
+                  112,
+                  111,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currency_token_program"
+        },
+        {
+          "name": "collateral_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_info",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "init_debt_controller",
       "discriminator": [
         172,
@@ -3027,6 +3955,192 @@
       "args": []
     },
     {
+      "name": "liquidate_position",
+      "discriminator": [
+        187,
+        74,
+        229,
+        149,
+        102,
+        81,
+        221,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "close_position",
+          "accounts": [
+            {
+              "name": "owner",
+              "writable": true,
+              "relations": [
+                "owner_payout_account"
+              ]
+            },
+            {
+              "name": "owner_payout_account",
+              "writable": true
+            },
+            {
+              "name": "lp_vault",
+              "writable": true,
+              "relations": [
+                "position"
+              ]
+            },
+            {
+              "name": "vault",
+              "writable": true,
+              "relations": [
+                "lp_vault"
+              ]
+            },
+            {
+              "name": "pool"
+            },
+            {
+              "name": "currency_vault",
+              "writable": true,
+              "relations": [
+                "pool"
+              ]
+            },
+            {
+              "name": "collateral_vault",
+              "writable": true,
+              "relations": [
+                "pool",
+                "position"
+              ]
+            },
+            {
+              "name": "currency"
+            },
+            {
+              "name": "collateral"
+            },
+            {
+              "name": "position",
+              "writable": true
+            },
+            {
+              "name": "authority",
+              "writable": true,
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
+              "name": "fee_wallet",
+              "writable": true
+            },
+            {
+              "name": "liquidation_wallet",
+              "writable": true
+            },
+            {
+              "name": "debt_controller",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "global_settings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "currency_token_program"
+            },
+            {
+              "name": "collateral_token_program"
+            },
+            {
+              "name": "system_program",
+              "address": "11111111111111111111111111111111"
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "liquidate_position_cleanup",
       "discriminator": [
         185,
@@ -3337,6 +4451,267 @@
         {
           "name": "expiration",
           "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "open_long_position",
+      "discriminator": [
+        246,
+        23,
+        177,
+        9,
+        228,
+        202,
+        219,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_currency_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u16"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
         }
       ]
     },
@@ -3710,6 +5085,270 @@
         {
           "name": "expiration",
           "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "open_short_position",
+      "discriminator": [
+        101,
+        142,
+        41,
+        201,
+        192,
+        88,
+        35,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_target_currency_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "collateral_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "lp_vault"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currency_token_program"
+        },
+        {
+          "name": "collateral_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u16"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
         }
       ]
     },
@@ -4994,6 +6633,229 @@
       ]
     },
     {
+      "name": "stop_loss",
+      "discriminator": [
+        184,
+        119,
+        157,
+        75,
+        46,
+        255,
+        173,
+        203
+      ],
+      "accounts": [
+        {
+          "name": "close_position",
+          "accounts": [
+            {
+              "name": "owner",
+              "writable": true,
+              "relations": [
+                "owner_payout_account"
+              ]
+            },
+            {
+              "name": "owner_payout_account",
+              "writable": true
+            },
+            {
+              "name": "lp_vault",
+              "writable": true,
+              "relations": [
+                "position"
+              ]
+            },
+            {
+              "name": "vault",
+              "writable": true,
+              "relations": [
+                "lp_vault"
+              ]
+            },
+            {
+              "name": "pool"
+            },
+            {
+              "name": "currency_vault",
+              "writable": true,
+              "relations": [
+                "pool"
+              ]
+            },
+            {
+              "name": "collateral_vault",
+              "writable": true,
+              "relations": [
+                "pool",
+                "position"
+              ]
+            },
+            {
+              "name": "currency"
+            },
+            {
+              "name": "collateral"
+            },
+            {
+              "name": "position",
+              "writable": true
+            },
+            {
+              "name": "authority",
+              "writable": true,
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
+              "name": "fee_wallet",
+              "writable": true
+            },
+            {
+              "name": "liquidation_wallet",
+              "writable": true
+            },
+            {
+              "name": "debt_controller",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "global_settings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "currency_token_program"
+            },
+            {
+              "name": "collateral_token_program"
+            },
+            {
+              "name": "system_program",
+              "address": "11111111111111111111111111111111"
+            }
+          ]
+        },
+        {
+          "name": "stop_loss_order",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  112,
+                  95,
+                  108,
+                  111,
+                  115,
+                  115,
+                  95,
+                  111,
+                  114,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "close_position.position",
+                "account": "ClosePositionInternal"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "stop_loss_cleanup",
       "discriminator": [
         144,
@@ -5972,6 +7834,231 @@
       ]
     },
     {
+      "name": "take_profit",
+      "discriminator": [
+        66,
+        6,
+        244,
+        211,
+        190,
+        249,
+        180,
+        185
+      ],
+      "accounts": [
+        {
+          "name": "close_position",
+          "accounts": [
+            {
+              "name": "owner",
+              "writable": true,
+              "relations": [
+                "owner_payout_account"
+              ]
+            },
+            {
+              "name": "owner_payout_account",
+              "writable": true
+            },
+            {
+              "name": "lp_vault",
+              "writable": true,
+              "relations": [
+                "position"
+              ]
+            },
+            {
+              "name": "vault",
+              "writable": true,
+              "relations": [
+                "lp_vault"
+              ]
+            },
+            {
+              "name": "pool"
+            },
+            {
+              "name": "currency_vault",
+              "writable": true,
+              "relations": [
+                "pool"
+              ]
+            },
+            {
+              "name": "collateral_vault",
+              "writable": true,
+              "relations": [
+                "pool",
+                "position"
+              ]
+            },
+            {
+              "name": "currency"
+            },
+            {
+              "name": "collateral"
+            },
+            {
+              "name": "position",
+              "writable": true
+            },
+            {
+              "name": "authority",
+              "writable": true,
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
+              "name": "fee_wallet",
+              "writable": true
+            },
+            {
+              "name": "liquidation_wallet",
+              "writable": true
+            },
+            {
+              "name": "debt_controller",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "global_settings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "currency_token_program"
+            },
+            {
+              "name": "collateral_token_program"
+            },
+            {
+              "name": "system_program",
+              "address": "11111111111111111111111111111111"
+            }
+          ]
+        },
+        {
+          "name": "take_profit_order",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  116,
+                  95,
+                  111,
+                  114,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "close_position.position",
+                "account": "ClosePositionInternal"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "execution_fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "take_profit_cleanup",
       "discriminator": [
         121,
@@ -6321,6 +8408,234 @@
         {
           "name": "expiration",
           "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "update_long_position",
+      "discriminator": [
+        247,
+        217,
+        253,
+        122,
+        241,
+        234,
+        108,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner_currency_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lp_vault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_target_amount",
+          "type": "u64"
+        },
+        {
+          "name": "down_payment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
         }
       ]
     },
@@ -7172,16 +9487,21 @@
     },
     {
       "code": 6037,
+      "name": "LiquidationWalletNotSet",
+      "msg": "Liquidation wallet was not provided"
+    },
+    {
+      "code": 6038,
       "name": "TooMuchCollateralSpent",
       "msg": "Too much collateral spent"
     },
     {
-      "code": 6038,
+      "code": 6039,
       "name": "InvalidOrder",
       "msg": "Invalid order"
     },
     {
-      "code": 6039,
+      "code": 6040,
       "name": "InsufficientPrincipalRepaid",
       "msg": "Insufficient principal repaid"
     }
@@ -7448,6 +9768,34 @@
               "Bit mapping of enabled features. Status allow disabling trading, lping, etc."
             ],
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Hop",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "data_start_idx",
+            "type": "u8"
+          },
+          {
+            "name": "data_size",
+            "type": "u8"
+          },
+          {
+            "name": "account_start_idx",
+            "type": "u8"
+          },
+          {
+            "name": "num_accounts",
+            "type": "u8"
           }
         ]
       }
@@ -8063,6 +10411,24 @@
           {
             "name": "fees_to_be_paid",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Route",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hops",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Hop"
+                }
+              }
+            }
           }
         ]
       }

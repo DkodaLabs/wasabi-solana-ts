@@ -2,13 +2,16 @@ import { Program } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
     TransactionSignature,
-    PublicKey
+    PublicKey,
+    AccountMeta
 } from '@solana/web3.js';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
 
 export type ProcessResult<T> = {
     accounts: T;
     args?: any;
+    remainingAccounts?: AccountMeta[];
     setup?: TransactionInstruction[];
     cleanup?: TransactionInstruction[];
 };
@@ -17,6 +20,7 @@ export type ConfigArgs<TArgs, TAccounts> = {
     program: Program<WasabiSolana>;
     accounts: TAccounts;
     args?: TArgs;
+    mintCache?: MintCache;
 };
 
 export type MethodCallArgs<TArgs, TAccounts, TProgramAccounts> = {
@@ -38,11 +42,18 @@ export async function handleMethodCall<TArgs = void, TAccounts = any, TProgramAc
     const processed = await args.config.process({
         program: args.program,
         accounts: args.accounts,
-        args: args.args
+        args: args.args,
+        mintCache: args.mintCache,
     });
     const methodBuilder = args.config.getMethod(args.program)(processed.args);
 
-    const builder = methodBuilder.accountsStrict(processed.accounts);
+    const accounts = methodBuilder.accounts(processed.accounts);
+
+    let builder = methodBuilder.accountsStrict(accounts);
+
+    if (processed.remainingAccounts && processed.remainingAccounts.length > 0) {
+        builder = builder.remainingAccounts(processed.remainingAccounts);
+    }
 
     return builder.instruction().then((ix: TransactionInstruction) => {
         const ixes = [

@@ -17,6 +17,7 @@ import {
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import { MintCache } from '../utils/mintCache';
 
 export type CloseType = 'MARKET' | 'LIQUIDATION' | 'TAKE_PROFIT' | 'STOP_LOSS';
 
@@ -145,7 +146,8 @@ export function transformArgs(args: ClosePositionSetupArgs): {
 export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts,
-    closeType?: CloseType
+    closeType?: CloseType,
+    mintCache?: MintCache
 ): Promise<CpsuAndIx> {
     const [
         { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram },
@@ -155,7 +157,8 @@ export async function getClosePositionSetupInstructionAccounts(
         handleMintsAndTokenProgram(
             program.provider.connection,
             accounts.currency,
-            accounts.collateral
+            accounts.collateral,
+            { mintCache }
         ),
         program.account.position.fetch(accounts.position).then((pos) => pos.trader),
         handleOrdersCheck(program, accounts.position, closeType)
@@ -219,7 +222,7 @@ async function fetchVaultAddress(
 }
 
 // Close order when exiting positions if they exist
-async function handleOrdersCheck(
+export async function handleOrdersCheck(
     program: Program<WasabiSolana>,
     positionAddress: PublicKey,
     closeType?: CloseType
