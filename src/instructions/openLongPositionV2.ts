@@ -35,10 +35,71 @@ const openLongPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const [tokenProgram, collateralTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral)
-        ]);
+        let setupIx: TransactionInstruction[] = [];
+        const cleanupIx: TransactionInstruction[] = [];
+
+        let ownerCurrencyAta: PublicKey | undefined = undefined;
+        let fetchOwnerCurrencyAtaPromise: Promise<any> | undefined = undefined;
+
+        const currencyIsSol = config.accounts.currency.equals(NATIVE_MINT);
+        if (currencyIsSol) {
+            ownerCurrencyAta = getAssociatedTokenAddressSync(
+                NATIVE_MINT,
+                config.accounts.owner,
+                false,
+                TOKEN_PROGRAM_ID
+            );
+
+            setupIx.push(
+                SystemProgram.transfer({
+                    fromPubkey: config.accounts.owner,
+                    toPubkey: ownerCurrencyAta,
+                    lamports: Number(config.args.downPayment) + Number(config.args.fee)
+                })
+            );
+
+            setupIx.push(createSyncNativeInstruction(ownerCurrencyAta, TOKEN_PROGRAM_ID));
+
+            fetchOwnerCurrencyAtaPromise =
+                config.program.provider.connection.getAccountInfo(ownerCurrencyAta);
+        }
+
+        const promises: Promise<any>[] = [
+            config.mintCache.getMintInfos([config.accounts.currency, config.accounts.collateral])
+        ];
+
+        if (fetchOwnerCurrencyAtaPromise) {
+            promises.push(fetchOwnerCurrencyAtaPromise);
+        }
+
+        const results = await Promise.all(promises);
+        const mints = results[0];
+        const ownerCurrencyAtaInfo = results.length > 1 ? results[1] : null;
+
+        const tokenProgram = mints.get(config.accounts.currency).owner;
+        const collateralTokenProgram = mints.get(config.accounts.collateral).owner;
+
+        if (currencyIsSol && ownerCurrencyAta && !ownerCurrencyAtaInfo) {
+            setupIx = [
+                createAssociatedTokenAccountIdempotentInstruction(
+                    config.accounts.owner,
+                    ownerCurrencyAta,
+                    config.accounts.owner,
+                    NATIVE_MINT,
+                    TOKEN_PROGRAM_ID
+                ),
+                ...setupIx
+            ];
+            cleanupIx.push(
+                createCloseAccountInstruction(
+                    ownerCurrencyAta,
+                    config.accounts.owner,
+                    config.accounts.owner,
+                    [],
+                    TOKEN_PROGRAM_ID
+                )
+            );
+        }
 
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
@@ -50,7 +111,7 @@ const openLongPositionConfig: BaseMethodConfig<
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerCurrencyAccount: getAssociatedTokenAddressSync(
+                ownerCurrencyAccount: ownerCurrencyAta ?? getAssociatedTokenAddressSync(
                     config.accounts.currency,
                     config.accounts.owner,
                     false,
@@ -92,6 +153,8 @@ const openLongPositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: setupIx,
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },

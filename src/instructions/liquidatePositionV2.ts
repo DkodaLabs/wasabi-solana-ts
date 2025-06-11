@@ -2,7 +2,8 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     ClosePositionAccounts,
     ClosePositionArgs,
-    ClosePositionInstructionAccounts, ClosePositionInternalInstructionAccounts
+    ClosePositionInstructionAccounts,
+    ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
 import { SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -28,7 +29,7 @@ const liquidatePositionConfig: BaseMethodConfig<
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
         const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =

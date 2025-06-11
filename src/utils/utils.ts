@@ -789,8 +789,10 @@ export async function handlePaymentTokenMintWithAuthority(
                 : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
-    const currencyTokenProgram = await getTokenProgram(connection, currency, mintCache);
-    const collateralTokenProgram = await getTokenProgram(connection, collateral, mintCache);
+    const [currencyTokenProgram, collateralTokenProgram] = await Promise.all([
+        getTokenProgram(connection, currency, mintCache),
+        getTokenProgram(connection, collateral, mintCache)
+    ]);
 
     return {
         currencyMint: currency,
@@ -801,6 +803,7 @@ export async function handlePaymentTokenMintWithAuthority(
         cleanupIx: instructions.cleanupIx
     };
 }
+
 export type CloseTokenAccounts = {
     payoutMint?: PublicKey;
     payoutIsSol: boolean;
@@ -889,4 +892,3 @@ export async function handleCloseTokenAccounts(
         currencyTokenProgram: mints.get(poolAccount.currency)!.owner,
         collateralTokenProgram: mints.get(poolAccount.collateral)!.owner
     };
-}

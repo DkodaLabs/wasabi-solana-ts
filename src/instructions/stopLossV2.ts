@@ -30,7 +30,7 @@ const stopLossConfig: BaseMethodConfig<
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
         const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =

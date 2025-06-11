@@ -89,7 +89,6 @@ export class Wasabi {
     }
 
     // === V2 Ixes ===
-
     async createOpenLongPositionInstruction(
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
@@ -184,7 +183,6 @@ export class Wasabi {
     }
 
     // === V1 Ixes ===
-
     async createOpenLongPositionSetupInstruction(
         args: OpenPositionSetupArgs,
         accounts: OpenPositionSetupAccounts

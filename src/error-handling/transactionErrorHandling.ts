@@ -8,6 +8,7 @@ import {
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
 import { WasabiSolana } from '../index';
+import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 const WasabiIDL = idl as WasabiSolana;
 
@@ -41,6 +42,10 @@ const jupiterProgramId = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 const jupiterExpectedErrors = [
     6001 // SlippageToleranceExceeded
 ];
+
+const raydiumErrors = [
+    6028, // Invalid first tick array
+]
 
 // Index errors by code for quick lookup
 const wasabiErrorIndex: Record<number, ErrorObject> = WasabiIDL.errors.reduce(
@@ -317,11 +322,16 @@ export const getFailingSwapProgram = (instructions: TransactionInstruction[]): s
         }
     }
 
-    const failingProgram = instructions[failingProgramIdx].programId.toBase58();
-    return failingProgram === jupiterProgramId
-        ? 'Jupiter'
-        : failingProgram === TOKEN_PROGRAM_ID.toBase58()
+    try {
+        const failingProgram = instructions[failingProgramIdx].programId.toBase58();
+        return failingProgram === jupiterProgramId
+            ? 'Jupiter'
+            : failingProgram === TOKEN_PROGRAM_ID.toBase58()
             ? 'Token'
             : failingProgram === TOKEN_2022_PROGRAM_ID.toBase58()
-                ? 'Token2022' : 'Raydium';
+            ? 'Token2022'
+            : 'Raydium';
+    } catch (error: any) {
+        return 'Unknown';
+    }
 };

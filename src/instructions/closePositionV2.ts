@@ -59,12 +59,13 @@ const closePostionConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
         );
 
         if (!poolAccount) {
-            throw new Error('Position does not exist');
+            throw new Error('Pool does not exist');
         }
 
         const [
