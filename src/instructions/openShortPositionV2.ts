@@ -2,15 +2,8 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
-import { MintCache, PDA } from '../utils';
-import {
-    createAssociatedTokenAccountIdempotentInstruction,
-    createCloseAccountInstruction,
-    createSyncNativeInstruction,
-    getAssociatedTokenAddressSync,
-    NATIVE_MINT,
-    TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
+import { getTokenProgram, MintCache, PDA } from '../utils';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 
@@ -184,7 +177,7 @@ export async function createOpenShortPositionInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
     accounts: OpenPositionAccounts,
-    mintCache?: MintCache
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

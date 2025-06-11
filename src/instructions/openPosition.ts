@@ -9,7 +9,9 @@ export type OpenPositionParams = {
 
 export type OpenPositionSetupArgs = {
     /// The nonce of the position
-    nonce: number; // u16
+    nonce?: number; // u16
+    /// The position's address
+    positionId?: string;
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
     /// The initial down payment amount required to open the position
@@ -27,6 +29,7 @@ export type OpenPositionSetupArgs = {
 export type OpenPositionSetupAccounts = {
     /// Needs to be passed in as we construct the instruction for the user
     owner: PublicKey; // required
+    authority?: PublicKey; // mostly used for testing only
     /// Backend authority - this should be program.provider.publicKey since we always
     /// construct the instruction for the user
     //authority: PublicKey,
@@ -76,7 +79,6 @@ export type OpenPositionSetupInstructionBaseAccounts = {
     sysvarInfo: PublicKey;
 };
 
-
 export type OpenPositionArgs = {
     nonce?: number,
     positionId?: string,
@@ -94,4 +96,3 @@ export type OpenPositionAccounts = {
     authority: PublicKey,
     feeWallet: PublicKey,
 };
-

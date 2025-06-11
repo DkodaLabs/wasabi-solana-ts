@@ -1,32 +1,59 @@
 import { Program, BN } from '@coral-xyz/anchor';
 import {
     TransactionInstruction,
-    PublicKey,
     SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY
+    SYSVAR_INSTRUCTIONS_PUBKEY,
+    PublicKey
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
-    OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts
+    OpenPositionCleanupAccounts
 } from './openPosition';
 import { PDA, getPermission, handleMintsAndTokenProgram, handlePaymentTokenMint } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
 
-type OpenShortPositionSetupInstructionAccounts = {
-    collateralTokenProgram: PublicKey;
-    currencyTokenProgram: PublicKey;
-} & OpenPositionSetupInstructionBaseAccounts;
-
-type OpenShortPositionCleanupInstructionAccounts = {
+export type OpenShortPositionSetupInstructionAccounts = {
+    owner: PublicKey;
+    ownerCurrencyAccount: PublicKey;
+    ownerTargetCurrencyAccount: PublicKey;
+    lpVault: PublicKey;
     vault: PublicKey;
+    pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    currency: PublicKey;
+    collateral: PublicKey;
+    openPositionRequest: PublicKey;
+    position: PublicKey;
+    authority: PublicKey;
+    permission: PublicKey;
+    feeWallet: PublicKey;
+    feeWalletAta: PublicKey;
+    globalSettings: PublicKey;
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+    systemProgram: PublicKey;
+    sysvarInfo: PublicKey;
+};
+
+export type OpenShortPositionCleanupInstructionAccounts = {
+    owner: PublicKey;
+    position: PublicKey;
+    pool: PublicKey;
+    collateralVault: PublicKey;
+    currencyVault: PublicKey;
+    lpVault: PublicKey;
+    vault: PublicKey;
+    collateral: PublicKey;
+    currency: PublicKey;
+    openPositionRequest: PublicKey;
     debtController: PublicKey;
-} & OpenPositionCleanupInstructionAccounts;
+    tokenProgram: PublicKey;
+};
 
 const openShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,

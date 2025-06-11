@@ -24,7 +24,7 @@ const closeStopLossOrderConfig: BaseMethodConfig<
     CloseStopLossOrderInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, CloseStopLossOrderAccounts>) => {
-        let permission = PDA.getAdmin(config.program.provider.publicKey);
+        const permission = PDA.getAdmin(config.program.provider.publicKey);
         const [trader, permissionAccount] = await Promise.all([
             config.program.account.position
                 .fetch(config.accounts.position)

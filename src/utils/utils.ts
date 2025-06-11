@@ -892,4 +892,3 @@ export async function handleCloseTokenAccounts(
         currencyTokenProgram: mints.get(poolAccount.currency)!.owner,
         collateralTokenProgram: mints.get(poolAccount.collateral)!.owner
     };
-}

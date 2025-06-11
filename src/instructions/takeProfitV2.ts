@@ -8,7 +8,7 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { handleOrdersCheck } from './closePosition';
 
@@ -95,6 +95,7 @@ const takeProfitConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.takeProfit(
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.interest),
             new BN(args.executionFee),
@@ -108,7 +109,7 @@ export async function createTakeProfitInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

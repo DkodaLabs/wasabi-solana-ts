@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { MintCache, PDA, handleCloseTokenAccounts } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { handleOrdersCheck } from './closePosition';
 
 type StopLossInstructionAccounts = {
@@ -95,6 +95,7 @@ const stopLossConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.stopLoss(
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.interest),
             new BN(args.executionFee),

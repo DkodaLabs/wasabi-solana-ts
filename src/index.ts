@@ -1,14 +1,14 @@
 import {
+    AddCollateralAccounts,
+    AddCollateralArgs,
     ClosePositionAccounts,
     ClosePositionArgs,
-    createClosePositionInstruction, createDonateInstruction,
+    createClosePositionInstruction,
+    createIncreaseShortPositionInstruction,
     createLiquidatePositionInstruction,
-    createOpenLongPositionInstruction,
-    createOpenShortPositionInstruction,
     createStopLossInstruction,
-    createTakeProfitInstruction, DonateAccounts, DonateArgs,
-    OpenPositionAccounts,
-    OpenPositionArgs
+    DonateAccounts,
+    DonateArgs
 } from './instructions';
 
 export * from './utils/index.js';
@@ -66,6 +66,18 @@ import {
     createStopLossCleanupInstruction,
     createStopLossSetupInstruction
 } from './instructions/stopLoss.js';
+import {
+    createOpenLongPositionInstruction,
+    createOpenShortPositionInstruction,
+    createAddCollateralToShortPositionInstruction,
+    createTakeProfitInstruction,
+    createIncreaseLongPositionSetupInstruction,
+    createIncreaseShortPositionSetupInstruction,
+    createDonateInstruction,
+    createUpdateLongPositionInstruction,
+    OpenPositionArgs,
+    OpenPositionAccounts
+} from './instructions';
 
 export class Wasabi {
     program: Program<WasabiSolana>;
@@ -76,6 +88,7 @@ export class Wasabi {
         this.mintCache = mintCache;
     }
 
+    // === V2 Ixes ===
     async createOpenLongPositionInstruction(
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
@@ -107,20 +120,6 @@ export class Wasabi {
         return await createClosePositionInstruction(this.program, args, accounts, this.mintCache);
     }
 
-    async createTakeProfitInstruction(
-        args: ClosePositionArgs,
-        accounts: ClosePositionAccounts
-    ): Promise<TransactionInstruction[]> {
-        return await createTakeProfitInstruction(this.program, args, accounts, this.mintCache);
-    }
-
-    async createStopLossInstruction(
-        args: ClosePositionArgs,
-        accounts: ClosePositionAccounts
-    ): Promise<TransactionInstruction[]> {
-        return await createStopLossInstruction(this.program, args, accounts, this.mintCache);
-    }
-
     async createLiquidatePositionInstruction(
         args: ClosePositionArgs,
         accounts: ClosePositionAccounts
@@ -133,6 +132,57 @@ export class Wasabi {
         );
     }
 
+    async createStopLossInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createStopLossInstruction(this.program, args, accounts, this.mintCache);
+    }
+
+    async createTakeProfitInstruction(
+        args: ClosePositionArgs,
+        accounts: ClosePositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createTakeProfitInstruction(this.program, args, accounts, this.mintCache);
+    }
+
+    async createAddCollateralToShortPositionInstruction(
+        args: AddCollateralArgs,
+        accounts: AddCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createAddCollateralToShortPositionInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
+    }
+
+    async createUpdateLongPositionInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createUpdateLongPositionInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
+    }
+
+    async createIncreaseShortPositionInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createIncreaseShortPositionInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
+    }
+
+    // === V1 Ixes ===
     async createOpenLongPositionSetupInstruction(
         args: OpenPositionSetupArgs,
         accounts: OpenPositionSetupAccounts
@@ -155,11 +205,35 @@ export class Wasabi {
         );
     }
 
+    async createIncreaseLongPositionSetupInstruction(
+        args: OpenPositionSetupArgs,
+        accounts: OpenPositionSetupAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createIncreaseLongPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
+    }
+
     async createOpenShortPositionSetupInstruction(
         args: OpenPositionSetupArgs,
         accounts: OpenPositionSetupAccounts
     ): Promise<TransactionInstruction[]> {
         return await createOpenShortPositionSetupInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
+    }
+
+    async createIncreaseShortPositionSetupInstruction(
+        args: OpenPositionSetupArgs,
+        accounts: OpenPositionSetupAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createIncreaseShortPositionSetupInstruction(
             this.program,
             args,
             accounts,
@@ -267,6 +341,6 @@ export class Wasabi {
         args: DonateArgs,
         accounts: DonateAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createDonateInstruction(this.program, args, accounts);
+        return await createDonateInstruction(this.program, args, accounts, this.mintCache);
     }
 }

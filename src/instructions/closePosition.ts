@@ -35,6 +35,8 @@ export type ClosePositionParams = {
 } & ClosePositionSetupArgs;
 
 export type ClosePositionSetupArgs = {
+    /// The amount of the position to close
+    amount: number; //u64
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
     /// The amount of interest the user must pay
@@ -126,12 +128,14 @@ type CpcuAndIx = {
 };
 
 export function transformArgs(args: ClosePositionSetupArgs): {
+    amount: BN;
     minTargetAmount: BN;
     interest: BN;
     executionFee: BN;
     expiration: BN;
 } {
     return {
+        amount: new BN(args.amount),
         minTargetAmount: new BN(args.minTargetAmount),
         interest: new BN(args.interest),
         executionFee: new BN(args.executionFee),

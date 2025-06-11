@@ -2,7 +2,8 @@ import { IDL as JupiterIDL } from './jupiter';
 import {
     SendTransactionError,
     VersionedTransaction,
-    TransactionInstruction, SystemProgram
+    TransactionInstruction,
+    SystemProgram
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
