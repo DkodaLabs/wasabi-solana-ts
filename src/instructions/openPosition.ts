@@ -79,7 +79,6 @@ export type OpenPositionSetupInstructionBaseAccounts = {
     sysvarInfo: PublicKey;
 };
 
-
 export type OpenPositionArgs = {
     nonce?: number,
     positionId?: string,
@@ -97,4 +96,3 @@ export type OpenPositionAccounts = {
     authority: PublicKey,
     feeWallet: PublicKey,
 };
-
