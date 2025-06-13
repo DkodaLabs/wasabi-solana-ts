@@ -33,18 +33,20 @@ const stopLossConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
-            await Promise.all([
-                handleCloseTokenAccounts(
-                    {
-                        program: config.program,
-                        accounts: { owner: config.accounts.owner },
-                        mintCache: config.mintCache
-                    },
-                    poolAccount
-                ),
-                handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS')
-            ]);
+        const [
+            { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram },
+            orderIxes
+        ] = await Promise.all([
+            handleCloseTokenAccounts(
+                {
+                    program: config.program,
+                    owner: config.accounts.owner,
+                    mintCache: config.mintCache
+                },
+                poolAccount
+            ),
+            handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS')
+        ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -53,12 +55,7 @@ const stopLossConfig: BaseMethodConfig<
                 stopLossOrder: PDA.getStopLossOrder(config.accounts.position),
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
-                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
-                        config.accounts.owner,
-                        false,
-                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-                    ),
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault: PDA.getLpVault(poolAccount.currency),
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,

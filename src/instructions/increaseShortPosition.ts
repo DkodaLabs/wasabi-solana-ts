@@ -2,11 +2,12 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
-import { getTokenProgram, MintCache, PDA } from '../utils';
+import { handleOpenTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
+import { handleOrdersCheck } from './closePosition';
 
 const increaseShortPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
@@ -16,11 +17,6 @@ const increaseShortPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const [currencyTokenProgram, collateralTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral)
-        ]);
-
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
@@ -28,15 +24,28 @@ const increaseShortPositionConfig: BaseMethodConfig<
             throw new Error('positionId is required for `IncreaseShortPosition`');
         }
 
+        const position = new PublicKey(config.args.positionId);
+        const [
+            { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx },
+            orderIxes
+        ] = await Promise.all([
+            handleOpenTokenAccounts({
+                program: config.program,
+                owner: config.accounts.owner,
+                downPayment: config.args.downPayment,
+                fee: config.args.fee,
+                mintCache: config.mintCache,
+                isLongPool: false,
+                currency: config.accounts.currency,
+                collateral: config.accounts.collateral
+            }),
+            handleOrdersCheck(config.program, position, 'MARKET')
+        ]);
+
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerTargetCurrencyAccount: getAssociatedTokenAddressSync(
-                    config.accounts.collateral,
-                    config.accounts.owner,
-                    false,
-                    collateralTokenProgram
-                ),
+                ownerTargetCurrencyAccount: ownerPaymentAta,
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
@@ -59,7 +68,7 @@ const increaseShortPositionConfig: BaseMethodConfig<
                 ),
                 currency: config.accounts.currency,
                 collateral: config.accounts.collateral,
-                position: new PublicKey(config.args.positionId),
+                position,
                 authority: config.accounts.authority,
                 permission: PDA.getAdmin(config.accounts.authority),
                 feeWallet: config.accounts.feeWallet,
@@ -74,6 +83,8 @@ const increaseShortPositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },

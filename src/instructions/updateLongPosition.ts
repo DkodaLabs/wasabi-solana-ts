@@ -2,11 +2,12 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
 import { extractInstructionData } from './shared';
-import { getTokenProgram, MintCache, PDA } from '../utils';
+import { handleOpenTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
+import { handleOrdersCheck } from './closePosition';
 
 const updateLongPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
@@ -16,40 +17,49 @@ const updateLongPositionConfig: BaseMethodConfig<
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
 
-        const [tokenProgram, collateralTokenProgram] = await Promise.all([
-            getTokenProgram(config.program.provider.connection, config.accounts.currency),
-            getTokenProgram(config.program.provider.connection, config.accounts.collateral)
-        ]);
-
         const lpVault = PDA.getLpVault(config.accounts.currency);
         const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
 
         if (!config.args.positionId) {
-            throw new Error('positionId is required for `IncreaseLongPosition`');
+            throw new Error('positionId is required for `UpdateLongPosition`');
         }
+
+        const position = new PublicKey(config.args.positionId);
+
+        const [
+            { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx },
+            orderIxes
+        ] = await Promise.all([
+            handleOpenTokenAccounts({
+                program: config.program,
+                owner: config.accounts.owner,
+                downPayment: config.args.downPayment,
+                fee: config.args.fee,
+                mintCache: config.mintCache,
+                isLongPool: true,
+                currency: config.accounts.currency,
+                collateral: config.accounts.collateral
+            }),
+            handleOrdersCheck(config.program, position, 'MARKET')
+        ]);
 
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerCurrencyAccount: getAssociatedTokenAddressSync(
-                    config.accounts.currency,
-                    config.accounts.owner,
-                    false,
-                    tokenProgram
-                ),
+                ownerCurrencyAccount: ownerPaymentAta,
                 lpVault,
                 vault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
                     lpVault,
                     true,
-                    tokenProgram
+                    currencyTokenProgram
                 ),
                 pool,
                 currencyVault: getAssociatedTokenAddressSync(
                     config.accounts.currency,
                     pool,
                     true,
-                    tokenProgram
+                    currencyTokenProgram
                 ),
                 collateralVault: getAssociatedTokenAddressSync(
                     config.accounts.collateral,
@@ -59,15 +69,17 @@ const updateLongPositionConfig: BaseMethodConfig<
                 ),
                 currency: config.accounts.currency,
                 collateral: config.accounts.collateral,
-                position: new PublicKey(config.args.positionId),
+                position,
                 authority: config.accounts.authority,
                 permission: PDA.getAdmin(config.accounts.authority),
                 feeWallet: config.accounts.feeWallet,
-                tokenProgram,
+                tokenProgram: currencyTokenProgram,
                 debtController: PDA.getDebtController(),
                 globalSettings: PDA.getGlobalSettings(),
                 systemProgram: SystemProgram.programId
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             args: {
                 ...config.args,
                 hops,

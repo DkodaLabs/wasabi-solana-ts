@@ -2,7 +2,6 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     ClosePositionAccounts,
     ClosePositionArgs,
-    ClosePositionInstructionAccounts,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
 import { SystemProgram, TransactionInstruction } from '@solana/web3.js';
@@ -32,18 +31,20 @@ const liquidatePositionConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const [{ ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram }, orderIxes] =
-            await Promise.all([
-                handleCloseTokenAccounts(
-                    {
-                        program: config.program,
-                        accounts: { owner: config.accounts.owner },
-                        mintCache: config.mintCache
-                    },
-                    poolAccount
-                ),
-                handleOrdersCheck(config.program, config.accounts.position, 'LIQUIDATION')
-            ]);
+        const [
+            { ownerPayoutAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram },
+            orderIxes
+        ] = await Promise.all([
+            handleCloseTokenAccounts(
+                {
+                    program: config.program,
+                    owner: config.accounts.owner,
+                    mintCache: config.mintCache
+                },
+                poolAccount
+            ),
+            handleOrdersCheck(config.program, config.accounts.position, 'LIQUIDATION')
+        ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -51,12 +52,7 @@ const liquidatePositionConfig: BaseMethodConfig<
             accounts: {
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta ?? getAssociatedTokenAddressSync(
-                        poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
-                        config.accounts.owner,
-                        false,
-                        poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-                    ),
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -106,13 +102,13 @@ export async function createLiquidatePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
         config: liquidatePositionConfig,
         args,
-        mintCache,
+        mintCache
     }) as Promise<TransactionInstruction[]>;
 }

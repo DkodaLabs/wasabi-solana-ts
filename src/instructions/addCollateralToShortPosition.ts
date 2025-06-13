@@ -3,7 +3,8 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { MintCache, PDA } from '../utils';
+import { handleCloseTokenAccounts, handleOpenTokenAccounts, MintCache, PDA } from '../utils';
+import { handleOrdersCheck } from './closePosition';
 
 export type AddCollateralArgs = {
     downPayment: number;
@@ -41,35 +42,43 @@ const addCollateralConfig: BaseMethodConfig<
         if (!position) throw new Error('Position not found');
 
         const pool = PDA.getShortPool(position.collateral, position.currency);
-        const collateralTokenProgram = (
-            await config.program.provider.connection.getAccountInfo(position.collateral)
-        ).owner;
 
-        const collateralVault = getAssociatedTokenAddressSync(
-            position.collateral,
-            pool,
-            true,
-            collateralTokenProgram
-        );
+        const [
+            {
+                ownerPaymentAta,
+                setupIx,
+                cleanupIx,
+                collateralTokenProgram
+            },
+            orderIxes
+        ] = await Promise.all([
+            handleOpenTokenAccounts({
+                program: config.program,
+                owner: config.accounts.owner,
+                mintCache: config.mintCache,
+                downPayment: config.args.downPayment,
+                fee: config.args.fee,
+                currency: position.currency,
+                collateral: position.collateral,
+                isLongPool: false
+            }),
+            handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
+        ]);
 
-        const ownerTargetCurrencyAccount = getAssociatedTokenAddressSync(
-            position.collateral,
-            config.accounts.owner,
-            false,
-            collateralTokenProgram
-        );
         return {
             accounts: {
                 owner: config.accounts.owner,
-                ownerTargetCurrencyAccount,
+                ownerTargetCurrencyAccount: ownerPaymentAta,
                 position: config.accounts.position,
                 pool,
-                collateralVault: collateralVault,
+                collateralVault: position.collateralVault,
                 collateral: position.collateral,
                 feeWallet: config.accounts.feeWallet,
                 globalSettings: PDA.getGlobalSettings(),
                 collateralTokenProgram
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             args: {
                 downPayment: config.args.downPayment,
                 feesToPaid: config.args.fee,
@@ -89,7 +98,7 @@ export async function createAddCollateralToShortPositionInstruction(
     program: Program<WasabiSolana>,
     args: AddCollateralArgs,
     accounts: AddCollateralAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

@@ -75,7 +75,7 @@ const closePostionConfig: BaseMethodConfig<
             handleCloseTokenAccounts(
                 {
                     program: config.program,
-                    accounts: { owner: config.accounts.owner },
+                    owner: config.accounts.owner,
                     mintCache: config.mintCache
                 },
                 poolAccount
@@ -90,15 +90,7 @@ const closePostionConfig: BaseMethodConfig<
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount:
-                        ownerPayoutAta ??
-                        getAssociatedTokenAddressSync(
-                            poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
-                            config.accounts.owner,
-                            false,
-                            poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-                        ),
-
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -149,7 +141,7 @@ export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache,
+    mintCache?: MintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
