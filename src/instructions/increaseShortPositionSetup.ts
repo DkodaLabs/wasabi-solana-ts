@@ -14,6 +14,7 @@ import {
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { OpenShortPositionSetupInstructionAccounts } from './openShortPosition';
+import { handleOrdersCheck } from './closePosition';
 
 const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -21,14 +22,14 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenShortPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
-        const {
+        const [{
             currencyMint,
             collateralMint,
             currencyTokenProgram,
             collateralTokenProgram,
             setupIx,
             cleanupIx
-        } = await handlePaymentTokenMint(
+        }, orderIxes] = await Promise.all([handlePaymentTokenMint(
             config.program.provider.connection,
             config.accounts.owner,
             config.accounts.collateral, // payment token mint
@@ -36,7 +37,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee)
-        );
+        ), handleOrdersCheck(config.program, config.accounts.owner, 'MARKET')]);
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
@@ -101,7 +102,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
                 fee: new BN(config.args.fee),
                 expiration: new BN(config.args.expiration)
             },
-            setup: setupIx,
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx
         };
     },

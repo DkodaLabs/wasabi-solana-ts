@@ -9,6 +9,7 @@ import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstru
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { OpenLongPositionSetupInstructionAccounts } from './openLongPosition';
+import { handleOrdersCheck } from './closePosition';
 
 const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -16,7 +17,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
-        const result = await handlePaymentTokenMint(
+        const [result, orderIxes] = await Promise.all([handlePaymentTokenMint(
             config.program.provider.connection,
             config.accounts.owner,
             config.accounts.currency, // payment token mint
@@ -24,7 +25,8 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee)
-        );
+        ), handleOrdersCheck(config.program, config.accounts.owner, 'MARKET')]);
+
         const {
             currencyMint,
             collateralMint,
@@ -97,7 +99,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 fee: new BN(config.args.fee),
                 expiration: new BN(config.args.expiration)
             },
-            setup: setupIx,
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx
         };
     },
