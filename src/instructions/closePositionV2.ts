@@ -1,13 +1,14 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import { PublicKey, TransactionInstruction, SystemProgram } from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
-import { handleOrdersCheck, CloseType } from './closePosition';
+import { handleOrdersCheck } from './closePosition';
 
 export type ClosePositionArgs = {
+    amount: number | bigint;
     minTargetAmount: number | bigint;
     interest: number | bigint;
     executionFee: number | bigint;
@@ -74,14 +75,13 @@ const closePostionConfig: BaseMethodConfig<
             handleCloseTokenAccounts(
                 {
                     program: config.program,
-                    accounts: { owner: config.accounts.owner },
+                    owner: config.accounts.owner,
                     mintCache: config.mintCache
                 },
                 poolAccount
             ),
             handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
         ]);
-
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
@@ -90,15 +90,7 @@ const closePostionConfig: BaseMethodConfig<
                 owner: config.accounts.owner,
                 closePosition: {
                     owner: config.accounts.owner,
-                    ownerPayoutAccount:
-                        ownerPayoutAta ??
-                        getAssociatedTokenAddressSync(
-                            poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral,
-                            config.accounts.owner,
-                            false,
-                            poolAccount.isLongPool ? currencyTokenProgram : collateralTokenProgram
-                        ),
-
+                    ownerPayoutAccount: ownerPayoutAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         poolAccount.currency,
@@ -135,6 +127,7 @@ const closePostionConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.closePosition(
+            new BN(args.amount),
             new BN(args.minTargetAmount),
             new BN(args.interest),
             new BN(args.executionFee),

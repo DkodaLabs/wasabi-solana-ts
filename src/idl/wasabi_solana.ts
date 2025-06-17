@@ -14,94 +14,37 @@ export type WasabiSolana = {
   },
   "instructions": [
     {
-      "name": "claimPosition",
+      "name": "addCollateralToShortPosition",
       "discriminator": [
-        168,
-        90,
-        89,
-        44,
-        203,
-        246,
-        210,
-        46
+        160,
+        157,
+        226,
+        209,
+        112,
+        148,
+        163,
+        22
       ],
       "accounts": [
         {
-          "name": "trader",
+          "name": "owner",
           "docs": [
-            "The wallet that owns the Position"
+            "The wallet that owns the assets"
           ],
           "writable": true,
-          "signer": true,
-          "relations": [
-            "position"
-          ]
+          "signer": true
         },
         {
-          "name": "traderCurrencyAccount",
+          "name": "ownerTargetCurrencyAccount",
+          "docs": [
+            "The account that holds the owner's target currency"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "trader"
-              },
-              {
-                "kind": "account",
-                "path": "currencyTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "currency"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "traderCollateralAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "trader"
+                "path": "owner"
               },
               {
                 "kind": "account",
@@ -156,10 +99,16 @@ export type WasabiSolana = {
           "writable": true
         },
         {
-          "name": "pool"
+          "name": "pool",
+          "docs": [
+            "The ShortPool that owns the Position"
+          ]
         },
         {
           "name": "collateralVault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
           "writable": true,
           "relations": [
             "position",
@@ -170,52 +119,8 @@ export type WasabiSolana = {
           "name": "collateral"
         },
         {
-          "name": "currency"
-        },
-        {
-          "name": "lpVault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
-        },
-        {
           "name": "feeWallet",
           "writable": true
-        },
-        {
-          "name": "debtController",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  98,
-                  116,
-                  95,
-                  99,
-                  111,
-                  110,
-                  116,
-                  114,
-                  111,
-                  108,
-                  108,
-                  101,
-                  114
-                ]
-              }
-            ]
-          }
         },
         {
           "name": "globalSettings",
@@ -246,12 +151,22 @@ export type WasabiSolana = {
         },
         {
           "name": "collateralTokenProgram"
-        },
-        {
-          "name": "currencyTokenProgram"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
     },
     {
       "name": "closeLongPositionCleanup",
@@ -566,6 +481,10 @@ export type WasabiSolana = {
       ],
       "args": [
         {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
           "name": "minTargetAmount",
           "type": "u64"
         },
@@ -674,8 +593,7 @@ export type WasabiSolana = {
             },
             {
               "name": "liquidationWallet",
-              "writable": true,
-              "optional": true
+              "writable": true
             },
             {
               "name": "debtController",
@@ -745,6 +663,10 @@ export type WasabiSolana = {
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "minTargetAmount",
           "type": "u64"
@@ -1087,6 +1009,10 @@ export type WasabiSolana = {
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "minTargetAmount",
           "type": "u64"
@@ -1684,6 +1610,739 @@ export type WasabiSolana = {
         {
           "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "increaseLongPositionSetup",
+      "discriminator": [
+        192,
+        83,
+        234,
+        53,
+        87,
+        233,
+        121,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCurrencyAccount",
+          "docs": [
+            "The account that holds the owner's quote currency"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault",
+          "docs": [
+            "The LP Vault that the user will borrow from",
+            "For long positions, this is the `currency` i.e. the `quote`"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account."
+          ],
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The LongPool that owns the Position"
+          ]
+        },
+        {
+          "name": "collateralVault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "openPositionRequest",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  101,
+                  110,
+                  95,
+                  112,
+                  111,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "feeWallet",
+          "writable": true
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvarInfo",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "increaseShortPosition",
+      "discriminator": [
+        197,
+        22,
+        116,
+        176,
+        227,
+        104,
+        20,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerTargetCurrencyAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "collateralTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "collateralVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "feeWallet",
+          "writable": true
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currencyTokenProgram"
+        },
+        {
+          "name": "collateralTokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "increaseShortPositionSetup",
+      "discriminator": [
+        91,
+        77,
+        250,
+        204,
+        185,
+        50,
+        57,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerTargetCurrencyAccount",
+          "docs": [
+            "The account that holds the owner's target currency"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "collateralTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault",
+          "docs": [
+            "The LP Vault that the user will borrow from"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account."
+          ],
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The ShortPool that owns the Position"
+          ]
+        },
+        {
+          "name": "collateralVault",
+          "docs": [
+            "The collateral account that is the destination of the swap"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "openPositionRequest",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  101,
+                  110,
+                  95,
+                  112,
+                  111,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "feeWallet",
+          "writable": true
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currencyTokenProgram"
+        },
+        {
+          "name": "collateralTokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvarInfo",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
         }
       ]
     },
@@ -2881,8 +3540,7 @@ export type WasabiSolana = {
             },
             {
               "name": "liquidationWallet",
-              "writable": true,
-              "optional": true
+              "writable": true
             },
             {
               "name": "debtController",
@@ -5560,8 +6218,7 @@ export type WasabiSolana = {
             },
             {
               "name": "liquidationWallet",
-              "writable": true,
-              "optional": true
+              "writable": true
             },
             {
               "name": "debtController",
@@ -5664,6 +6321,10 @@ export type WasabiSolana = {
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "minTargetAmount",
           "type": "u64"
@@ -6023,6 +6684,10 @@ export type WasabiSolana = {
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "minTargetAmount",
           "type": "u64"
@@ -6754,8 +7419,7 @@ export type WasabiSolana = {
             },
             {
               "name": "liquidationWallet",
-              "writable": true,
-              "optional": true
+              "writable": true
             },
             {
               "name": "debtController",
@@ -6860,6 +7524,10 @@ export type WasabiSolana = {
         }
       ],
       "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
         {
           "name": "minTargetAmount",
           "type": "u64"
@@ -7222,6 +7890,10 @@ export type WasabiSolana = {
       ],
       "args": [
         {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
           "name": "minTargetAmount",
           "type": "u64"
         },
@@ -7236,6 +7908,230 @@ export type WasabiSolana = {
         {
           "name": "expiration",
           "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "updateLongPosition",
+      "discriminator": [
+        247,
+        217,
+        253,
+        122,
+        241,
+        234,
+        108,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCurrencyAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateralVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "feeWallet",
+          "writable": true
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "minTargetAmount",
+          "type": "u64"
+        },
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
         }
       ]
     },
@@ -7678,6 +8574,19 @@ export type WasabiSolana = {
   ],
   "events": [
     {
+      "name": "collateralAddedToPosition",
+      "discriminator": [
+        52,
+        209,
+        134,
+        206,
+        155,
+        109,
+        155,
+        243
+      ]
+    },
+    {
       "name": "deposit",
       "discriminator": [
         62,
@@ -7743,19 +8652,6 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "positionClaimed",
-      "discriminator": [
-        149,
-        250,
-        141,
-        45,
-        210,
-        198,
-        94,
-        148
-      ]
-    },
-    {
       "name": "positionClosed",
       "discriminator": [
         157,
@@ -7779,6 +8675,45 @@ export type WasabiSolana = {
         135,
         237,
         158
+      ]
+    },
+    {
+      "name": "positionDecreased",
+      "discriminator": [
+        251,
+        151,
+        37,
+        204,
+        127,
+        87,
+        115,
+        232
+      ]
+    },
+    {
+      "name": "positionDecreasedWithOrder",
+      "discriminator": [
+        174,
+        196,
+        21,
+        217,
+        36,
+        62,
+        214,
+        106
+      ]
+    },
+    {
+      "name": "positionIncreased",
+      "discriminator": [
+        73,
+        58,
+        247,
+        181,
+        100,
+        237,
+        249,
+        81
       ]
     },
     {
@@ -7983,8 +8918,8 @@ export type WasabiSolana = {
     },
     {
       "code": 6024,
-      "name": "u64Overflow",
-      "msg": "Amount exceeds u64"
+      "name": "integerOverflow",
+      "msg": "Failed to cast integer to original type"
     },
     {
       "code": 6025,
@@ -8048,13 +8983,23 @@ export type WasabiSolana = {
     },
     {
       "code": 6037,
-      "name": "integerOverflow",
-      "msg": "Integer overflow"
+      "name": "liquidationWalletNotSet",
+      "msg": "Liquidation wallet was not provided"
     },
     {
       "code": 6038,
-      "name": "liquidationWalletNotSet",
-      "msg": "Liquidation wallet was not provided"
+      "name": "tooMuchCollateralSpent",
+      "msg": "Too much collateral spent"
+    },
+    {
+      "code": 6039,
+      "name": "invalidOrder",
+      "msg": "Invalid order"
+    },
+    {
+      "code": 6040,
+      "name": "insufficientPrincipalRepaid",
+      "msg": "Insufficient principal repaid"
     }
   ],
   "types": [
@@ -8167,6 +9112,42 @@ export type WasabiSolana = {
           },
           {
             "name": "executionFee",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "feesToBePaid",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "collateralAddedToPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "downPaymentAdded",
+            "type": "u64"
+          },
+          {
+            "name": "collateralAdded",
+            "type": "u64"
+          },
+          {
+            "name": "feesAdded",
             "type": "u64"
           }
         ]
@@ -8527,6 +9508,18 @@ export type WasabiSolana = {
           {
             "name": "position",
             "type": "pubkey"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "downPayment",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
           }
         ]
       }
@@ -8639,42 +9632,6 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "positionClaimed",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "side",
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "type": "pubkey"
-          },
-          {
-            "name": "trader",
-            "type": "pubkey"
-          },
-          {
-            "name": "amountClaimed",
-            "type": "u64"
-          },
-          {
-            "name": "principalRepaid",
-            "type": "u64"
-          },
-          {
-            "name": "interestPaid",
-            "type": "u64"
-          },
-          {
-            "name": "feeAmount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "positionClosed",
       "type": {
         "kind": "struct",
@@ -8745,6 +9702,130 @@ export type WasabiSolana = {
           },
           {
             "name": "feeAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionDecreased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "principalRepaid",
+            "type": "u64"
+          },
+          {
+            "name": "interestPaid",
+            "type": "u64"
+          },
+          {
+            "name": "closeFee",
+            "type": "u64"
+          },
+          {
+            "name": "pastFees",
+            "type": "u64"
+          },
+          {
+            "name": "collateralReduced",
+            "type": "u64"
+          },
+          {
+            "name": "downPaymentReduced",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionDecreasedWithOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "orderType",
+            "type": "u8"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "principalRepaid",
+            "type": "u64"
+          },
+          {
+            "name": "interestPaid",
+            "type": "u64"
+          },
+          {
+            "name": "closeFee",
+            "type": "u64"
+          },
+          {
+            "name": "pastFees",
+            "type": "u64"
+          },
+          {
+            "name": "collateralReduced",
+            "type": "u64"
+          },
+          {
+            "name": "downPaymentReduced",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionIncreased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "downPaymentAdded",
+            "type": "u64"
+          },
+          {
+            "name": "principalAdded",
+            "type": "u64"
+          },
+          {
+            "name": "collateralAdded",
+            "type": "u64"
+          },
+          {
+            "name": "feesAdded",
             "type": "u64"
           }
         ]

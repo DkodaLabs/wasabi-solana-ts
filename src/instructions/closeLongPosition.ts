@@ -50,6 +50,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.closeLongPositionSetup(
+            args.amount,
             args.minTargetAmount,
             args.interest,
             args.executionFee,

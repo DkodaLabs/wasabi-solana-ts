@@ -24,7 +24,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
     CloseTakeProfitOrderInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, CloseTakeProfitOrderAccounts>) => {
-        let permission = PDA.getAdmin(config.program.provider.publicKey);
+        const permission = PDA.getAdmin(config.program.provider.publicKey);
         const [trader, permissionAccount] = await Promise.all([
             config.program.account.position
                 .fetch(config.accounts.position)

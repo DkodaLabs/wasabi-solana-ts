@@ -61,6 +61,7 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
     },
     getMethod: (program) => (args) =>
         program.methods.closeShortPositionSetup(
+            args.amount,
             args.minTargetAmount,
             args.interest,
             args.executionFee,

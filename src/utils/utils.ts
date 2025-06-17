@@ -804,11 +804,100 @@ export async function handlePaymentTokenMintWithAuthority(
     };
 }
 
+type OpenTokenAccountArgs = {
+    program: Program<WasabiSolana>;
+    owner: PublicKey;
+    downPayment: number | bigint;
+    fee: number | bigint;
+    mintCache: MintCache;
+    isLongPool: boolean;
+    currency: PublicKey;
+    collateral: PublicKey;
+};
+
+export type OpenTokenAccounts = {
+    paymentMint?: PublicKey;
+    paymentIsSol?: boolean;
+    ownerPaymentAta?: PublicKey;
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+};
+
+export async function handleOpenTokenAccounts({
+    program,
+    owner,
+    downPayment,
+    fee,
+    mintCache,
+    isLongPool,
+    currency,
+    collateral
+}: OpenTokenAccountArgs): Promise<OpenTokenAccounts> {
+    let setupIx: TransactionInstruction[] = [];
+    const cleanupIx: TransactionInstruction[] = [];
+
+    const [currencyInfo, collateralInfo] = await mintCache.getMintInfos([currency, collateral]);
+
+    const paymentMintInfo = isLongPool ? currencyInfo : collateralInfo;
+    const paymentMint = paymentMintInfo[0];
+    const paymentTokenProgram = paymentMintInfo[1].owner;
+    const paymentIsSol = paymentMintInfo[0].equals(NATIVE_MINT);
+
+    const ownerPaymentAta = getAssociatedTokenAddressSync(
+        paymentMint,
+        owner,
+        false,
+        paymentTokenProgram
+    );
+
+    if (paymentIsSol) {
+        setupIx.push(
+            SystemProgram.transfer({
+                fromPubkey: owner,
+                toPubkey: ownerPaymentAta,
+                lamports: Number(downPayment) + Number(fee)
+            })
+        );
+
+        setupIx.push(createSyncNativeInstruction(ownerPaymentAta, paymentTokenProgram));
+
+        cleanupIx.push(
+            createCloseAccountInstruction(ownerPaymentAta, owner, owner, [], paymentTokenProgram)
+        );
+    }
+
+    const ownerPaymentAtaInfo = await program.provider.connection.getAccountInfo(ownerPaymentAta);
+
+    if (!ownerPaymentAtaInfo) {
+        setupIx = [
+            createAssociatedTokenAccountIdempotentInstruction(
+                owner,
+                ownerPaymentAta,
+                owner,
+                paymentMint,
+                paymentTokenProgram
+            ),
+            ...setupIx
+        ];
+    }
+
+    return {
+        paymentMint,
+        paymentIsSol,
+        ownerPaymentAta,
+        currencyTokenProgram: currencyInfo[1].owner,
+        collateralTokenProgram: collateralInfo[1].owner,
+        setupIx,
+        cleanupIx
+    };
+}
+
 export type CloseTokenAccounts = {
     payoutMint?: PublicKey;
     payoutIsSol: boolean;
     ownerPayoutAta?: PublicKey;
-    fetchOwnerPayoutAtaPromise?: Promise<any>;
     setupIx: TransactionInstruction[];
     cleanupIx: TransactionInstruction[];
     currencyTokenProgram: PublicKey;
@@ -818,66 +907,58 @@ export type CloseTokenAccounts = {
 export async function handleCloseTokenAccounts(
     config: {
         program: Program<WasabiSolana>;
-        accounts: { owner: PublicKey };
+        owner: PublicKey;
         mintCache: MintCache;
     },
     poolAccount: {
         isLongPool: boolean;
         currency: PublicKey;
         collateral: PublicKey;
-        currencyVault: PublicKey;
-        collateralVault: PublicKey;
     }
 ): Promise<CloseTokenAccounts> {
-    const payoutMint = poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral;
+    const [currencyInfo, collateralInfo] = await config.mintCache.getMintInfos([
+        poolAccount.currency,
+        poolAccount.collateral
+    ]);
+
+    const payoutMintInfo = poolAccount.isLongPool ? currencyInfo : collateralInfo;
+    const payoutMint = payoutMintInfo[0];
+    const payoutTokenProgram = payoutMintInfo[1].owner;
     const payoutIsSol = payoutMint.equals(NATIVE_MINT);
 
-    let ownerPayoutAta: PublicKey | undefined = undefined;
-    let fetchOwnerPayoutAtaPromise: Promise<any> | undefined = undefined;
+    const ownerPayoutAta = getAssociatedTokenAddressSync(
+        payoutMint,
+        config.owner,
+        false,
+        payoutTokenProgram
+    );
 
-    if (payoutIsSol) {
-        ownerPayoutAta = getAssociatedTokenAddressSync(
-            NATIVE_MINT,
-            config.accounts.owner,
-            false,
-            TOKEN_PROGRAM_ID
-        );
-
-        fetchOwnerPayoutAtaPromise =
-            config.program.provider.connection.getAccountInfo(ownerPayoutAta);
-    }
-
-    const promises: Promise<any>[] = [
-        config.mintCache.getMintInfos([poolAccount.currency, poolAccount.collateral])
-    ];
-
-    if (fetchOwnerPayoutAtaPromise) {
-        promises.push(fetchOwnerPayoutAtaPromise);
-    }
-
-    const results = await Promise.all(promises);
-    const mints = results[0];
-    const ownerPayoutAtaInfo = results.length > 1 ? results[1] : undefined;
+    const ownerPayoutAtaInfo = await config.program.provider.connection.getAccountInfo(
+        ownerPayoutAta
+    );
 
     const setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
-    if (payoutIsSol && ownerPayoutAta && !ownerPayoutAtaInfo) {
+    if (!ownerPayoutAtaInfo) {
         setupIx.push(
             createAssociatedTokenAccountIdempotentInstruction(
-                config.accounts.owner,
+                config.owner,
                 ownerPayoutAta,
-                config.accounts.owner,
-                NATIVE_MINT,
-                TOKEN_PROGRAM_ID
+                config.owner,
+                payoutMint,
+                payoutTokenProgram
             )
         );
+    }
+
+    if (payoutIsSol) {
         cleanupIx.push(
             createCloseAccountInstruction(
                 ownerPayoutAta,
-                config.accounts.owner,
-                config.accounts.owner,
+                config.owner,
+                config.owner,
                 [],
-                TOKEN_PROGRAM_ID
+                payoutTokenProgram
             )
         );
     }
@@ -886,10 +967,9 @@ export async function handleCloseTokenAccounts(
         payoutMint,
         payoutIsSol,
         ownerPayoutAta,
-        fetchOwnerPayoutAtaPromise,
         setupIx,
         cleanupIx,
-        currencyTokenProgram: mints.get(poolAccount.currency)!.owner,
-        collateralTokenProgram: mints.get(poolAccount.collateral)!.owner
+        currencyTokenProgram: currencyInfo[1].owner,
+        collateralTokenProgram: collateralInfo[1].owner
     };
 }

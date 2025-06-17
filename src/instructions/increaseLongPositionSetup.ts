@@ -1,50 +1,37 @@
-import { Program, BN } from '@coral-xyz/anchor';
-import {
-    TransactionInstruction,
-    SystemProgram,
-    SYSVAR_INSTRUCTIONS_PUBKEY, PublicKey,
-} from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import {
-    PDA,
-    handleMintsAndTokenProgram,
-    getPermission,
-    handlePaymentTokenMint,
-} from '../utils';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
-    OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
-    OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts,
-    OpenPositionSetupInstructionBaseAccounts,
+    OpenPositionSetupArgs
 } from './openPosition';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA } from '../utils';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import { OpenLongPositionSetupInstructionAccounts } from './openLongPosition';
+import { handleOrdersCheck } from './closePosition';
 
-export type OpenLongPositionSetupInstructionAccounts = {
-    ownerCollateralAccount: PublicKey;
-    openPositionRequest: PublicKey;
-    debtController: PublicKey;
-    tokenProgram: PublicKey;
-} & OpenPositionSetupInstructionBaseAccounts;
-
-const openLongPositionSetupConfig: BaseMethodConfig<
+const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
     OpenPositionSetupAccounts,
     OpenLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
-        const result = await handlePaymentTokenMint(
+        if (!config.args.positionId) {
+            throw new Error('positionId is required for increaseLongPositionSetup');
+        }
+
+        const position = new PublicKey(config.args.positionId);
+
+        const [result, orderIxes] = await Promise.all([handlePaymentTokenMint(
             config.program.provider.connection,
             config.accounts.owner,
             config.accounts.currency, // payment token mint
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee),
-            config.mintCache
-        );
+            Number(config.args.downPayment) + Number(config.args.fee)
+        ), handleOrdersCheck(config.program, position, 'MARKET')]);
 
         const {
             currencyMint,
@@ -95,8 +82,8 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
-                authority: config.accounts.authority || config.program.provider.publicKey,
+                position,
+                authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(
@@ -112,91 +99,37 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                nonce: config.args.nonce,
                 minTargetAmount: new BN(config.args.minTargetAmount),
                 downPayment: new BN(config.args.downPayment),
                 principal: new BN(config.args.principal),
                 fee: new BN(config.args.fee),
                 expiration: new BN(config.args.expiration)
             },
-            setup: setupIx,
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.openLongPositionSetup(
-            args.nonce,
+        program.methods.increaseLongPositionSetup(
             args.minTargetAmount,
             args.downPayment,
             args.principal,
             args.fee,
             args.expiration
         )
-};
+}
 
-const openLongPositionCleanupConfig: BaseMethodConfig<
-    void,
-    OpenPositionCleanupAccounts,
-    OpenPositionCleanupInstructionAccounts
-> = {
-    process: async (config: ConfigArgs<void, OpenPositionCleanupAccounts>) => {
-        const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
-            await handleMintsAndTokenProgram(
-                config.program.provider.connection,
-                config.accounts.currency,
-                config.accounts.collateral,
-                { owner: config.accounts.pool, mintCache: config.mintCache }
-            );
-
-        return {
-            accounts: {
-                owner: config.accounts.owner,
-                pool: config.accounts.pool,
-                collateralVault: getAssociatedTokenAddressSync(
-                    collateralMint,
-                    config.accounts.pool,
-                    true,
-                    collateralTokenProgram
-                ),
-                currencyVault: getAssociatedTokenAddressSync(
-                    currencyMint,
-                    config.accounts.pool,
-                    true,
-                    currencyTokenProgram
-                ),
-                openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: config.accounts.position,
-                tokenProgram: currencyTokenProgram
-            }
-        };
-    },
-    getMethod: (program) => () => program.methods.openLongPositionCleanup()
-};
-
-export async function createOpenLongPositionSetupInstruction(
+export async function createIncreaseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: MintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
         accounts,
-        config: openLongPositionSetupConfig,
+        config: increaseLongPositionSetupConfig,
         args,
-        mintCache
-    }) as Promise<TransactionInstruction[]>;
-}
-
-export async function createOpenLongPositionCleanupInstruction(
-    program: Program<WasabiSolana>,
-    accounts: OpenPositionCleanupAccounts,
-    mintCache?: MintCache
-): Promise<TransactionInstruction[]> {
-    return handleMethodCall({
-        program,
-        accounts,
-        config: openLongPositionCleanupConfig,
         mintCache
     }) as Promise<TransactionInstruction[]>;
 }
