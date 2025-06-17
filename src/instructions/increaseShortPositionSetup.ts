@@ -22,6 +22,12 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenShortPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
+        if (!config.args.positionId) {
+            throw new Error('positionId is required for increaseShortPositionSetup');
+        }
+
+        const position = new PublicKey(config.args.positionId);
+
         const [{
             currencyMint,
             collateralMint,
@@ -37,7 +43,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee)
-        ), handleOrdersCheck(config.program, config.accounts.owner, 'MARKET')]);
+        ), handleOrdersCheck(config.program, position, 'MARKET')]);
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
@@ -79,7 +85,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: new PublicKey(config.args.positionId),
+                position,
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,

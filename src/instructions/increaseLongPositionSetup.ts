@@ -17,6 +17,12 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
+        if (!config.args.positionId) {
+            throw new Error('positionId is required for increaseLongPositionSetup');
+        }
+
+        const position = new PublicKey(config.args.positionId);
+
         const [result, orderIxes] = await Promise.all([handlePaymentTokenMint(
             config.program.provider.connection,
             config.accounts.owner,
@@ -25,7 +31,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee)
-        ), handleOrdersCheck(config.program, config.accounts.owner, 'MARKET')]);
+        ), handleOrdersCheck(config.program, position, 'MARKET')]);
 
         const {
             currencyMint,
@@ -76,7 +82,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: new PublicKey(config.args.positionId),
+                position,
                 authority: config.program.provider.publicKey,
                 permission: await getPermission(config.program, config.program.provider.publicKey),
                 feeWallet: config.accounts.feeWallet,

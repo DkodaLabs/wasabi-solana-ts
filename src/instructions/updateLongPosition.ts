@@ -78,13 +78,13 @@ const updateLongPositionConfig: BaseMethodConfig<
                 globalSettings: PDA.getGlobalSettings(),
                 systemProgram: SystemProgram.programId
             },
-            setup: [...orderIxes, ...setupIx],
-            cleanup: cleanupIx,
             args: {
                 ...config.args,
                 hops,
                 data
             },
+            setup: [...orderIxes, ...setupIx],
+            cleanup: cleanupIx,
             remainingAccounts
         };
     },
