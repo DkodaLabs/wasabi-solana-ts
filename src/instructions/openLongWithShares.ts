@@ -5,14 +5,22 @@ import { extractInstructionData } from './shared';
 import { handleOpenTokenAccounts, MintCache, PDA } from '../utils';
 import { WasabiSolana } from '../idl';
 import { SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
+import { TokenInstructionAccounts } from './tokenAccounts';
 
-const openShortVaultShares: BaseMethodConfig<> = {
-    process: async (config: ConfigArgs<>) => {
+type OpenLongWithSharesInstructionAccounts = {
+    withdraw: TokenInstructionAccounts;
+    openLongPosition: OpenLongPositionInstructionAccounts;
+};
+
+const openLongWithShares: BaseMethodConfig<
+    OpenPositionArgs,
+    OpenPositionAccounts,
+    OpenLongWithSharesInstructionAccounts
+> = {
+    process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
         const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
-
-        const lpVault = PDA.getLpVault(config.acounts.currency);
-        const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
 
         // TODO: Handle the case where the payment currency is wrapped SOL
         // This is because we should create a wrapped SOL account for the user but neither
@@ -30,21 +38,48 @@ const openShortVaultShares: BaseMethodConfig<> = {
             downPayment: config.args.downPayment,
             fee: config.args.fee,
             mintCache: config.mintCache,
-            isLongPool: false,
+            isLongPool: true,
             currency: config.accounts.currency,
             collateral: config.accounts.collateral
         });
 
         if (!config.args.nonce) {
-            throw new Error('Nonce is required for `OpenShortVaultShares`');
+            throw new Error('Nonce is required for `OpenLongWithShares`');
         }
+
+        const lpVault = PDA.getLpVault(config.accounts.currency);
+        const vault = getAssociatedTokenAddressSync(
+            config.accounts.currency,
+            lpVault,
+            true,
+            currencyTokenProgram
+        );
+        const sharesMint = PDA.getSharesMint(lpVault, config.accounts.currency);
+        const pool = PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
+        const globalSettings = PDA.getGlobalSettings();
 
         return {
             accounts: {
-                withdraw: {},
-                openShortPosition: {
+                withdraw: {
                     owner: config.accounts.owner,
-                    ownerTargetCurrencyAccount: ownerPaymentAta,
+                    ownerAssetAccount: ownerPaymentAta,
+                    ownerSharesAccount: getAssociatedTokenAddressSync(
+                        sharesMint,
+                        config.accounts.owner,
+                        false,
+                        TOKEN_2022_PROGRAM_ID
+                    ),
+                    lpVault,
+                    vault,
+                    assetMint: config.accounts.currency,
+                    sharesMint,
+                    globalSettings,
+                    assetTokenProgram: currencyTokenProgram,
+                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID
+                },
+                openLongPosition: {
+                    owner: config.accounts.owner,
+                    ownerCurrencyAccount: ownerPaymentAta,
                     lpVault,
                     vault: getAssociatedTokenAddressSync(
                         config.accounts.currency,
@@ -67,14 +102,18 @@ const openShortVaultShares: BaseMethodConfig<> = {
                     ),
                     currency: config.accounts.currency,
                     collateral: config.accounts.collateral,
-                    position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
+                    position: PDA.getPosition(
+                        config.accounts.owner,
+                        pool,
+                        lpVault,
+                        config.args.nonce
+                    ),
                     authority: config.accounts.authority,
                     permission: PDA.getAdmin(config.accounts.authority),
                     feeWallet: config.accounts.feeWallet,
+                    tokenProgram: currencyTokenProgram,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
-                    currencyTokenProgram,
-                    collateralTokenProgram,
                     systemProgram: SystemProgram.programId
                 }
             },
@@ -88,20 +127,21 @@ const openShortVaultShares: BaseMethodConfig<> = {
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) => program.methods.openShortPositionWithVaultShares(
-        args.withdrawAmount,
-        args.nonce,
-        new BN(args.minTargetAmount),
-        new BN(args.downPayment),
-        new BN(args.principal),
-        new BN(args.fee),
-        new BN(args.expiration),
-        { hops: args.hops },
-        args.data
-    )
+    getMethod: (program) => (args) =>
+        program.methods.openLongWithShares(
+            args.withdrawAmount,
+            args.nonce,
+            new BN(args.minTargetAmount),
+            new BN(args.downPayment),
+            new BN(args.principal),
+            new BN(args.fee),
+            new BN(args.expiration),
+            { hops: args.hops },
+            args.data
+        )
 };
 
-export async function createOpenShortVaultSharesInstruction(
+export async function createOpenLongWithSharesInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
     accounts: OpenPositionAccounts,
@@ -110,7 +150,7 @@ export async function createOpenShortVaultSharesInstruction(
     return handleMethodCall({
         program,
         accounts,
-        config: openShortVaultShares,
+        config: openLongWithShares,
         args,
         mintCache
     }) as Promise<TransactionInstruction[]>;

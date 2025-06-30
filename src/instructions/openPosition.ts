@@ -80,6 +80,7 @@ export type OpenPositionSetupInstructionBaseAccounts = {
 };
 
 export type OpenPositionArgs = {
+    withdrawAmount?: number | bigint,
     nonce?: number,
     positionId?: string,
     minTargetAmount: number | bigint,

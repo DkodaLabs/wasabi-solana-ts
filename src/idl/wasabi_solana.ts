@@ -5044,16 +5044,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "openLongPositionWithVaultShares",
+      "name": "openLongPositionWithShares",
       "discriminator": [
-        106,
-        78,
-        184,
-        90,
-        165,
-        127,
-        234,
-        197
+        42,
+        8,
+        254,
+        35,
+        111,
+        167,
+        161,
+        22
       ],
       "accounts": [
         {
@@ -6200,16 +6200,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "openShortPositionWithVaultShares",
+      "name": "openShortPositionWithShares",
       "discriminator": [
         34,
-        149,
-        65,
-        237,
-        253,
-        224,
-        228,
-        178
+        209,
+        52,
+        168,
+        100,
+        131,
+        78,
+        103
       ],
       "accounts": [
         {
@@ -9572,16 +9572,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "updateLongPositionWithVaultShares",
+      "name": "updateLongPositionWithShares",
       "discriminator": [
-        145,
-        159,
-        79,
-        228,
-        25,
-        224,
-        168,
-        39
+        52,
+        29,
+        17,
+        241,
+        0,
+        147,
+        72,
+        116
       ],
       "accounts": [
         {
