@@ -7,7 +7,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
-import { handleOrdersCheck } from './closePosition';
 
 const increaseShortPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
@@ -25,22 +24,22 @@ const increaseShortPositionConfig: BaseMethodConfig<
         }
 
         const position = new PublicKey(config.args.positionId);
-        const [
-            { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx },
-            orderIxes
-        ] = await Promise.all([
-            handleOpenTokenAccounts({
-                program: config.program,
-                owner: config.accounts.owner,
-                downPayment: config.args.downPayment,
-                fee: config.args.fee,
-                mintCache: config.mintCache,
-                isLongPool: false,
-                currency: config.accounts.currency,
-                collateral: config.accounts.collateral
-            }),
-            handleOrdersCheck(config.program, position, 'MARKET')
-        ]);
+        const {
+            ownerPaymentAta,
+            currencyTokenProgram,
+            collateralTokenProgram,
+            setupIx,
+            cleanupIx
+        } = await handleOpenTokenAccounts({
+            program: config.program,
+            owner: config.accounts.owner,
+            downPayment: config.args.downPayment,
+            fee: config.args.fee,
+            mintCache: config.mintCache,
+            isLongPool: false,
+            currency: config.accounts.currency,
+            collateral: config.accounts.collateral
+        });
 
         return {
             accounts: {
@@ -83,7 +82,7 @@ const increaseShortPositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: [...orderIxes, ...setupIx],
+            setup: setupIx,
             cleanup: cleanupIx,
             remainingAccounts
         };

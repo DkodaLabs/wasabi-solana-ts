@@ -45,7 +45,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx
+            setup: config.args.amount > 0 ? ixes.setupIx : [],
         };
     },
     getMethod: (program) => (args) =>

@@ -120,7 +120,7 @@ const closePostionConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: [...orderIxes, ...setupIx],
+            setup: config.args.amount > 0 ? setupIx : [...orderIxes, ...setupIx],
             cleanup: cleanupIx,
             remainingAccounts
         };

@@ -42,16 +42,8 @@ const addCollateralConfig: BaseMethodConfig<
 
         const pool = PDA.getShortPool(position.collateral, position.currency);
 
-        const [
-            {
-                ownerPaymentAta,
-                setupIx,
-                cleanupIx,
-                collateralTokenProgram
-            },
-            orderIxes
-        ] = await Promise.all([
-            handleOpenTokenAccounts({
+        const { ownerPaymentAta, setupIx, cleanupIx, collateralTokenProgram } =
+            await handleOpenTokenAccounts({
                 program: config.program,
                 owner: config.accounts.owner,
                 mintCache: config.mintCache,
@@ -60,9 +52,7 @@ const addCollateralConfig: BaseMethodConfig<
                 currency: position.currency,
                 collateral: position.collateral,
                 isLongPool: false
-            }),
-            handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
-        ]);
+            });
 
         return {
             accounts: {
@@ -81,8 +71,8 @@ const addCollateralConfig: BaseMethodConfig<
                 feesToPaid: config.args.fee,
                 expiration: config.args.expiration
             },
-            setup: [...orderIxes, ...setupIx],
-            cleanup: cleanupIx,
+            setup: setupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) =>
