@@ -80,7 +80,7 @@ const closePostionConfig: BaseMethodConfig<
                 },
                 poolAccount
             ),
-            handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
+            handleOrdersCheck(config.program, config.accounts.position, 'MARKET', Number(config.args.amount))
         ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);

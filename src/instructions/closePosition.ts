@@ -147,7 +147,8 @@ export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts,
     closeType?: CloseType,
-    mintCache?: MintCache
+    mintCache?: MintCache,
+    amount?: number
 ): Promise<CpsuAndIx> {
     const [
         { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram },
@@ -161,7 +162,7 @@ export async function getClosePositionSetupInstructionAccounts(
             { mintCache }
         ),
         program.account.position.fetch(accounts.position).then((pos) => pos.trader),
-        handleOrdersCheck(program, accounts.position, closeType)
+        handleOrdersCheck(program, accounts.position, closeType, amount)
     ]);
 
     return {
@@ -221,12 +222,16 @@ async function fetchVaultAddress(
     return lpVaultData.vault;
 }
 
-// Close order when exiting positions if they exist
 export async function handleOrdersCheck(
     program: Program<WasabiSolana>,
     positionAddress: PublicKey,
-    closeType?: CloseType
+    closeType?: CloseType,
+    amount?: number
 ): Promise<TransactionInstruction[]> {
+    if (amount !== undefined && amount > 0) {
+        return [];
+    }
+
     const shouldCheckStopLoss =
         closeType === 'MARKET' || closeType === 'LIQUIDATION' || closeType === 'TAKE_PROFIT';
     const shouldCheckTakeProfit =
