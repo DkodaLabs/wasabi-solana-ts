@@ -45,7 +45,7 @@ const stopLossConfig: BaseMethodConfig<
                 },
                 poolAccount
             ),
-            handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS')
+            handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS', Number(config.args.amount))
         ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
@@ -85,7 +85,7 @@ const stopLossConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: config.args.amount > 0 ? setupIx : [...orderIxes, ...setupIx],
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx,
             remainingAccounts
         };

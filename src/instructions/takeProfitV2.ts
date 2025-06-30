@@ -85,7 +85,7 @@ const takeProfitConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: config.args.amount > 0 ? setupIx : [...orderIxes, ...setupIx],
+            setup: [...orderIxes, ...setupIx],
             cleanup: cleanupIx,
             remainingAccounts
         };

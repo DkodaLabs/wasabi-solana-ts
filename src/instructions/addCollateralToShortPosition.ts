@@ -2,7 +2,6 @@ import { Program, BN } from '@coral-xyz/anchor';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { handleOrdersCheck } from './closePosition';
 import { handleOpenTokenAccounts, MintCache, PDA } from '../utils';
 
 export type AddCollateralArgs = {

@@ -7,7 +7,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
-import { handleOrdersCheck } from './closePosition';
 
 const updateLongPositionConfig: BaseMethodConfig<
     OpenPositionArgs,

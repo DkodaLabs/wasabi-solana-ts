@@ -45,7 +45,9 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
-            'MARKET'
+            'MARKET',
+            config.mintCache,
+            config.args.amount
         );
 
         return {
@@ -56,7 +58,7 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: config.args.amount > 0 ? ixes.setupIx : [],
+            setup: ixes.setupIx,
         };
     },
     getMethod: (program) => (args) =>
