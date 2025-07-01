@@ -75,7 +75,9 @@ const openLongWithShares: BaseMethodConfig<
                     sharesMint,
                     globalSettings,
                     assetTokenProgram: currencyTokenProgram,
-                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID
+                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                    eventAuthority: PDA.getEventAuthority(),
+                    program: config.program.programId,
                 },
                 openLongPosition: {
                     owner: config.accounts.owner,
@@ -102,7 +104,7 @@ const openLongWithShares: BaseMethodConfig<
                     ),
                     currency: config.accounts.currency,
                     collateral: config.accounts.collateral,
-                    position: PDA.getPosition(
+                    position: PDA.getPosition( // THIS IS WRONG - WHY?
                         config.accounts.owner,
                         pool,
                         lpVault,
@@ -127,10 +129,14 @@ const openLongWithShares: BaseMethodConfig<
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) =>
-        program.methods.openLongWithShares(
-            args.withdrawAmount,
+    getMethod: (program) => (args) => {
+        if (!args.withdrawAmount) {
+            throw new Error('withdrawAmount is required for `OpenLongWithShares`');
+        }
+
+        return program.methods.openLongWithShares(
             args.nonce,
+            new BN(args.withdrawAmount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
@@ -138,7 +144,8 @@ const openLongWithShares: BaseMethodConfig<
             new BN(args.expiration),
             { hops: args.hops },
             args.data
-        )
+        );
+    }
 };
 
 export async function createOpenLongWithSharesInstruction(

@@ -38,7 +38,8 @@ const updateLongPositionConfig: BaseMethodConfig<
                 mintCache: config.mintCache,
                 isLongPool: true,
                 currency: config.accounts.currency,
-                collateral: config.accounts.collateral
+                collateral: config.accounts.collateral,
+                useShares: false,
             }),
             handleOrdersCheck(config.program, position, 'MARKET')
         ]);

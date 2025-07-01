@@ -74,7 +74,9 @@ const updateLongWithShares: BaseMethodConfig<
                     sharesMint,
                     globalSettings,
                     assetTokenProgram: currencyTokenProgram,
-                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID
+                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                    eventAuthority: PDA.getEventAuthority(),
+                    program: config.program.programId,
                 },
                 updateLongPosition: {
                     owner: config.accounts.owner,
@@ -122,7 +124,7 @@ const updateLongWithShares: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.updateLongPositionWithShares(
+        program.methods.updateLongWithShares(
             args.withdrawAmount,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),

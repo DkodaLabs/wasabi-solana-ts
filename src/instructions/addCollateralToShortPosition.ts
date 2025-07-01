@@ -59,7 +59,8 @@ const addCollateralConfig: BaseMethodConfig<
                 fee: config.args.fee,
                 currency: position.currency,
                 collateral: position.collateral,
-                isLongPool: false
+                isLongPool: false,
+                useShares: false,
             }),
             handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
         ]);

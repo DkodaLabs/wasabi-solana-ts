@@ -2347,16 +2347,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "increaseShortPositionWithShares",
+      "name": "increaseShortWithShares",
       "discriminator": [
-        66,
-        239,
-        167,
-        56,
-        167,
-        143,
-        31,
-        96
+        57,
+        192,
+        77,
+        39,
+        27,
+        250,
+        67,
+        193
       ],
       "accounts": [
         {
@@ -5044,16 +5044,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "openLongPositionWithShares",
+      "name": "openLongWithShares",
       "discriminator": [
-        42,
-        8,
-        254,
-        35,
-        111,
-        167,
-        161,
-        22
+        48,
+        63,
+        152,
+        90,
+        98,
+        119,
+        24,
+        91
       ],
       "accounts": [
         {
@@ -5491,12 +5491,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "withdrawAmount",
-          "type": "u64"
-        },
-        {
           "name": "nonce",
           "type": "u16"
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64"
         },
         {
           "name": "minTargetAmount",
@@ -6200,16 +6200,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "openShortPositionWithShares",
+      "name": "openShortWithShares",
       "discriminator": [
-        34,
-        209,
-        52,
-        168,
-        100,
-        131,
-        78,
-        103
+        144,
+        16,
+        61,
+        40,
+        121,
+        73,
+        127,
+        26
       ],
       "accounts": [
         {
@@ -6650,12 +6650,12 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "withdrawAmount",
-          "type": "u64"
-        },
-        {
           "name": "nonce",
           "type": "u16"
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64"
         },
         {
           "name": "minTargetAmount",
@@ -9572,16 +9572,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "updateLongPositionWithShares",
+      "name": "updateLongWithShares",
       "discriminator": [
-        52,
-        29,
-        17,
-        241,
-        0,
-        147,
-        72,
-        116
+        119,
+        203,
+        242,
+        206,
+        218,
+        233,
+        226,
+        90
       ],
       "accounts": [
         {

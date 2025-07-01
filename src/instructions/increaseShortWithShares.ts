@@ -74,13 +74,16 @@ const increaseShortWithShares: BaseMethodConfig<
                     sharesMint,
                     globalSettings,
                     assetTokenProgram: currencyTokenProgram,
-                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID
+                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                    eventAuthority: PDA.getEventAuthority(),
+                    program: config.program.programId,
                 },
                 increaseShortPosition: {
                     owner: config.accounts.owner,
                     ownerTargetCurrencyAccount: ownerPaymentAta,
                     lpVault,
-                    vault: pool,
+                    vault,
+                    pool,
                     currencyVault: getAssociatedTokenAddressSync(
                         config.accounts.currency,
                         pool,
@@ -117,7 +120,7 @@ const increaseShortWithShares: BaseMethodConfig<
         };
     },
     getMethod: (program) => (args) =>
-        program.methods.increaseShortPositionWithShares(
+        program.methods.increaseShortWithShares(
             args.withdrawAmount,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),

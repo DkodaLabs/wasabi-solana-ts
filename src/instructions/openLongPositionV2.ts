@@ -52,7 +52,8 @@ const openLongPositionConfig: BaseMethodConfig<
             mintCache: config.mintCache,
             isLongPool: true,
             currency: config.accounts.currency,
-            collateral: config.accounts.collateral
+            collateral: config.accounts.collateral,
+            useShares: false,
         });
 
         if (!config.args.nonce) {

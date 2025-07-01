@@ -47,14 +47,21 @@ const openShortWithShares: BaseMethodConfig<
             throw new Error('Nonce is required for `OpenShortVaultShares`');
         }
 
-        const lpVault = PDA.getLpVault(config.accounts.currency);
-        const vault = getAssociatedTokenAddressSync(
+        const borrowLpVault = PDA.getLpVault(config.accounts.currency);
+        const borrowVault = getAssociatedTokenAddressSync(
             config.accounts.currency,
-            lpVault,
+            borrowLpVault,
             true,
             currencyTokenProgram
         );
-        const sharesMint = PDA.getSharesMint(lpVault, config.accounts.currency);
+        const withdrawLpVault = PDA.getLpVault(config.accounts.collateral);
+        const withdrawVault = getAssociatedTokenAddressSync(
+            config.accounts.collateral,
+            withdrawLpVault,
+            true,
+            collateralTokenProgram
+        );
+        const sharesMint = PDA.getSharesMint(withdrawLpVault, config.accounts.collateral);
         const pool = PDA.getShortPool(config.accounts.collateral, config.accounts.currency);
         const globalSettings = PDA.getGlobalSettings();
 
@@ -69,19 +76,22 @@ const openShortWithShares: BaseMethodConfig<
                         false,
                         TOKEN_2022_PROGRAM_ID
                     ),
-                    lpVault,
-                    vault,
-                    assetMint: config.accounts.currency,
+                    lpVault: withdrawLpVault,
+                    vault: withdrawVault,
+                    assetMint: config.accounts.collateral,
                     sharesMint,
                     globalSettings,
-                    assetTokenProgram: currencyTokenProgram,
-                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID
+                    assetTokenProgram: collateralTokenProgram,
+                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                    eventAuthority: PDA.getEventAuthority(),
+                    program: config.program.programId
                 },
                 openShortPosition: {
                     owner: config.accounts.owner,
                     ownerTargetCurrencyAccount: ownerPaymentAta,
-                    lpVault,
-                    vault: pool,
+                    lpVault: borrowLpVault,
+                    vault: borrowVault,
+                    pool,
                     currencyVault: getAssociatedTokenAddressSync(
                         config.accounts.currency,
                         pool,
@@ -99,7 +109,7 @@ const openShortWithShares: BaseMethodConfig<
                     position: PDA.getPosition(
                         config.accounts.owner,
                         pool,
-                        lpVault,
+                        borrowLpVault,
                         config.args.nonce
                     ),
                     authority: config.accounts.authority,
@@ -122,10 +132,13 @@ const openShortWithShares: BaseMethodConfig<
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) =>
-        program.methods.openShortWithShares(
-            args.withdrawAmount,
+    getMethod: (program) => (args) => {
+        if (!args.withdrawAmount) {
+            throw new Error('withdrawAmount is required for `OpenShortWithShares`');
+        }
+        return program.methods.openShortWithShares(
             args.nonce,
+            new BN(args.withdrawAmount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
@@ -133,7 +146,8 @@ const openShortWithShares: BaseMethodConfig<
             new BN(args.expiration),
             { hops: args.hops },
             args.data
-        )
+        );
+    }
 };
 
 export async function createOpenShortWithSharesInstruction(

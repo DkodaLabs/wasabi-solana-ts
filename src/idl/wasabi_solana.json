@@ -2341,16 +2341,16 @@
       ]
     },
     {
-      "name": "increase_short_position_with_shares",
+      "name": "increase_short_with_shares",
       "discriminator": [
-        66,
-        239,
-        167,
-        56,
-        167,
-        143,
-        31,
-        96
+        57,
+        192,
+        77,
+        39,
+        27,
+        250,
+        67,
+        193
       ],
       "accounts": [
         {
@@ -5038,16 +5038,16 @@
       ]
     },
     {
-      "name": "open_long_position_with_shares",
+      "name": "open_long_with_shares",
       "discriminator": [
-        42,
-        8,
-        254,
-        35,
-        111,
-        167,
-        161,
-        22
+        48,
+        63,
+        152,
+        90,
+        98,
+        119,
+        24,
+        91
       ],
       "accounts": [
         {
@@ -5485,12 +5485,12 @@
       ],
       "args": [
         {
-          "name": "withdraw_amount",
-          "type": "u64"
-        },
-        {
           "name": "nonce",
           "type": "u16"
+        },
+        {
+          "name": "withdraw_amount",
+          "type": "u64"
         },
         {
           "name": "min_target_amount",
@@ -6194,16 +6194,16 @@
       ]
     },
     {
-      "name": "open_short_position_with_shares",
+      "name": "open_short_with_shares",
       "discriminator": [
-        34,
-        209,
-        52,
-        168,
-        100,
-        131,
-        78,
-        103
+        144,
+        16,
+        61,
+        40,
+        121,
+        73,
+        127,
+        26
       ],
       "accounts": [
         {
@@ -6644,12 +6644,12 @@
       ],
       "args": [
         {
-          "name": "withdraw_amount",
-          "type": "u64"
-        },
-        {
           "name": "nonce",
           "type": "u16"
+        },
+        {
+          "name": "withdraw_amount",
+          "type": "u64"
         },
         {
           "name": "min_target_amount",
@@ -9566,16 +9566,16 @@
       ]
     },
     {
-      "name": "update_long_position_with_shares",
+      "name": "update_long_with_shares",
       "discriminator": [
-        52,
-        29,
-        17,
-        241,
-        0,
-        147,
-        72,
-        116
+        119,
+        203,
+        242,
+        206,
+        218,
+        233,
+        226,
+        90
       ],
       "accounts": [
         {
