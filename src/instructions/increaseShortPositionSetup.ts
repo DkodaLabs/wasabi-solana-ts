@@ -28,14 +28,14 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
 
         const position = new PublicKey(config.args.positionId);
 
-        const [{
+        const {
             currencyMint,
             collateralMint,
             currencyTokenProgram,
             collateralTokenProgram,
             setupIx,
             cleanupIx
-        }, orderIxes] = await Promise.all([handlePaymentTokenMint(
+        } = await handlePaymentTokenMint(
             config.program.provider.connection,
             config.accounts.owner,
             config.accounts.collateral, // payment token mint
@@ -43,7 +43,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.collateral,
             'wrap',
             Number(config.args.downPayment) + Number(config.args.fee)
-        ), handleOrdersCheck(config.program, position, 'MARKET')]);
+        );
         const lpVault = PDA.getLpVault(currencyMint);
         const pool = PDA.getShortPool(collateralMint, currencyMint);
 
@@ -108,7 +108,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
                 fee: new BN(config.args.fee),
                 expiration: new BN(config.args.expiration)
             },
-            setup: [...orderIxes, ...setupIx],
+            setup: setupIx,
             cleanup: cleanupIx
         };
     },

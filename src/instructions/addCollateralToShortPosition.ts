@@ -2,7 +2,6 @@ import { Program, BN } from '@coral-xyz/anchor';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { handleOrdersCheck } from './closePosition';
 import { handleOpenTokenAccounts, MintCache, PDA } from '../utils';
 
 export type AddCollateralArgs = {
@@ -17,7 +16,7 @@ export type AddCollateralAccounts = {
     feeWallet: PublicKey;
 };
 
-type AddCollateralInstructionAccounts = {
+export type AddCollateralInstructionAccounts = {
     owner: PublicKey;
     ownerTargetCurrencyAccount: PublicKey;
     position: PublicKey;
@@ -42,16 +41,8 @@ const addCollateralConfig: BaseMethodConfig<
 
         const pool = PDA.getShortPool(position.collateral, position.currency);
 
-        const [
-            {
-                ownerPaymentAta,
-                setupIx,
-                cleanupIx,
-                collateralTokenProgram
-            },
-            orderIxes
-        ] = await Promise.all([
-            handleOpenTokenAccounts({
+        const { ownerPaymentAta, setupIx, cleanupIx, collateralTokenProgram } =
+            await handleOpenTokenAccounts({
                 program: config.program,
                 owner: config.accounts.owner,
                 mintCache: config.mintCache,
@@ -60,10 +51,8 @@ const addCollateralConfig: BaseMethodConfig<
                 currency: position.currency,
                 collateral: position.collateral,
                 isLongPool: false,
-                useShares: false,
-            }),
-            handleOrdersCheck(config.program, config.accounts.position, 'MARKET')
-        ]);
+                useShares: false
+            });
 
         return {
             accounts: {
@@ -82,8 +71,8 @@ const addCollateralConfig: BaseMethodConfig<
                 feesToPaid: config.args.fee,
                 expiration: config.args.expiration
             },
-            setup: [...orderIxes, ...setupIx],
-            cleanup: cleanupIx,
+            setup: setupIx,
+            cleanup: cleanupIx
         };
     },
     getMethod: (program) => (args) =>

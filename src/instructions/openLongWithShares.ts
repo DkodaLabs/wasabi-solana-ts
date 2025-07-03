@@ -77,18 +77,13 @@ const openLongWithShares: BaseMethodConfig<
                     assetTokenProgram: currencyTokenProgram,
                     sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
                     eventAuthority: PDA.getEventAuthority(),
-                    program: config.program.programId,
+                    program: config.program.programId
                 },
                 openLongPosition: {
                     owner: config.accounts.owner,
                     ownerCurrencyAccount: ownerPaymentAta,
                     lpVault,
-                    vault: getAssociatedTokenAddressSync(
-                        config.accounts.currency,
-                        lpVault,
-                        true,
-                        currencyTokenProgram
-                    ),
+                    vault,
                     pool,
                     currencyVault: getAssociatedTokenAddressSync(
                         config.accounts.currency,
@@ -104,7 +99,7 @@ const openLongWithShares: BaseMethodConfig<
                     ),
                     currency: config.accounts.currency,
                     collateral: config.accounts.collateral,
-                    position: PDA.getPosition( // THIS IS WRONG - WHY?
+                    position: PDA.getPosition(
                         config.accounts.owner,
                         pool,
                         lpVault,
@@ -129,14 +124,9 @@ const openLongWithShares: BaseMethodConfig<
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) => {
-        if (!args.withdrawAmount) {
-            throw new Error('withdrawAmount is required for `OpenLongWithShares`');
-        }
-
-        return program.methods.openLongWithShares(
+    getMethod: (program) => (args) =>
+        program.methods.openLongWithShares(
             args.nonce,
-            new BN(args.withdrawAmount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
@@ -144,8 +134,7 @@ const openLongWithShares: BaseMethodConfig<
             new BN(args.expiration),
             { hops: args.hops },
             args.data
-        );
-    }
+        )
 };
 
 export async function createOpenLongWithSharesInstruction(

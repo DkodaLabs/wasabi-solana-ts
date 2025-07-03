@@ -7,7 +7,6 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
-import { handleOrdersCheck } from './closePosition';
 
 const updateLongPositionConfig: BaseMethodConfig<
     OpenPositionArgs,
@@ -26,23 +25,23 @@ const updateLongPositionConfig: BaseMethodConfig<
 
         const position = new PublicKey(config.args.positionId);
 
-        const [
-            { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx },
-            orderIxes
-        ] = await Promise.all([
-            handleOpenTokenAccounts({
-                program: config.program,
-                owner: config.accounts.owner,
-                downPayment: config.args.downPayment,
-                fee: config.args.fee,
-                mintCache: config.mintCache,
-                isLongPool: true,
-                currency: config.accounts.currency,
-                collateral: config.accounts.collateral,
-                useShares: false,
-            }),
-            handleOrdersCheck(config.program, position, 'MARKET')
-        ]);
+        const {
+            ownerPaymentAta,
+            currencyTokenProgram,
+            collateralTokenProgram,
+            setupIx,
+            cleanupIx
+        } = await handleOpenTokenAccounts({
+            program: config.program,
+            owner: config.accounts.owner,
+            downPayment: config.args.downPayment,
+            fee: config.args.fee,
+            mintCache: config.mintCache,
+            isLongPool: true,
+            currency: config.accounts.currency,
+            collateral: config.accounts.collateral,
+            useShares: false
+        });
 
         return {
             accounts: {
@@ -84,7 +83,7 @@ const updateLongPositionConfig: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: [...orderIxes, ...setupIx],
+            setup: setupIx,
             cleanup: cleanupIx,
             remainingAccounts
         };

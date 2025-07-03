@@ -8,7 +8,6 @@ import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
 import { TokenInstructionAccounts } from './tokenAccounts';
-import { handleOrdersCheck } from './closePosition';
 
 type IncreaseShortWithSharesInstructionAccounts = {
     withdraw: TokenInstructionAccounts;
@@ -31,22 +30,22 @@ const increaseShortWithShares: BaseMethodConfig<
         }
 
         const position = new PublicKey(config.args.positionId);
-        const [
-            { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx },
-            orderIxes
-        ] = await Promise.all([
-            handleOpenTokenAccounts({
-                program: config.program,
-                owner: config.accounts.owner,
-                downPayment: config.args.downPayment,
-                fee: config.args.fee,
-                mintCache: config.mintCache,
-                isLongPool: false,
-                currency: config.accounts.currency,
-                collateral: config.accounts.collateral
-            }),
-            handleOrdersCheck(config.program, position, 'MARKET')
-        ]);
+        const {
+            ownerPaymentAta,
+            currencyTokenProgram,
+            collateralTokenProgram,
+            setupIx,
+            cleanupIx
+        } = await handleOpenTokenAccounts({
+            program: config.program,
+            owner: config.accounts.owner,
+            downPayment: config.args.downPayment,
+            fee: config.args.fee,
+            mintCache: config.mintCache,
+            isLongPool: false,
+            currency: config.accounts.currency,
+            collateral: config.accounts.collateral
+        });
 
         const vault = getAssociatedTokenAddressSync(
             config.accounts.currency,
@@ -76,7 +75,7 @@ const increaseShortWithShares: BaseMethodConfig<
                     assetTokenProgram: currencyTokenProgram,
                     sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
                     eventAuthority: PDA.getEventAuthority(),
-                    program: config.program.programId,
+                    program: config.program.programId
                 },
                 increaseShortPosition: {
                     owner: config.accounts.owner,
@@ -103,7 +102,7 @@ const increaseShortWithShares: BaseMethodConfig<
                     permission: PDA.getAdmin(config.accounts.authority),
                     feeWallet: config.accounts.feeWallet,
                     debtController: PDA.getDebtController(),
-                    globalSettings: PDA.getGlobalSettings(),
+                    globalSettings,
                     currencyTokenProgram,
                     collateralTokenProgram,
                     systemProgram: SystemProgram.programId
@@ -114,14 +113,13 @@ const increaseShortWithShares: BaseMethodConfig<
                 hops,
                 data
             },
-            setup: [...orderIxes, ...setupIx],
+            setup: setupIx,
             cleanup: cleanupIx,
             remainingAccounts
         };
     },
     getMethod: (program) => (args) =>
         program.methods.increaseShortWithShares(
-            args.withdrawAmount,
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),

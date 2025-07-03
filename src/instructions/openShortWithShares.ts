@@ -132,13 +132,9 @@ const openShortWithShares: BaseMethodConfig<
             remainingAccounts
         };
     },
-    getMethod: (program) => (args) => {
-        if (!args.withdrawAmount) {
-            throw new Error('withdrawAmount is required for `OpenShortWithShares`');
-        }
-        return program.methods.openShortWithShares(
+    getMethod: (program) => (args) =>
+        program.methods.openShortWithShares(
             args.nonce,
-            new BN(args.withdrawAmount),
             new BN(args.minTargetAmount),
             new BN(args.downPayment),
             new BN(args.principal),
@@ -146,8 +142,7 @@ const openShortWithShares: BaseMethodConfig<
             new BN(args.expiration),
             { hops: args.hops },
             args.data
-        );
-    }
+        )
 };
 
 export async function createOpenShortWithSharesInstruction(
