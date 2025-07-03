@@ -16,7 +16,7 @@ export type AddCollateralAccounts = {
     feeWallet: PublicKey;
 };
 
-type AddCollateralInstructionAccounts = {
+export type AddCollateralInstructionAccounts = {
     owner: PublicKey;
     ownerTargetCurrencyAccount: PublicKey;
     position: PublicKey;
@@ -50,7 +50,8 @@ const addCollateralConfig: BaseMethodConfig<
                 fee: config.args.fee,
                 currency: position.currency,
                 collateral: position.collateral,
-                isLongPool: false
+                isLongPool: false,
+                useShares: false
             });
 
         return {

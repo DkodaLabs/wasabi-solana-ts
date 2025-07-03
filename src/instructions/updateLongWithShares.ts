@@ -1,28 +1,27 @@
 import { TransactionInstruction } from '@solana/web3.js';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
-import { createPositionMethodBuilder, processPositionInstruction } from './shared';
+import { createPositionMethodBuilder, processPositionInstruction, UpdateWithSharesInstructionAccounts } from './shared';
 import { MintCache } from '../utils';
 import { Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
-import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
 
-const updateLongPositionConfig: BaseMethodConfig<
+const updateLongWithShares: BaseMethodConfig<
     OpenPositionArgs,
     OpenPositionAccounts,
-    OpenLongPositionInstructionAccounts
+    UpdateWithSharesInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>) => {
-        return processPositionInstruction<OpenLongPositionInstructionAccounts>(config, {
-            useShares: false,
+        return processPositionInstruction<UpdateWithSharesInstructionAccounts>(config, {
+            useShares: true,
             isUpdate: true,
-            methodName: 'UpdateLongPosition'
+            methodName: 'UpdateLongWithShares'
         });
     },
-    getMethod: createPositionMethodBuilder('updateLongPosition', true)
+    getMethod: createPositionMethodBuilder('updateLongWithShares', true)
 };
 
-export async function createUpdateLongPositionInstruction(
+export async function createUpdateLongWithSharesInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionArgs,
     accounts: OpenPositionAccounts,
@@ -31,7 +30,7 @@ export async function createUpdateLongPositionInstruction(
     return handleMethodCall({
         program,
         accounts,
-        config: updateLongPositionConfig,
+        config: updateLongWithShares,
         args,
         mintCache
     }) as Promise<TransactionInstruction[]>;

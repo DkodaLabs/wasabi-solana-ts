@@ -38,7 +38,8 @@ const increaseShortPositionConfig: BaseMethodConfig<
             mintCache: config.mintCache,
             isLongPool: false,
             currency: config.accounts.currency,
-            collateral: config.accounts.collateral
+            collateral: config.accounts.collateral,
+            useShares: false
         });
 
         return {
