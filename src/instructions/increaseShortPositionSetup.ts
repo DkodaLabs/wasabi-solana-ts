@@ -1,8 +1,5 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import {
-    OpenPositionSetupAccounts,
-    OpenPositionSetupArgs,
-} from './openPosition';
+import { OpenPositionSetupAccounts, OpenPositionSetupArgs } from './openPosition';
 import { getPermission, handlePaymentTokenMint, MintCache, PDA } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
@@ -14,7 +11,6 @@ import {
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { OpenShortPositionSetupInstructionAccounts } from './openShortPosition';
-import { handleOrdersCheck } from './closePosition';
 
 const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,

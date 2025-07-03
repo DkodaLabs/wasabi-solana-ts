@@ -34,7 +34,8 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
             config.program,
             config.accounts,
             'MARKET',
-            config.mintCache
+            config.mintCache,
+            config.args.amount
         );
 
         return {
@@ -45,7 +46,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                 }
             },
             args: transformArgs(config.args),
-            setup: ixes.setupIx
+            setup: ixes.setupIx,
         };
     },
     getMethod: (program) => (args) =>
