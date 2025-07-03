@@ -395,7 +395,7 @@
           ]
         },
         {
-          "name": "add_collateral_to_short_position",
+          "name": "edit_position",
           "accounts": [
             {
               "name": "owner",
@@ -2952,7 +2952,7 @@
           ]
         },
         {
-          "name": "increase_short_position",
+          "name": "edit_position",
           "accounts": [
             {
               "name": "owner",
@@ -5645,7 +5645,7 @@
           ]
         },
         {
-          "name": "open_long_position",
+          "name": "open_position",
           "accounts": [
             {
               "name": "owner",
@@ -6797,7 +6797,7 @@
           ]
         },
         {
-          "name": "open_short_position",
+          "name": "open_position",
           "accounts": [
             {
               "name": "owner",
@@ -10165,7 +10165,7 @@
           ]
         },
         {
-          "name": "update_long_position",
+          "name": "edit_position",
           "accounts": [
             {
               "name": "owner",

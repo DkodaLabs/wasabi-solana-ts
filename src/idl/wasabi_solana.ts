@@ -401,7 +401,7 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "addCollateralToShortPosition",
+          "name": "editPosition",
           "accounts": [
             {
               "name": "owner",
@@ -2958,7 +2958,7 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "increaseShortPosition",
+          "name": "editPosition",
           "accounts": [
             {
               "name": "owner",
@@ -5651,7 +5651,7 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "openLongPosition",
+          "name": "openPosition",
           "accounts": [
             {
               "name": "owner",
@@ -6803,7 +6803,7 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "openShortPosition",
+          "name": "openPosition",
           "accounts": [
             {
               "name": "owner",
@@ -10171,7 +10171,7 @@ export type WasabiSolana = {
           ]
         },
         {
-          "name": "updateLongPosition",
+          "name": "editPosition",
           "accounts": [
             {
               "name": "owner",
