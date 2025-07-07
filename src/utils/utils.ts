@@ -327,10 +327,8 @@ export async function getMaxWithdraw(
     program: Program<WasabiSolana>,
     mint: PublicKey
 ): Promise<bigint> {
-    if (!program.provider.publicKey) {
-        throw new Error('Provider pubkey not set');
-    }
-    return getMaxWithdrawForUser(program, mint, program.provider.publicKey);
+    const providerPubkey = validateProviderPubkey(program.provider.publicKey);
+    return getMaxWithdrawForUser(program, mint, providerPubkey);
 }
 
 export async function getMaxWithdrawForUser(
@@ -433,11 +431,12 @@ export async function getUserVaultBalances(
                     };
                 }
             }
-            return null;
+
+            return undefined;
         })
     );
 
-    return shareBalances.filter((balance): balance is { asset: PublicKey; shares: bigint } => balance !== null && balance !== undefined);
+    return shareBalances.filter(balance => balance !== undefined);
 }
 
 export async function getMultipleTokenAccounts(
