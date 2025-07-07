@@ -11,7 +11,12 @@ import {
     getAssociatedTokenAddressSync
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
-import { getTokenProgram, PDA, WASABI_PROGRAM_ID } from '../utils';
+import {
+    getTokenProgram,
+    PDA,
+    validateProviderPayer,
+    WASABI_PROGRAM_ID
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type StrategyParams = StrategyArgs & StrategyAccounts;
@@ -81,6 +86,11 @@ export const getStrategyAccounts = async (
         getTokenProgram(connection, principal),
         getTokenProgram(connection, collateral)
     ]);
+
+    if (!principalTokenProgram || !collateralTokenProgram) {
+        throw new Error('Token program not found');
+    }
+
     const vault = getAssociatedTokenAddressSync(principal, lpVault, true, principalTokenProgram);
     const collateralVault = getAssociatedTokenAddressSync(
         collateral,
@@ -115,6 +125,7 @@ export const initStrategyConfig: BaseMethodConfig<
     InitStrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const {
             authority,
             permission,
@@ -127,13 +138,13 @@ export const initStrategyConfig: BaseMethodConfig<
             collateralTokenProgram
         } = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
 
         const setupIx = createAssociatedTokenAccountIdempotentInstruction(
-            config.program.provider.publicKey,
+            payer,
             collateralVault,
             lpVault,
             collateral,
@@ -164,9 +175,10 @@ export const strategyDepositSetupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyArgs, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
@@ -186,9 +198,10 @@ export const strategyDepositCleanupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
@@ -206,9 +219,10 @@ export const strategyWithdrawSetupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyArgs, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
@@ -228,9 +242,10 @@ export const strategyWithdrawCleanupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
@@ -251,9 +266,10 @@ export const strategyClaimConfig: BaseMethodConfig<
     StrategyClaimInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyClaimArgs, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const { authority, permission, lpVault, collateral, strategy } = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );
@@ -278,6 +294,7 @@ export const closeStrategyConfig: BaseMethodConfig<
     CloseStrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const {
             authority,
             permission,
@@ -288,7 +305,7 @@ export const closeStrategyConfig: BaseMethodConfig<
             tokenProgram
         } = await getStrategyAccounts(
             config.program.provider.connection,
-            config.program.provider.publicKey,
+            payer,
             config.accounts.principal,
             config.accounts.collateral
         );

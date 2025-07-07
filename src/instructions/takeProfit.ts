@@ -29,6 +29,10 @@ const takeProfitSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        if (!config.args) {
+            throw new Error('Missing args');
+        }
+
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,

@@ -8,7 +8,7 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { handleOrdersCheck } from './closePosition';
 
@@ -23,7 +23,9 @@ const takeProfitConfig: BaseMethodConfig<
     TakeProfitInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
-        const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+        const args = validateArgs(config.args);
+        const mintCache = validateMintCache(config.mintCache);
+        const { hops, data, remainingAccounts } = extractInstructionData(args.instructions);
 
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
@@ -41,7 +43,7 @@ const takeProfitConfig: BaseMethodConfig<
                 {
                     program: config.program,
                     owner: config.accounts.owner,
-                    mintCache: config.mintCache
+                    mintCache,
                 },
                 poolAccount
             ),

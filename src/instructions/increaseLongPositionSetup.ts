@@ -3,7 +3,7 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionSetupArgs
 } from './openPosition';
-import { getPermission, handlePaymentTokenMint, MintCache, PDA } from '../utils';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPayer } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -16,11 +16,14 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
-        if (!config.args.positionId) {
+        const args = validateArgs(config.args);
+        const authority = validateProviderPayer(config.program.provider.publicKey);
+
+        if (!args.positionId) {
             throw new Error('positionId is required for increaseLongPositionSetup');
         }
 
-        const position = new PublicKey(config.args.positionId);
+        const position = new PublicKey(args.positionId);
 
         const result = await handlePaymentTokenMint(
             config.program.provider.connection,
@@ -29,7 +32,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee)
+            Number(args.downPayment) + Number(args.fee)
         );
 
         const {
@@ -82,8 +85,8 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 position,
-                authority: config.program.provider.publicKey,
-                permission: await getPermission(config.program, config.program.provider.publicKey),
+                authority,
+                permission: await getPermission(config.program, authority),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(
                     currencyMint,
@@ -98,11 +101,11 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                minTargetAmount: new BN(config.args.minTargetAmount),
-                downPayment: new BN(config.args.downPayment),
-                principal: new BN(config.args.principal),
-                fee: new BN(config.args.fee),
-                expiration: new BN(config.args.expiration)
+                minTargetAmount: new BN(args.minTargetAmount),
+                downPayment: new BN(args.downPayment),
+                principal: new BN(args.principal),
+                fee: new BN(args.fee),
+                expiration: new BN(args.expiration)
             },
             setup: setupIx,
             cleanup: cleanupIx

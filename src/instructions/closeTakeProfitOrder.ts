@@ -5,7 +5,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA } from '../utils';
+import { PDA, validateProviderPayer } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type CloseTakeProfitOrderAccounts = {
@@ -24,7 +24,8 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
     CloseTakeProfitOrderInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, CloseTakeProfitOrderAccounts>) => {
-        const permission = PDA.getAdmin(config.program.provider.publicKey);
+        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const permission = PDA.getAdmin(payer);
         const [trader, permissionAccount] = await Promise.all([
             config.program.account.position
                 .fetch(config.accounts.position)
@@ -33,7 +34,7 @@ const closeTakeProfitOrderConfig: BaseMethodConfig<
         ]);
 
         const accounts = {
-            closer: config.program.provider.publicKey,
+            closer: payer,
             trader,
             permission: permissionAccount ? permission : PDA.getSuperAdmin(),
             position: config.accounts.position,

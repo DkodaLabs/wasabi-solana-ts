@@ -9,7 +9,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA } from '../utils';
+import { PDA, validateArgs } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type InitOrUpdateStopLossArgs = {
@@ -34,6 +34,7 @@ const initOrUpdateStopLossConfig: BaseMethodConfig<
     InitOrUpdateStopLossInstructionAccounts
 > = {
     process: async (config: ConfigArgs<InitOrUpdateStopLossArgs, InitOrUpdateStopLossAccounts>) => {
+        const args = validateArgs(config.args);
         const trader = await config.program.account.position
             .fetch(config.accounts.position)
             .then((pos) => pos.trader);
@@ -45,8 +46,8 @@ const initOrUpdateStopLossConfig: BaseMethodConfig<
                 systemProgram: SystemProgram.programId
             },
             args: {
-                makerAmount: new BN(config.args.makerAmount.toString()),
-                takerAmount: new BN(config.args.takerAmount.toString())
+                makerAmount: new BN(args.makerAmount.toString()),
+                takerAmount: new BN(args.takerAmount.toString())
             }
         };
     },

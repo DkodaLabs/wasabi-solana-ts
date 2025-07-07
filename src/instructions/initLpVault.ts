@@ -13,7 +13,7 @@ import {
 } from '@solana/spl-token';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { METADATA_PROGRAM_ID, PDA, getPermission, handleMint } from '../utils';
+import { METADATA_PROGRAM_ID, PDA, getPermission, handleMint, validateProviderPayer } from '../utils';
 
 export type InitLpVaultArgs = {
     name: string;
@@ -49,6 +49,7 @@ export const initLpVaultConfig: BaseMethodConfig<
     InitLpVaultInstructionAccounts
 > = {
     process: async (config: ConfigArgs<InitLpVaultArgs, InitLpVaultAccounts>) => {
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const { mint, tokenProgram } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
@@ -61,8 +62,8 @@ export const initLpVaultConfig: BaseMethodConfig<
 
         return {
             accounts: {
-                payer: config.program.provider.publicKey,
-                authority: config.program.provider.publicKey,
+                payer,
+                authority: payer,
                 permission: await getPermission(config.program, config.accounts.admin),
                 lpVault,
                 vault,
@@ -79,7 +80,7 @@ export const initLpVaultConfig: BaseMethodConfig<
             args: config.args,
             setup: [
                 createAssociatedTokenAccountIdempotentInstruction(
-                    config.program.provider.publicKey,
+                    payer,
                     vault,
                     lpVault,
                     mint,

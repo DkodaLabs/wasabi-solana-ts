@@ -9,7 +9,7 @@ import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
 import { extractInstructionData } from './shared';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
 import { handleOrdersCheck } from './closePosition';
 
 type StopLossInstructionAccounts = {
@@ -23,7 +23,9 @@ const stopLossConfig: BaseMethodConfig<
     StopLossInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
-        const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+        const args = validateArgs(config.args);
+        const mintCache = validateMintCache(config.mintCache);
+        const { hops, data, remainingAccounts } = extractInstructionData(args.instructions);
 
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
@@ -41,11 +43,11 @@ const stopLossConfig: BaseMethodConfig<
                 {
                     program: config.program,
                     owner: config.accounts.owner,
-                    mintCache: config.mintCache
+                    mintCache,
                 },
                 poolAccount
             ),
-            handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS', Number(config.args.amount))
+            handleOrdersCheck(config.program, config.accounts.position, 'STOP_LOSS', Number(args.amount))
         ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);

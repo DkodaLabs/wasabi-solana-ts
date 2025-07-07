@@ -1,5 +1,7 @@
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
 import fetch from 'cross-fetch';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { JitoJsonRpcClient } from 'jito-js-rpc';
 import {
     Connection,

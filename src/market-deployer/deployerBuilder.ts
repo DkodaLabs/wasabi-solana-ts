@@ -13,7 +13,7 @@ import {
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID
 } from '@solana/spl-token';
-import { PDA } from '../utils';
+import { PDA, validateProviderPayer } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
     createInitLpVaultInstruction,
@@ -257,11 +257,16 @@ export class DeployerBuilder {
 
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
+        const payer = validateProviderPayer(this.program.provider.publicKey);
+
+        if (!this.computeBudget) {
+            throw new Error('Compute budget is required');
+        }
 
         const latestBlockhash = (await this.program.provider.connection.getLatestBlockhash())
             .blockhash;
         const builder = new TransactionBuilder()
-            .setPayer(this.program.provider.publicKey)
+            .setPayer(payer)
             .setConnection(this.program.provider.connection)
             .setComputeBudgetConfig(this.computeBudget)
             .setRecentBlockhash(latestBlockhash);
@@ -330,7 +335,7 @@ export class DeployerBuilder {
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: NATIVE_MINT,
                         collateral: this.mint,
-                        admin: this.program.provider.publicKey
+                        admin: this.program.provider.publicKey!
                     }))
                 );
             }
@@ -340,7 +345,7 @@ export class DeployerBuilder {
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
                         collateral: NATIVE_MINT,
-                        admin: this.program.provider.publicKey
+                        admin: this.program.provider.publicKey!
                     }))
                 );
             }
@@ -355,7 +360,7 @@ export class DeployerBuilder {
                     ...(await createInitLongPoolInstruction(this.program, {
                         currency: usdc,
                         collateral: this.mint,
-                        admin: this.program.provider.publicKey
+                        admin: this.program.provider.publicKey!
                     }))
                 );
 
@@ -364,7 +369,7 @@ export class DeployerBuilder {
 
                     longIxes.push(
                         createAssociatedTokenAccountIdempotentInstruction(
-                            this.program.provider.publicKey,
+                            this.program.provider.publicKey!,
                             getAssociatedTokenAddressSync(
                                 NATIVE_MINT,
                                 longPool,
@@ -385,7 +390,7 @@ export class DeployerBuilder {
                     ...(await createInitShortPoolInstruction(this.program, {
                         currency: this.mint,
                         collateral: usdc,
-                        admin: this.program.provider.publicKey
+                        admin: this.program.provider.publicKey!
                     }))
                 );
 
@@ -394,7 +399,7 @@ export class DeployerBuilder {
 
                     shortIxes.push(
                         createAssociatedTokenAccountIdempotentInstruction(
-                            this.program.provider.publicKey,
+                            this.program.provider.publicKey!,
                             getAssociatedTokenAddressSync(
                                 NATIVE_MINT,
                                 shortPool,
@@ -460,7 +465,7 @@ export class DeployerBuilder {
                 uri: this.uri
             },
             {
-                admin: this.program.provider.publicKey,
+                admin: this.program.provider.publicKey!,
                 assetMint: this.mint
             }
         );
@@ -475,7 +480,13 @@ export class DeployerBuilder {
         // eslint-disable-next-line prefer-const
         let [addresses, assetTokenProgram] = await Promise.all([
             this.getCommonLookupTableAddresses(),
-            this.program.provider.connection.getAccountInfo(this.mint).then((acc) => acc.owner)
+            this.program.provider.connection.getAccountInfo(this.mint).then((acc) => {
+                if (!acc) {
+                    throw new Error('Mint does not exist')
+                }
+
+                return acc.owner
+            })
         ]);
 
         addresses.push(
@@ -574,8 +585,8 @@ export class DeployerBuilder {
         // Protocol wallets
         addresses.push(
             ...[
-                ...WALLETS.FEE[NATIVE_MINT.toBase58()],
-                ...WALLETS.LIQUIDATION[NATIVE_MINT.toBase58()]
+                ...WALLETS.FEE[NATIVE_MINT.toBase58() as keyof typeof WALLETS.FEE],
+                ...WALLETS.LIQUIDATION[NATIVE_MINT.toBase58() as keyof typeof WALLETS.LIQUIDATION]
             ]
         );
         addresses.push(...[...WALLETS.FEE[USDC_MINT], ...WALLETS.LIQUIDATION[USDC_MINT]]);
@@ -585,8 +596,8 @@ export class DeployerBuilder {
         if (!this.lookupTable) {
             const [createLookupTableIx, _lookupTable] = AddressLookupTableProgram.createLookupTable(
                 {
-                    authority: this.program.provider.publicKey,
-                    payer: this.program.provider.publicKey,
+                    authority: this.program.provider.publicKey!,
+                    payer: this.program.provider.publicKey!,
                     recentSlot: await this.program.provider.connection
                         .getLatestBlockhashAndContext('finalized')
                         .then((bh) => bh.context.slot)
@@ -606,7 +617,7 @@ export class DeployerBuilder {
             lookupTableInstructions.push(
                 AddressLookupTableProgram.extendLookupTable({
                     lookupTable: this.lookupTable,
-                    authority: this.program.provider.publicKey,
+                    authority: this.program.provider.publicKey!,
                     payer: this.program.provider.publicKey,
                     addresses: addressesToAdd
                 })

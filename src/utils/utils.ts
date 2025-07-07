@@ -94,6 +94,10 @@ export async function getTokenProgram(
 
     const mintInfo = await connection.getAccountInfo(mint);
 
+    if (!mintInfo) {
+        return null;
+    }
+
     if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
         return mintInfo.owner;
     } else {
@@ -106,6 +110,10 @@ export async function getTokenProgramAndDecimals(
     mint: PublicKey
 ): Promise<[PublicKey, number] | null> {
     const mintInfo = await connection.getAccountInfo(mint);
+
+    if (!mintInfo) {
+        return null;
+    }
 
     if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
         const mintDecimals = MintLayout.decode(mintInfo.data).decimals;
@@ -319,6 +327,9 @@ export async function getMaxWithdraw(
     program: Program<WasabiSolana>,
     mint: PublicKey
 ): Promise<bigint> {
+    if (!program.provider.publicKey) {
+        throw new Error('Provider pubkey not set');
+    }
     return getMaxWithdrawForUser(program, mint, program.provider.publicKey);
 }
 
@@ -394,6 +405,10 @@ export async function getUserVaultBalances(
 ): Promise<{ asset: PublicKey; shares: bigint }[]> {
     const walletToCheck = wallet || program.provider.publicKey;
 
+    if (!walletToCheck) {
+        throw new Error('Wallet not set');
+    }
+
     const [vaults, tokenAccounts] = await Promise.all([
         program.account.lpVault.all(),
         program.provider.connection.getTokenAccountsByOwner(walletToCheck, {
@@ -418,10 +433,11 @@ export async function getUserVaultBalances(
                     };
                 }
             }
+            return null;
         })
     );
 
-    return shareBalances.filter(Boolean);
+    return shareBalances.filter((balance): balance is { asset: PublicKey; shares: bigint } => balance !== null && balance !== undefined);
 }
 
 export async function getMultipleTokenAccounts(
@@ -495,6 +511,8 @@ export async function createAtaIfNeeded(
             tokenProgram
         );
     }
+
+    return null;
 }
 
 export async function createWrapSolInstruction(
@@ -649,7 +667,7 @@ export async function handleMint(
         mintCache?: MintCache;
     }
 ): Promise<MintResult> {
-    let instructions = { setupIx: [], cleanupIx: [] };
+    let instructions: { setupIx: TransactionInstruction[], cleanupIx: TransactionInstruction[] } = { setupIx: [], cleanupIx: [] };
     if (isSOL(mint)) {
         const { tokenProgram, nativeMint } = handleSOL();
 
@@ -668,6 +686,9 @@ export async function handleMint(
     }
 
     const tokenProgram = await getTokenProgram(connection, mint, options.mintCache);
+    if (!tokenProgram) {
+        throw new Error('Token program not found');
+    }
 
     if (options.owner) {
         const userAta = getAssociatedTokenAddressSync(mint, options.owner, true, tokenProgram);
@@ -781,7 +802,10 @@ export async function handlePaymentTokenMintWithAuthority(
     amount?: number | bigint,
     mintCache?: MintCache
 ): Promise<TokenProgramsWithSetupResult> {
-    let instructions = { setupIx: [], cleanupIx: [] };
+    let instructions: { setupIx: TransactionInstruction[]; cleanupIx: TransactionInstruction[] } = {
+        setupIx: [],
+        cleanupIx: []
+    };
 
     if (paymentToken.equals(NATIVE_MINT)) {
         instructions =
@@ -794,6 +818,10 @@ export async function handlePaymentTokenMintWithAuthority(
         getTokenProgram(connection, currency, mintCache),
         getTokenProgram(connection, collateral, mintCache)
     ]);
+
+    if (!currencyTokenProgram || !collateralTokenProgram) {
+        throw new Error('Token program not found');
+    }
 
     return {
         currencyMint: currency,
@@ -850,7 +878,7 @@ export async function handleOpenTokenAccounts({
             collateral
         ]);
 
-        if (!result || !result[0] || !result[1]) {
+        if (!result) {
             throw new Error('Could not get mint info');
         }
 
@@ -865,7 +893,6 @@ export async function handleOpenTokenAccounts({
     const paymentMint = isLongPool ? currency : collateral;
     const paymentTokenProgram = paymentMintInfo!.owner;
     const paymentIsSol = paymentMint.equals(NATIVE_MINT);
-
 
     const ownerPaymentAta = getAssociatedTokenAddressSync(
         paymentMint,
@@ -905,6 +932,10 @@ export async function handleOpenTokenAccounts({
         ];
     }
 
+    if (!currencyInfo || !collateralInfo) {
+        throw new Error('Could not get mint info');
+    }
+
     return {
         paymentMint,
         paymentIsSol,
@@ -919,7 +950,7 @@ export async function handleOpenTokenAccounts({
 export type CloseTokenAccounts = {
     payoutMint?: PublicKey;
     payoutIsSol: boolean;
-    ownerPayoutAta?: PublicKey;
+    ownerPayoutAta: PublicKey;
     setupIx: TransactionInstruction[];
     cleanupIx: TransactionInstruction[];
     currencyTokenProgram: PublicKey;
@@ -994,4 +1025,28 @@ export async function handleCloseTokenAccounts(
         currencyTokenProgram: currencyInfo[1].owner,
         collateralTokenProgram: collateralInfo[1].owner
     };
+}
+
+export function validateArgs<T>(args: T): NonNullable<T> {
+    if (!args) {
+        throw new Error('Args are required');
+    }
+
+    return args;
+}
+
+export function validateProviderPayer(payer: PublicKey | undefined): NonNullable<PublicKey> {
+    if (!payer) {
+        throw new Error('Payer is required');
+    }
+
+    return payer;
+}
+
+export function validateMintCache(mintCache: MintCache | undefined): NonNullable<MintCache> {
+    if (!mintCache) {
+        throw new Error('Mint cache is required');
+    }
+
+    return mintCache;
 }

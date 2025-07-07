@@ -275,7 +275,7 @@ async function handleAtaCheck(
     payer: PublicKey
 ): Promise<{
     ata: PublicKey;
-    ix: TransactionInstruction;
+    ix: TransactionInstruction | null;
 }> {
     const ata = getAssociatedTokenAddressSync(asset, owner, true, tokenProgram);
     return {
@@ -337,6 +337,10 @@ export async function getClosePositionCleanupInstructionAccounts(
     isTriggeredByAuthority: boolean = false
 ): Promise<CpcuAndIx> {
     const { owner, lpVault } = await fetchPositionData(program, accounts.position);
+
+    if (!program.provider.publicKey) {
+        throw new Error("Provider pubkey is not set");
+    }
 
     const [vault, tokenSetup] = await Promise.all([
         fetchVaultAddress(program, lpVault),

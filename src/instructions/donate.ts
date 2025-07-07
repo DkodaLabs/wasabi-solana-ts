@@ -6,7 +6,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA, handleMint, getPermission, MintCache } from '../utils';
+import { PDA, handleMint, getPermission, MintCache, validateArgs, validateProviderPayer } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -35,6 +35,8 @@ const donateConfig: BaseMethodConfig<
     DonateInstructionAccounts | DonateIntructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
+        const args = validateArgs(config.args);
+        const payer = validateProviderPayer(config.program.provider.publicKey);
         const [{ mint, tokenProgram, setupIx, cleanupIx }, permission] = await Promise.all([
             handleMint(
                 config.program.provider.connection,
@@ -42,21 +44,21 @@ const donateConfig: BaseMethodConfig<
                 {
                     owner: config.program.provider.publicKey,
                     wrapMode: 'wrap',
-                    amount: config.args.amount,
+                    amount: args.amount,
                     mintCache: config.mintCache
                 }
             ),
-            getPermission(config.program, config.program.provider.publicKey),
+            getPermission(config.program, payer),
         ]);
 
         const lpVault = PDA.getLpVault(mint);
 
         return {
             accounts: {
-                owner: config.program.provider.publicKey,
+                owner: payer,
                 ownerAssetAccount: getAssociatedTokenAddressSync(
                     mint,
-                    config.program.provider.publicKey,
+                    payer,
                     false,
                     tokenProgram
                 ),
@@ -67,7 +69,7 @@ const donateConfig: BaseMethodConfig<
                 globalSettings: PDA.getGlobalSettings(),
                 tokenProgram
             },
-            args: config.args ? new BN(config.args.amount.toString()) : undefined,
+            args: new BN(args.amount.toString()),
             setup: setupIx,
             cleanup: cleanupIx
         };

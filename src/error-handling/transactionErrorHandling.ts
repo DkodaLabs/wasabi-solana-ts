@@ -8,7 +8,6 @@ import {
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import * as idl from '../idl/wasabi_solana.json';
 import { WasabiSolana } from '../index';
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 const WasabiIDL = idl as WasabiSolana;
 
@@ -43,6 +42,7 @@ const jupiterExpectedErrors = [
     6001 // SlippageToleranceExceeded
 ];
 
+//@ts-ignore
 const raydiumErrors = [
     6028, // Invalid first tick array
 ]

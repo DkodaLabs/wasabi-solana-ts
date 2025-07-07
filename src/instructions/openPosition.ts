@@ -25,18 +25,18 @@ export type OpenPositionSetupArgs = {
     /// 3. VAULT - Spicy Tokens
     payInType: PayInType,
     /// The minimum amount out required when swapping
-    minTargetAmount: number; // u64
+    minTargetAmount: bigint; // u64
     /// The initial down payment amount required to open the position
     /// (is in `currency` for long positions, `collateralCurrency` for short
     /// positions
     /// Also used as the 'withdrawAmount' when opening a position using vault deposits
-    downPayment: number; // u64
+    downPayment: bigint; // u64
     /// The total principal amount to be borrowed for the position.
-    principal: number; // u64
+    principal: bigint; // u64
     /// The fee to be paid for the position
-    fee: number; // u64
+    fee: bigint; // u64
     /// The timestamp when this position request expires as a unixtimestamp
-    expiration: number; // i64
+    expiration: bigint; // i64
 };
 
 export type OpenPositionSetupAccounts = {
@@ -95,11 +95,11 @@ export type OpenPositionSetupInstructionBaseAccounts = {
 export type OpenPositionArgs = {
     nonce?: number,
     positionId?: string,
-    minTargetAmount: number | bigint,
-    downPayment: number | bigint,
-    principal: number | bigint,
-    fee: number | bigint,
-    expiration: number | bigint,
+    minTargetAmount: bigint,
+    downPayment: bigint,
+    principal: bigint,
+    fee: bigint,
+    expiration: bigint,
     instructions: TransactionInstruction[],
 }
 export type OpenPositionAccounts = {

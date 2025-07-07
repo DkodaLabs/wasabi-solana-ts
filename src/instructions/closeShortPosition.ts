@@ -42,6 +42,10 @@ const closeShortPositionSetupConfig: BaseMethodConfig<
     CloseShortPositionSetupInstructionAccounts | CloseShortPositionSetupInstructionAccountsStrict
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        if (!config.args) {
+            throw new Error('Args are required');
+        }
+
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,

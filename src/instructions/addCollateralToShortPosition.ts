@@ -6,9 +6,9 @@ import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/sp
 import { TokenInstructionAccounts } from './tokenAccounts';
 
 export type AddCollateralArgs = {
-    downPayment: number;
-    fee: number;
-    expiration: number;
+    downPayment: bigint;
+    fee: bigint;
+    expiration: bigint;
 };
 
 export type AddCollateralAccounts = {
@@ -29,11 +29,6 @@ export type AddCollateralInstructionAccounts = {
     collateralTokenProgram: PublicKey;
 };
 
-export type AddCollateralWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    addCollateral: AddCollateralInstructionAccounts;
-};
-
 export async function processAddCollateralInstruction(
     config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
     options: {
@@ -48,6 +43,10 @@ export async function processAddCollateralInstruction(
 
     const pool = PDA.getShortPool(position.collateral, position.currency);
 
+    if (!config.args) {
+        throw new Error('Args are required');
+    }
+
     const { ownerPaymentAta, setupIx, cleanupIx, collateralTokenProgram } =
         await handleOpenTokenAccounts({
             program: config.program,
@@ -60,6 +59,11 @@ export async function processAddCollateralInstruction(
             isLongPool: false,
             useShares
         });
+
+    if (!ownerPaymentAta) {
+        throw new Error('Owner payout account does not exist');
+    }
+
 
     const addCollateralAccounts: AddCollateralInstructionAccounts = {
         owner: config.accounts.owner,
