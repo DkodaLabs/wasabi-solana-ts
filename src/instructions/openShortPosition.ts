@@ -18,7 +18,7 @@ import {
     handleMintsAndTokenProgram,
     handlePaymentTokenMint,
     validateArgs,
-    validateProviderPayer
+    validateProviderPubkey
 } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
@@ -69,7 +69,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const { nonce, minTargetAmount, downPayment, principal, fee, expiration } = validateArgs(config.args);
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!nonce) {
             throw new Error("Nonce is required for 'openShortPositionSetup'");

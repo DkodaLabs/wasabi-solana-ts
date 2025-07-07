@@ -1,7 +1,7 @@
 import { BN } from '@coral-xyz/anchor';
 import { ConfigArgs } from '../base';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { handleOpenTokenAccounts, PDA } from '../utils';
+import { handleOpenTokenAccounts, PDA, validateArgs } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInstructionAccounts } from './tokenAccounts';
 
@@ -37,23 +37,20 @@ export async function processAddCollateralInstruction(
     }
 ): Promise<TransactionInstruction[]> {
     const { useShares } = options;
+    const args = validateArgs(config.args);
 
     const position = await config.program.account.position.fetchNullable(config.accounts.position);
     if (!position) throw new Error('Position not found');
 
     const pool = PDA.getShortPool(position.collateral, position.currency);
 
-    if (!config.args) {
-        throw new Error('Args are required');
-    }
-
     const { ownerPaymentAta, setupIx, cleanupIx, collateralTokenProgram } =
         await handleOpenTokenAccounts({
             program: config.program,
             owner: config.accounts.owner,
             mintCache: config.mintCache,
-            downPayment: config.args.downPayment,
-            fee: config.args.fee,
+            downPayment: args.downPayment,
+            fee: args.fee,
             currency: position.currency,
             collateral: position.collateral,
             isLongPool: false,
@@ -78,9 +75,9 @@ export async function processAddCollateralInstruction(
     };
 
     const params = [
-        new BN(config.args.downPayment),
-        new BN(config.args.fee),
-        new BN(config.args.expiration)
+        new BN(args.downPayment),
+        new BN(args.fee),
+        new BN(args.expiration)
     ] as const;
 
     if (useShares) {

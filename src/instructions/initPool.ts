@@ -1,7 +1,7 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PDA, getPermission, handleMintsAndTokenProgram, validateProviderPayer } from '../utils';
+import { PDA, getPermission, handleMintsAndTokenProgram, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
 
@@ -32,7 +32,7 @@ export async function getInitPoolInstructionAccounts(
     pool_type: 'long' | 'short',
     mintCache?: MintCache
 ): Promise<InitPoolInstructionAccounts> {
-    const payer = validateProviderPayer(program.provider.publicKey);
+    const payer = validateProviderPubkey(program.provider.publicKey);
     const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =
         await handleMintsAndTokenProgram(
             program.provider.connection,

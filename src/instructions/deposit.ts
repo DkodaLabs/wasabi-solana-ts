@@ -12,13 +12,13 @@ import {
     TokenInstructionAccounts,
     getTokenInstructionAccounts
 } from './tokenAccounts';
-import { handleMint, validateArgs, validateProviderPayer } from '../utils';
+import { handleMint, validateArgs, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstructionAccounts> = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
 
         const setup: TransactionInstruction[] = [];
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(

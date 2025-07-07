@@ -15,7 +15,7 @@ import {
     ClosePositionCleanupInstructionAccounts,
     ExitOrderSetupInstructionAccounts
 } from './closePosition';
-import { MintCache, PDA } from '../utils';
+import { MintCache, PDA, validateArgs } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type TakeProfitCleanupInstructionAccounts = {
@@ -29,9 +29,7 @@ const takeProfitSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
-        if (!config.args) {
-            throw new Error('Missing args');
-        }
+        const args = validateArgs(config.args);
 
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
@@ -43,7 +41,7 @@ const takeProfitSetupConfig: BaseMethodConfig<
             accounts: {
                 closePositionSetup: accounts
             },
-            args: transformArgs(config.args),
+            args: transformArgs(args),
             setup: ixes.setupIx
         };
     },

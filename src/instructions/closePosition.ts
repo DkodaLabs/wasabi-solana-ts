@@ -12,7 +12,7 @@ import {
     getPermission,
     createAtaIfNeeded,
     handleMintsAndTokenProgram,
-    handlePaymentTokenMintWithAuthority
+    handlePaymentTokenMintWithAuthority, validateProviderPubkey
 } from '../utils';
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
@@ -337,10 +337,7 @@ export async function getClosePositionCleanupInstructionAccounts(
     isTriggeredByAuthority: boolean = false
 ): Promise<CpcuAndIx> {
     const { owner, lpVault } = await fetchPositionData(program, accounts.position);
-
-    if (!program.provider.publicKey) {
-        throw new Error("Provider pubkey is not set");
-    }
+    const payer = validateProviderPubkey(program.provider.publicKey);
 
     const [vault, tokenSetup] = await Promise.all([
         fetchVaultAddress(program, lpVault),
@@ -349,7 +346,7 @@ export async function getClosePositionCleanupInstructionAccounts(
             owner,
             accounts.currency,
             accounts.collateral,
-            program.provider.publicKey,
+            payer,
             await program.account.basePool.fetch(accounts.pool).then((pool) => pool.isLongPool),
             isTriggeredByAuthority
         )

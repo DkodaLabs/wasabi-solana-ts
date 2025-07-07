@@ -1035,7 +1035,7 @@ export function validateArgs<T>(args: T): NonNullable<T> {
     return args;
 }
 
-export function validateProviderPayer(payer: PublicKey | undefined): NonNullable<PublicKey> {
+export function validateProviderPubkey(payer: PublicKey | undefined): NonNullable<PublicKey> {
     if (!payer) {
         throw new Error('Payer is required');
     }

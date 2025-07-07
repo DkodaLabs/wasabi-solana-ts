@@ -9,7 +9,7 @@ import {
     PDA,
     handleMintsAndTokenProgram,
     getPermission,
-    handlePaymentTokenMint, validateArgs, validateProviderPayer
+    handlePaymentTokenMint, validateArgs, validateProviderPubkey
 } from '../utils';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
@@ -36,7 +36,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.nonce) {
             throw new Error('Nonce is required for `openLongPositionSetup');

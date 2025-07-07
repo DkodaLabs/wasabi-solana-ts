@@ -13,7 +13,7 @@ import {
     TOKEN_PROGRAM_ID,
     TOKEN_2022_PROGRAM_ID
 } from '@solana/spl-token';
-import { PDA, validateProviderPayer } from '../utils';
+import { PDA, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {
     createInitLpVaultInstruction,
@@ -257,7 +257,7 @@ export class DeployerBuilder {
 
     async build(): Promise<DeployerResponse> {
         this.validateRequiredFields();
-        const payer = validateProviderPayer(this.program.provider.publicKey);
+        const payer = validateProviderPubkey(this.program.provider.publicKey);
 
         if (!this.computeBudget) {
             throw new Error('Compute budget is required');

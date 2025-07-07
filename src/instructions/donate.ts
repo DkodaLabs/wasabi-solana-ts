@@ -6,7 +6,7 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA, handleMint, getPermission, MintCache, validateArgs, validateProviderPayer } from '../utils';
+import { PDA, handleMint, getPermission, MintCache, validateArgs, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export type DonateArgs = {
@@ -36,7 +36,7 @@ const donateConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<DonateArgs, DonateAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const [{ mint, tokenProgram, setupIx, cleanupIx }, permission] = await Promise.all([
             handleMint(
                 config.program.provider.connection,

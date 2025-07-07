@@ -3,7 +3,7 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionSetupArgs
 } from './openPosition';
-import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPayer } from '../utils';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPubkey } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -17,7 +17,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const authority = validateProviderPayer(config.program.provider.publicKey);
+        const authority = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.positionId) {
             throw new Error('positionId is required for increaseLongPositionSetup');

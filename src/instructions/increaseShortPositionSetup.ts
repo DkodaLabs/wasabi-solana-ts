@@ -1,6 +1,6 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionSetupAccounts, OpenPositionSetupArgs } from './openPosition';
-import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPayer } from '../utils';
+import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPubkey } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PublicKey,
@@ -19,7 +19,7 @@ const increaseShortPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const authority = validateProviderPayer(config.program.provider.publicKey);
+        const authority = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.positionId) {
             throw new Error('positionId is required for increaseShortPositionSetup');

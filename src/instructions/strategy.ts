@@ -14,7 +14,7 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import {
     getTokenProgram,
     PDA,
-    validateProviderPayer,
+    validateProviderPubkey,
     WASABI_PROGRAM_ID
 } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -125,7 +125,7 @@ export const initStrategyConfig: BaseMethodConfig<
     InitStrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const {
             authority,
             permission,
@@ -175,7 +175,7 @@ export const strategyDepositSetupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyArgs, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
             payer,
@@ -198,7 +198,7 @@ export const strategyDepositCleanupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
             payer,
@@ -219,7 +219,7 @@ export const strategyWithdrawSetupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyArgs, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
             payer,
@@ -242,7 +242,7 @@ export const strategyWithdrawCleanupConfig: BaseMethodConfig<
     StrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const accounts = await getStrategyAccounts(
             config.program.provider.connection,
             payer,
@@ -266,7 +266,7 @@ export const strategyClaimConfig: BaseMethodConfig<
     StrategyClaimInstructionAccounts
 > = {
     process: async (config: ConfigArgs<StrategyClaimArgs, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const { authority, permission, lpVault, collateral, strategy } = await getStrategyAccounts(
             config.program.provider.connection,
             payer,
@@ -294,7 +294,7 @@ export const closeStrategyConfig: BaseMethodConfig<
     CloseStrategyInstructionAccounts
 > = {
     process: async (config: ConfigArgs<void, StrategyAccounts>) => {
-        const payer = validateProviderPayer(config.program.provider.publicKey);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
         const {
             authority,
             permission,
