@@ -7,7 +7,8 @@ import {
     createLiquidatePositionInstruction,
     createStopLossInstruction,
     DonateAccounts,
-    DonateArgs
+    DonateArgs,
+    processAddCollateralInstruction
 } from './instructions';
 
 export * from './utils/index.js';
@@ -66,7 +67,6 @@ import {
     createStopLossSetupInstruction
 } from './instructions/stopLoss.js';
 import {
-    createAddCollateralToShortPositionInstruction,
     createTakeProfitInstruction,
     createIncreaseLongPositionSetupInstruction,
     createIncreaseShortPositionSetupInstruction,
@@ -74,7 +74,6 @@ import {
     OpenPositionArgs,
     OpenPositionAccounts
 } from './instructions';
-import { createAddCollateralToShortWithSharesInstruction } from './instructions/addCollateralToShortWithShares';
 import { processPositionInstruction } from './instructions/shared';
 
 export class Wasabi {
@@ -204,11 +203,17 @@ export class Wasabi {
         args: AddCollateralArgs,
         accounts: AddCollateralAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createAddCollateralToShortPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processAddCollateralInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                methodName: 'AddCollateralToShortPosition'
+            }
         );
     }
 
@@ -216,11 +221,17 @@ export class Wasabi {
         args: AddCollateralArgs,
         accounts: AddCollateralAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createAddCollateralToShortWithSharesInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processAddCollateralInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                methodName: 'AddCollateralToShortWithShares'
+            }
         );
     }
 

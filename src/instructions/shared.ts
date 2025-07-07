@@ -61,41 +61,10 @@ export function extractInstructionData(instructions: TransactionInstruction[]): 
     return { hops, data, remainingAccounts };
 }
 
-export type OpenLongWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    openPosition: OpenLongPositionInstructionAccounts;
-};
-
-export type UpdateLongWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    editPosition: OpenLongPositionInstructionAccounts;
-};
-
-export type OpenShortWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    openPosition: OpenShortPositionInstructionAccounts;
-};
-
-export type UpdateShortWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    editPosition: OpenShortPositionInstructionAccounts;
-};
-
 export type AddCollateralWithSharesInstructionAccounts = {
     withdraw: TokenInstructionAccounts;
     addCollateral: AddCollateralInstructionAccounts;
 };
-
-export type OpenWithSharesInstructionAccounts =
-    | OpenLongWithSharesInstructionAccounts
-    | OpenShortWithSharesInstructionAccounts;
-export type UpdateWithSharesInstructionAccounts =
-    | UpdateLongWithSharesInstructionAccounts
-    | UpdateShortWithSharesInstructionAccounts;
-export type WithSharesInstructionAccounts =
-    | OpenWithSharesInstructionAccounts
-    | UpdateWithSharesInstructionAccounts
-    | AddCollateralWithSharesInstructionAccounts;
 
 export type ProcessPositionOptions = {
     useShares: boolean;
@@ -104,12 +73,7 @@ export type ProcessPositionOptions = {
     methodName: string;
 };
 
-export async function processPositionInstruction<
-    T extends
-        | OpenLongPositionInstructionAccounts
-        | OpenShortPositionInstructionAccounts
-        | WithSharesInstructionAccounts
->(
+export async function processPositionInstruction(
     config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>,
     options: ProcessPositionOptions
 ): Promise<TransactionInstruction[]> {
@@ -234,7 +198,7 @@ export async function processPositionInstruction<
             };
 
             if (isUpdate) {
-                const editShortShares = config.program.methods.increaseShortWithShares(params);
+                const editShortShares = config.program.methods.increaseShortWithShares(...params);
                 editShortShares.remainingAccounts(remainingAccounts);
                 editShortShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -245,7 +209,7 @@ export async function processPositionInstruction<
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openShortShares = config.program.methods.openShortWithShares(params);
+                const openShortShares = config.program.methods.openShortWithShares(...params);
                 openShortShares.remainingAccounts(remainingAccounts);
                 openShortShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -257,7 +221,7 @@ export async function processPositionInstruction<
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             }
         } else {
-            const openShortPosition = config.program.methods.openShortPosition(params);
+            const openShortPosition = config.program.methods.openShortPosition(...params);
             openShortPosition.remainingAccounts(remainingAccounts);
             openShortPosition.accountsStrict(shortPositionAccounts);
 
@@ -321,7 +285,7 @@ export async function processPositionInstruction<
             };
 
             if (isUpdate) {
-                const updateLongShares = config.program.methods.updateLongWithShares(params);
+                const updateLongShares = config.program.methods.updateLongWithShares(...params);
                 updateLongShares.remainingAccounts(remainingAccounts);
                 updateLongShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -332,19 +296,20 @@ export async function processPositionInstruction<
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openLongShares = config.program.methods.openLongWithShares(params);
+                const openLongShares = config.program.methods.openLongWithShares(...params);
                 openLongShares.accountsStrict({
                     withdraw: withdrawAccounts,
                     openPosition: longPositionAccounts
                 });
                 openLongShares.remainingAccounts(remainingAccounts);
+                console.log(openLongShares);
 
                 return openLongShares
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             }
         } else {
-            const openPosition = config.program.methods.openLongPosition(params);
+            const openPosition = config.program.methods.openLongPosition(...params);
             openPosition.accountsStrict(longPositionAccounts);
             openPosition.remainingAccounts(remainingAccounts);
 
@@ -355,116 +320,4 @@ export async function processPositionInstruction<
     }
 }
 
-export async function processAddCollateralInstruction<
-    T extends AddCollateralInstructionAccounts | AddCollateralWithSharesInstructionAccounts
->(
-    config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
-    options: {
-        useShares: boolean;
-        methodName: string;
-    }
-): Promise<{
-    accounts: T;
-    args: any;
-    setup: TransactionInstruction[];
-    cleanup: TransactionInstruction[];
-}> {
-    const { useShares, methodName } = options;
 
-    const position = await config.program.account.position.fetchNullable(config.accounts.position);
-    if (!position) throw new Error('Position not found');
-
-    const pool = PDA.getShortPool(position.collateral, position.currency);
-
-    const { ownerPaymentAta, setupIx, cleanupIx, collateralTokenProgram } =
-        await handleOpenTokenAccounts({
-            program: config.program,
-            owner: config.accounts.owner,
-            mintCache: config.mintCache,
-            downPayment: config.args.downPayment,
-            fee: config.args.fee,
-            currency: position.currency,
-            collateral: position.collateral,
-            isLongPool: false,
-            useShares
-        });
-
-    const addCollateralAccounts: AddCollateralInstructionAccounts = {
-        owner: config.accounts.owner,
-        ownerTargetCurrencyAccount: ownerPaymentAta,
-        position: config.accounts.position,
-        pool,
-        collateralVault: position.collateralVault,
-        collateral: position.collateral,
-        feeWallet: config.accounts.feeWallet,
-        globalSettings: PDA.getGlobalSettings(),
-        collateralTokenProgram
-    };
-
-    if (useShares) {
-        const lpVault = PDA.getLpVault(position.collateral);
-        const vault = getAssociatedTokenAddressSync(
-            position.collateral,
-            lpVault,
-            true,
-            collateralTokenProgram
-        );
-        const sharesMint = PDA.getSharesMint(lpVault, position.collateral);
-        const globalSettings = PDA.getGlobalSettings();
-
-        const withdrawAccounts: TokenInstructionAccounts = {
-            owner: config.accounts.owner,
-            ownerAssetAccount: ownerPaymentAta,
-            ownerSharesAccount: getAssociatedTokenAddressSync(
-                sharesMint,
-                config.accounts.owner,
-                false,
-                TOKEN_2022_PROGRAM_ID
-            ),
-            lpVault,
-            vault,
-            assetMint: position.collateral,
-            sharesMint,
-            globalSettings,
-            assetTokenProgram: collateralTokenProgram,
-            sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
-            eventAuthority: PDA.getEventAuthority(),
-            program: config.program.programId
-        };
-
-        return {
-            accounts: {
-                withdraw: withdrawAccounts,
-                addCollateral: addCollateralAccounts
-            } as T,
-            args: {
-                downPayment: config.args.downPayment,
-                feesToPaid: config.args.fee,
-                expiration: config.args.expiration
-            },
-            setup: setupIx,
-            cleanup: cleanupIx
-        };
-    } else {
-        return {
-            accounts: addCollateralAccounts as T,
-            args: {
-                downPayment: config.args.downPayment,
-                feesToPaid: config.args.fee,
-                expiration: config.args.expiration
-            },
-            setup: setupIx,
-            cleanup: cleanupIx
-        };
-    }
-}
-
-export function createAddCollateralMethodBuilder(methodName: string) {
-    return (program) => (args) => {
-        return program.methods[methodName](
-            new BN(args.downPayment),
-            new BN(args.feesToPaid),
-            new BN(args.expiration)
-        );
-    };
-}
