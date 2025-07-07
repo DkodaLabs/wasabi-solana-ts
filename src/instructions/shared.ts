@@ -302,7 +302,6 @@ export async function processPositionInstruction(
                     openPosition: longPositionAccounts
                 });
                 openLongShares.remainingAccounts(remainingAccounts);
-                console.log(openLongShares);
 
                 return openLongShares
                     .instruction()
