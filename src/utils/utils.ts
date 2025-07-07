@@ -436,7 +436,7 @@ export async function getUserVaultBalances(
         })
     );
 
-    return shareBalances.filter(balance => balance !== undefined);
+    return shareBalances.filter((balance): balance is { asset: PublicKey; shares: bigint } => balance !== undefined);
 }
 
 export async function getMultipleTokenAccounts(
