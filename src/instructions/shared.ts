@@ -133,36 +133,40 @@ export async function processPositionInstruction(
         params = [config.args.nonce || 0, ...params];
     }
 
+    const commonPositionAccounts = {
+        owner: config.accounts.owner,
+        lpVault,
+        vault,
+        pool,
+        currencyVault: getAssociatedTokenAddressSync(
+            config.accounts.currency,
+            pool,
+            true,
+            currencyTokenProgram
+        ),
+        collateralVault: getAssociatedTokenAddressSync(
+            config.accounts.collateral,
+            pool,
+            true,
+            collateralTokenProgram
+        ),
+        currency: config.accounts.currency,
+        collateral: config.accounts.collateral,
+        position,
+        authority: config.accounts.authority,
+        permission: PDA.getAdmin(config.accounts.authority),
+        feeWallet: config.accounts.feeWallet,
+        debtController: PDA.getDebtController(),
+        globalSettings: PDA.getGlobalSettings(),
+        systemProgram: SystemProgram.programId
+    };
+
     if (isShort) {
         const shortPositionAccounts: OpenShortPositionInstructionAccounts = {
-            owner: config.accounts.owner,
+            ...commonPositionAccounts,
             ownerTargetCurrencyAccount: ownerPaymentAta,
-            lpVault,
-            vault,
-            pool,
-            currencyVault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
-                pool,
-                true,
-                currencyTokenProgram
-            ),
-            collateralVault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
-                pool,
-                true,
-                collateralTokenProgram
-            ),
-            currency: config.accounts.currency,
-            collateral: config.accounts.collateral,
-            position,
-            authority: config.accounts.authority,
-            permission: PDA.getAdmin(config.accounts.authority),
-            feeWallet: config.accounts.feeWallet,
-            debtController: PDA.getDebtController(),
-            globalSettings: PDA.getGlobalSettings(),
             currencyTokenProgram,
             collateralTokenProgram,
-            systemProgram: SystemProgram.programId
         };
 
         if (useShares) {
@@ -231,33 +235,9 @@ export async function processPositionInstruction(
         }
     } else {
         const longPositionAccounts: OpenLongPositionInstructionAccounts = {
-            owner: config.accounts.owner,
+            ...commonPositionAccounts,
             ownerCurrencyAccount: ownerPaymentAta,
-            lpVault,
-            vault,
-            pool,
-            currencyVault: getAssociatedTokenAddressSync(
-                config.accounts.currency,
-                pool,
-                true,
-                currencyTokenProgram
-            ),
-            collateralVault: getAssociatedTokenAddressSync(
-                config.accounts.collateral,
-                pool,
-                true,
-                collateralTokenProgram
-            ),
-            currency: config.accounts.currency,
-            collateral: config.accounts.collateral,
-            position,
-            authority: config.accounts.authority,
-            permission: PDA.getAdmin(config.accounts.authority),
-            feeWallet: config.accounts.feeWallet,
             tokenProgram: currencyTokenProgram,
-            debtController: PDA.getDebtController(),
-            globalSettings: PDA.getGlobalSettings(),
-            systemProgram: SystemProgram.programId
         };
 
         if (useShares) {
