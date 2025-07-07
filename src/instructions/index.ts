@@ -34,5 +34,3 @@ export * from './takeProfit.js';
 export * from './takeProfitV2.js';
 export * from './withdraw.js';
 export * from './strategy.js';
-export * from './updateLongPosition.js';
-export * from './increaseShortPosition.js';

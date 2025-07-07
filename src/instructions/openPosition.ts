@@ -1,5 +1,11 @@
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 
+export enum PayInType {
+    NATIVE = 'NATIVE',
+    TOKEN = 'TOKEN',
+    VAULT = 'VAULT',
+}
+
 // `owner` == `userPubkey` passed in via request
 export type OpenPositionParams = {
     currency: PublicKey;
@@ -12,11 +18,18 @@ export type OpenPositionSetupArgs = {
     nonce?: number; // u16
     /// The position's address
     positionId?: string;
+    /// The type of asset being used to open a position.
+    /// Options are:
+    /// 1. NATIVE - SOLANA
+    /// 2. TOKEN - SPL Tokens
+    /// 3. VAULT - Spicy Tokens
+    payInType: PayInType,
     /// The minimum amount out required when swapping
     minTargetAmount: number; // u64
     /// The initial down payment amount required to open the position
-    // (is in `currency` for long positions, `collateralCurrency` for short
-    // positions
+    /// (is in `currency` for long positions, `collateralCurrency` for short
+    /// positions
+    /// Also used as the 'withdrawAmount' when opening a position using vault deposits
     downPayment: number; // u64
     /// The total principal amount to be borrowed for the position.
     principal: number; // u64

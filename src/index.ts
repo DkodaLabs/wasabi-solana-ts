@@ -4,11 +4,11 @@ import {
     ClosePositionAccounts,
     ClosePositionArgs,
     createClosePositionInstruction,
-    createIncreaseShortPositionInstruction,
     createLiquidatePositionInstruction,
     createStopLossInstruction,
     DonateAccounts,
-    DonateArgs
+    DonateArgs,
+    processAddCollateralInstruction
 } from './instructions';
 
 export * from './utils/index.js';
@@ -67,17 +67,14 @@ import {
     createStopLossSetupInstruction
 } from './instructions/stopLoss.js';
 import {
-    createOpenLongPositionInstruction,
-    createOpenShortPositionInstruction,
-    createAddCollateralToShortPositionInstruction,
     createTakeProfitInstruction,
     createIncreaseLongPositionSetupInstruction,
     createIncreaseShortPositionSetupInstruction,
     createDonateInstruction,
-    createUpdateLongPositionInstruction,
     OpenPositionArgs,
     OpenPositionAccounts
 } from './instructions';
+import { processPositionInstruction } from './instructions/shared';
 
 export class Wasabi {
     program: Program<WasabiSolana>;
@@ -93,11 +90,39 @@ export class Wasabi {
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createOpenLongPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                isUpdate: false,
+                isShort: false,
+                methodName: 'OpenLongPosition'
+            }
+        );
+    }
+
+    async createOpenLongWithSharesInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                isUpdate: false,
+                isShort: false,
+                methodName: 'OpenLongWithShares'
+            }
         );
     }
 
@@ -105,11 +130,39 @@ export class Wasabi {
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createOpenShortPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                isUpdate: false,
+                isShort: true,
+                methodName: 'OpenShortPosition'
+            }
+        );
+    }
+
+    async createOpenShortWithSharesInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                isUpdate: false,
+                isShort: true,
+                methodName: 'OpenShortWithShares'
+            }
         );
     }
 
@@ -150,11 +203,35 @@ export class Wasabi {
         args: AddCollateralArgs,
         accounts: AddCollateralAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createAddCollateralToShortPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processAddCollateralInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                methodName: 'AddCollateralToShortPosition'
+            }
+        );
+    }
+
+    async createAddCollateralToShortWithSharesInstruction(
+        args: AddCollateralArgs,
+        accounts: AddCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processAddCollateralInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                methodName: 'AddCollateralToShortWithShares'
+            }
         );
     }
 
@@ -162,11 +239,39 @@ export class Wasabi {
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createUpdateLongPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                isUpdate: true,
+                isShort: false,
+                methodName: 'UpdateLongPosition'
+            }
+        );
+    }
+
+    async createUpdateLongWithSharesInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                isUpdate: true,
+                isShort: false,
+                methodName: 'UpdateLongWithShares'
+            }
         );
     }
 
@@ -174,11 +279,39 @@ export class Wasabi {
         args: OpenPositionArgs,
         accounts: OpenPositionAccounts
     ): Promise<TransactionInstruction[]> {
-        return await createIncreaseShortPositionInstruction(
-            this.program,
-            args,
-            accounts,
-            this.mintCache
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: false,
+                isUpdate: true,
+                isShort: true,
+                methodName: 'IncreaseShortPosition'
+            }
+        );
+    }
+
+    async createIncreaseShortWithSharesInstruction(
+        args: OpenPositionArgs,
+        accounts: OpenPositionAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processPositionInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            {
+                useShares: true,
+                isShort: true,
+                isUpdate: true,
+                methodName: 'IncreaseShortWithShares'
+            }
         );
     }
 

@@ -3,7 +3,8 @@ import {
     Connection,
     SystemProgram,
     TransactionInstruction,
-    LAMPORTS_PER_SOL
+    LAMPORTS_PER_SOL,
+    AccountInfo
 } from '@solana/web3.js';
 import { Program, utils, BN, IdlAccounts } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
@@ -809,10 +810,11 @@ type OpenTokenAccountArgs = {
     owner: PublicKey;
     downPayment: number | bigint;
     fee: number | bigint;
-    mintCache: MintCache;
+    mintCache?: MintCache;
     isLongPool: boolean;
     currency: PublicKey;
     collateral: PublicKey;
+    useShares?: boolean;
 };
 
 export type OpenTokenAccounts = {
@@ -833,17 +835,37 @@ export async function handleOpenTokenAccounts({
     mintCache,
     isLongPool,
     currency,
-    collateral
+    collateral,
+    useShares
 }: OpenTokenAccountArgs): Promise<OpenTokenAccounts> {
     let setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
 
-    const [currencyInfo, collateralInfo] = await mintCache.getMintInfos([currency, collateral]);
+    let mintInfos: Map<PublicKey, AccountInfo<Buffer>>;
+    if (mintCache !== undefined) {
+        mintInfos = await mintCache.getMintInfos([currency, collateral]);
+    } else {
+        const result = await program.provider.connection.getMultipleAccountsInfo([
+            currency,
+            collateral
+        ]);
+
+        if (!result || !result[0] || !result[1]) {
+            throw new Error('Could not get mint info');
+        }
+
+        mintInfos = new Map();
+        if (result[0]) mintInfos.set(currency, result[0]);
+        if (result[1]) mintInfos.set(collateral, result[1]);
+    }
+    const currencyInfo = mintInfos.get(currency);
+    const collateralInfo = mintInfos.get(collateral);
 
     const paymentMintInfo = isLongPool ? currencyInfo : collateralInfo;
-    const paymentMint = paymentMintInfo[0];
-    const paymentTokenProgram = paymentMintInfo[1].owner;
-    const paymentIsSol = paymentMintInfo[0].equals(NATIVE_MINT);
+    const paymentMint = isLongPool ? currency : collateral;
+    const paymentTokenProgram = paymentMintInfo!.owner;
+    const paymentIsSol = paymentMint.equals(NATIVE_MINT);
+
 
     const ownerPaymentAta = getAssociatedTokenAddressSync(
         paymentMint,
@@ -852,7 +874,7 @@ export async function handleOpenTokenAccounts({
         paymentTokenProgram
     );
 
-    if (paymentIsSol) {
+    if (paymentIsSol && !useShares) {
         setupIx.push(
             SystemProgram.transfer({
                 fromPubkey: owner,
@@ -887,8 +909,8 @@ export async function handleOpenTokenAccounts({
         paymentMint,
         paymentIsSol,
         ownerPaymentAta,
-        currencyTokenProgram: currencyInfo[1].owner,
-        collateralTokenProgram: collateralInfo[1].owner,
+        currencyTokenProgram: currencyInfo.owner,
+        collateralTokenProgram: collateralInfo.owner,
         setupIx,
         cleanupIx
     };
