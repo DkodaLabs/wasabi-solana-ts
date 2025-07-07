@@ -850,7 +850,7 @@ export async function handleOpenTokenAccounts({
             collateral
         ]);
 
-        if (!result) {
+        if (!result || !result[0] || !result[1]) {
             throw new Error('Could not get mint info');
         }
 
