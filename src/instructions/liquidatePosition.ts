@@ -12,7 +12,7 @@ import {
     transformArgs
 } from './closePosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils';
+import { MintCache, validateArgs } from '../utils';
 
 type LiquidatePositionSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts;
@@ -28,6 +28,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
     LiquidatePositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        const args = validateArgs(config.args);
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
@@ -40,7 +41,7 @@ const liquidatePositionSetupConfig: BaseMethodConfig<
                     ...accounts
                 }
             },
-            args: transformArgs(config.args),
+            args: transformArgs(args),
             setup: ixes.setupIx
         };
     },

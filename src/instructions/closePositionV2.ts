@@ -2,7 +2,7 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { handleCloseTokenAccounts, MintCache, PDA } from '../utils';
+import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 import { handleOrdersCheck } from './closePosition';
@@ -58,7 +58,9 @@ const closePostionConfig: BaseMethodConfig<
     ClosePositionInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionArgs, ClosePositionAccounts>) => {
-        const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+        const args = validateArgs(config.args);
+        const mintCache = validateMintCache(config.mintCache);
+        const { hops, data, remainingAccounts } = extractInstructionData(args.instructions);
 
         const poolAccount = await config.program.account.basePool.fetchNullable(
             config.accounts.pool
@@ -76,14 +78,18 @@ const closePostionConfig: BaseMethodConfig<
                 {
                     program: config.program,
                     owner: config.accounts.owner,
-                    mintCache: config.mintCache
+                    mintCache,
                 },
                 poolAccount
             ),
-            handleOrdersCheck(config.program, config.accounts.position, 'MARKET', Number(config.args.amount))
+            handleOrdersCheck(config.program, config.accounts.position, 'MARKET', Number(args.amount))
         ]);
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
+
+        if (!ownerPayoutAta) {
+            throw new Error('Owner payout account does not exist');
+        }
 
         return {
             accounts: {

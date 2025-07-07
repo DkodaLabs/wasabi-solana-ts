@@ -1,7 +1,7 @@
 import { AccountMeta, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { ConfigArgs } from '../base';
 import { OpenPositionAccounts, OpenPositionArgs } from './openPosition';
-import { handleOpenTokenAccounts, PDA } from '../utils';
+import { handleOpenTokenAccounts, PDA, validateArgs } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
@@ -67,32 +67,26 @@ export async function processPositionInstruction(
     config: ConfigArgs<OpenPositionArgs, OpenPositionAccounts>,
     options: ProcessPositionOptions
 ): Promise<TransactionInstruction[]> {
+    const { nonce, positionId, minTargetAmount, downPayment, principal, fee, expiration, instructions } = validateArgs(config.args);
     const { useShares, isUpdate, isShort, methodName } = options;
-
-    if (isUpdate) {
-        if (!config.args.positionId) {
-            throw new Error(`positionId is required for \`${methodName}\``);
-        }
-    } else {
-        if (!config.args.nonce) {
-            throw new Error(`Nonce is required for \`${methodName}\``);
-        }
-    }
-
-    const { hops, data, remainingAccounts } = extractInstructionData(config.args.instructions);
+    const { hops, data, remainingAccounts } = extractInstructionData(instructions);
 
     const { ownerPaymentAta, currencyTokenProgram, collateralTokenProgram, setupIx, cleanupIx } =
         await handleOpenTokenAccounts({
             program: config.program,
             owner: config.accounts.owner,
-            downPayment: config.args.downPayment,
-            fee: config.args.fee,
+            downPayment,
+            fee,
             mintCache: config.mintCache,
             isLongPool: !isShort,
             currency: config.accounts.currency,
             collateral: config.accounts.collateral,
             useShares
         });
+
+    if (!ownerPaymentAta) {
+        throw new Error('Owner payment account does not exist');
+    }
 
     const lpVault = PDA.getLpVault(config.accounts.currency);
     const vault = getAssociatedTokenAddressSync(
@@ -105,23 +99,34 @@ export async function processPositionInstruction(
         ? PDA.getShortPool(config.accounts.collateral, config.accounts.currency)
         : PDA.getLongPool(config.accounts.collateral, config.accounts.currency);
 
-    const position = isUpdate
-        ? new PublicKey(config.args.positionId)
-        : PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce);
+
     const globalSettings = PDA.getGlobalSettings();
 
+    let position: PublicKey;
+    if (isUpdate) {
+        if (!positionId) {
+            throw new Error(`positionId is required for \`${methodName}\``);
+        }
+        position = new PublicKey(positionId);
+    } else {
+        if (!nonce) {
+            throw new Error(`Nonce is required for \`${methodName}\``);
+        }
+        position = PDA.getPosition(config.accounts.owner, pool, lpVault, nonce)
+    }
+
     let params = [
-        new BN(config.args.minTargetAmount),
-        new BN(config.args.downPayment),
-        new BN(config.args.principal),
-        new BN(config.args.fee),
-        new BN(config.args.expiration),
+        new BN(minTargetAmount),
+        new BN(downPayment),
+        new BN(principal),
+        new BN(fee),
+        new BN(expiration),
         { hops },
         data
     ];
 
     if (!isUpdate) {
-        params = [config.args.nonce || 0, ...params];
+        params = [nonce || 0, ...params];
     }
 
     const commonWithdrawAccounts = {
@@ -220,13 +225,21 @@ export async function processPositionInstruction(
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             }
         } else {
-            const openShortPosition = config.program.methods.openShortPosition(...params);
-            openShortPosition.remainingAccounts(remainingAccounts);
-            openShortPosition.accountsStrict(shortPositionAccounts);
+            if (isUpdate) {
+                const increaseShortPosition = config.program.methods.increaseShortPosition(...params);
+                increaseShortPosition.remainingAccounts(remainingAccounts);
+                increaseShortPosition.accountsStrict({ ...shortPositionAccounts });
 
-            return openShortPosition
-                .instruction()
-                .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+                return increaseShortPosition.instruction().then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+            } else {
+                const openShortPosition = config.program.methods.openShortPosition(...params);
+                openShortPosition.remainingAccounts(remainingAccounts);
+                openShortPosition.accountsStrict(shortPositionAccounts);
+
+                return openShortPosition
+                    .instruction()
+                    .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+            }
         }
     } else {
         const longPositionAccounts: OpenLongPositionInstructionAccounts = {
@@ -277,13 +290,21 @@ export async function processPositionInstruction(
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             }
         } else {
-            const openPosition = config.program.methods.openLongPosition(...params);
-            openPosition.accountsStrict(longPositionAccounts);
-            openPosition.remainingAccounts(remainingAccounts);
+            if (isUpdate) {
+                const updateLongPosition = config.program.methods.updateLongPosition(...params);
+                updateLongPosition.remainingAccounts(remainingAccounts);
+                updateLongPosition.accountsStrict({ ...longPositionAccounts });
 
-            return openPosition
-                .instruction()
-                .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+                return updateLongPosition.instruction().then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+            } else {
+                const openPosition = config.program.methods.openLongPosition(...params);
+                openPosition.accountsStrict(longPositionAccounts);
+                openPosition.remainingAccounts(remainingAccounts);
+
+                return openPosition
+                    .instruction()
+                    .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ import {
     getPermission,
     createAtaIfNeeded,
     handleMintsAndTokenProgram,
-    handlePaymentTokenMintWithAuthority
+    handlePaymentTokenMintWithAuthority, validateProviderPubkey
 } from '../utils';
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
@@ -275,7 +275,7 @@ async function handleAtaCheck(
     payer: PublicKey
 ): Promise<{
     ata: PublicKey;
-    ix: TransactionInstruction;
+    ix: TransactionInstruction | null;
 }> {
     const ata = getAssociatedTokenAddressSync(asset, owner, true, tokenProgram);
     return {
@@ -337,6 +337,7 @@ export async function getClosePositionCleanupInstructionAccounts(
     isTriggeredByAuthority: boolean = false
 ): Promise<CpcuAndIx> {
     const { owner, lpVault } = await fetchPositionData(program, accounts.position);
+    const payer = validateProviderPubkey(program.provider.publicKey);
 
     const [vault, tokenSetup] = await Promise.all([
         fetchVaultAddress(program, lpVault),
@@ -345,7 +346,7 @@ export async function getClosePositionCleanupInstructionAccounts(
             owner,
             accounts.currency,
             accounts.collateral,
-            program.provider.publicKey,
+            payer,
             await program.account.basePool.fetch(accounts.pool).then((pool) => pool.isLongPool),
             isTriggeredByAuthority
         )

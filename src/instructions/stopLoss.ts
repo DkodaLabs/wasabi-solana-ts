@@ -15,7 +15,7 @@ import {
     ClosePositionCleanupInstructionAccounts,
     ExitOrderSetupInstructionAccounts
 } from './closePosition';
-import { MintCache, PDA } from '../utils';
+import { MintCache, PDA, validateArgs } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 type StopLossCleanupInstructionAccounts = {
@@ -29,6 +29,7 @@ const stopLossSetupConfig: BaseMethodConfig<
     ExitOrderSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        const args = validateArgs(config.args);
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
@@ -39,7 +40,7 @@ const stopLossSetupConfig: BaseMethodConfig<
             accounts: {
                 closePositionSetup: accounts
             },
-            args: transformArgs(config.args),
+            args: transformArgs(args),
             setup: ixes.setupIx
         };
     },

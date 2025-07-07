@@ -26,14 +26,12 @@ export class BundleBuilder {
     private client!: JitoClient;
     private program?: Program<WasabiSolana>;
     private connection?: Connection;
-    private payer: PublicKey;
-    private authority?: PublicKey;
-    private transactions?: VersionedTransaction[] = [];
-    private instructions?: InstructionGroup[] = [];
+    private payer?: PublicKey;
+    private transactions: VersionedTransaction[] = [];
+    private instructions: InstructionGroup[] = [];
     private numExpectedTxns: number = 0;
     private computeBudgetConfig: ComputeBudgetConfig = DEFAULT_CONFIG;
     private tipLocation: TipLocation = 'IX';
-    private reciprocal?: PublicKey;
 
     setClient(client: JitoClient): this {
         this.client = client;
@@ -46,7 +44,11 @@ export class BundleBuilder {
     }
 
     private getConnection(): Connection {
-        return this.connection || this.program.provider.connection;
+        const connection = this.connection || this.program?.provider.connection;
+        if (!connection) {
+            throw new Error("Connection and provider connection are not set")
+        }
+        return connection;
     }
 
     setProgram(program: Program<WasabiSolana>): this {
@@ -59,9 +61,11 @@ export class BundleBuilder {
         return this;
     }
 
-    setAuthority(authority: PublicKey): this {
-        this.authority = authority;
-        return this;
+    getPayer(): PublicKey {
+        if (!this.payer) {
+            throw new Error("Payer is not set");
+        }
+        return this.payer;
     }
 
     addTransactions(...transactions: VersionedTransaction[]): this {
@@ -130,15 +134,15 @@ export class BundleBuilder {
                     MAX_SERIALIZED_LEN - 48 // Compute budget ixes require ~24bytes
                 ) {
                     transactions = await this.client.appendTipInstruction(
-                        this.connection,
-                        this.payer,
+                        this.getConnection(),
+                        this.getPayer(),
                         this.computeBudgetConfig,
                         this.transactions
                     );
                 } else if (this.transactions.length < 5) {
                     transactions = await this.client.appendTipTransaction(
                         this.getConnection(),
-                        this.payer,
+                        this.getPayer(),
                         this.computeBudgetConfig,
                         this.transactions
                     );

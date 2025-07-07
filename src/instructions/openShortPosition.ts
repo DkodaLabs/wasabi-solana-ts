@@ -12,7 +12,14 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionCleanupAccounts
 } from './openPosition';
-import { PDA, getPermission, handleMintsAndTokenProgram, handlePaymentTokenMint } from '../utils';
+import {
+    PDA,
+    getPermission,
+    handleMintsAndTokenProgram,
+    handlePaymentTokenMint,
+    validateArgs,
+    validateProviderPubkey
+} from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { MintCache } from '../utils/mintCache';
 
@@ -61,6 +68,14 @@ const openShortPositionSetupConfig: BaseMethodConfig<
     OpenShortPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
+        const { nonce, minTargetAmount, downPayment, principal, fee, expiration } = validateArgs(config.args);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
+
+        if (!nonce) {
+            throw new Error("Nonce is required for 'openShortPositionSetup'");
+        }
+
+
         const {
             currencyMint,
             collateralMint,
@@ -75,7 +90,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             config.accounts.currency,
             config.accounts.collateral,
             'wrap',
-            Number(config.args.downPayment) + Number(config.args.fee),
+            Number(downPayment) + Number(fee),
             config.mintCache
         );
 
@@ -120,9 +135,9 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 currency: currencyMint,
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
-                position: PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce),
-                authority: config.program.provider.publicKey,
-                permission: await getPermission(config.program, config.program.provider.publicKey),
+                position: PDA.getPosition(config.accounts.owner, pool, lpVault, nonce),
+                authority: payer,
+                permission: await getPermission(config.program, payer),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(
                     collateralMint,
@@ -137,12 +152,12 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                nonce: config.args.nonce,
-                minTargetAmount: new BN(config.args.minTargetAmount),
-                downPayment: new BN(config.args.downPayment),
-                principal: new BN(config.args.principal),
-                fee: new BN(config.args.fee),
-                expiration: new BN(config.args.expiration)
+                nonce: nonce,
+                minTargetAmount: new BN(minTargetAmount),
+                downPayment: new BN(downPayment),
+                principal: new BN(principal),
+                fee: new BN(fee),
+                expiration: new BN(expiration)
             },
             setup: setupIx,
             cleanup: cleanupIx

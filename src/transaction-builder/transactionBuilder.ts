@@ -157,7 +157,7 @@ export class TransactionBuilder {
                 throw new SimulationError(
                     JSON.stringify(simResult.value.err),
                     transaction,
-                    simResult.value.logs
+                    simResult.value.logs ?? undefined
                 );
             }
 

@@ -1,6 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
-import { PDA, WASABI_PROGRAM_ID } from '../utils';
+import { PDA, validateProviderPubkey, WASABI_PROGRAM_ID } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -44,18 +44,19 @@ export async function getTokenInstructionAccounts(
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(assetMint, lpVault, true, assetTokenProgram);
     const sharesMint = PDA.getSharesMint(lpVault, assetMint);
+    const payer = validateProviderPubkey(program.provider.publicKey);
 
     return {
-        owner: program.provider.publicKey,
+        owner: payer,
         ownerAssetAccount: getAssociatedTokenAddressSync(
             assetMint,
-            program.provider.publicKey,
+            payer,
             false,
             assetTokenProgram
         ),
         ownerSharesAccount: getAssociatedTokenAddressSync(
             sharesMint,
-            program.provider.publicKey,
+            payer,
             false,
             TOKEN_2022_PROGRAM_ID
         ),

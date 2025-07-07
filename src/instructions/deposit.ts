@@ -12,11 +12,14 @@ import {
     TokenInstructionAccounts,
     getTokenInstructionAccounts
 } from './tokenAccounts';
-import { handleMint } from '../utils';
+import { handleMint, validateArgs, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstructionAccounts> = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
+        const args = validateArgs(config.args);
+        const payer = validateProviderPubkey(config.program.provider.publicKey);
+
         const setup: TransactionInstruction[] = [];
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
@@ -24,12 +27,14 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
             {
                 owner: config.program.provider.publicKey,
                 wrapMode: 'wrap',
-                amount: config.args.amount,
+                amount: args.amount,
                 mintCache: config.mintCache
             }
         );
 
-        setup.push(...setupIx);
+        if (setupIx) {
+            setup.push(...setupIx);
+        }
 
         const accounts = await getTokenInstructionAccounts(config.program, mint, tokenProgram);
 
@@ -40,9 +45,9 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
         if (!ownerShares) {
             setup.push(
                 createAssociatedTokenAccountInstruction(
-                    config.program.provider.publicKey,
+                    payer,
                     accounts.ownerSharesAccount,
-                    config.program.provider.publicKey,
+                    payer,
                     accounts.sharesMint,
                     TOKEN_2022_PROGRAM_ID
                 )
@@ -51,7 +56,7 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
 
         return {
             accounts,
-            args: config.args ? new BN(config.args.amount.toString()) : undefined,
+            args: new BN(args.amount.toString()),
             setup,
             cleanup: cleanupIx
         };

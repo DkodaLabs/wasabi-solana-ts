@@ -12,7 +12,7 @@ import {
 } from './closePosition';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils';
+import { MintCache, validateArgs } from '../utils';
 
 type CloseLongPositionSetupInstructionAccounts = {
     owner: PublicKey;
@@ -30,12 +30,13 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
     CloseLongPositionSetupInstructionAccounts
 > = {
     process: async (config: ConfigArgs<ClosePositionSetupArgs, ClosePositionSetupAccounts>) => {
+        const args = validateArgs(config.args);
         const { accounts, ixes } = await getClosePositionSetupInstructionAccounts(
             config.program,
             config.accounts,
             'MARKET',
             config.mintCache,
-            config.args.amount
+            args.amount
         );
 
         return {
@@ -45,7 +46,7 @@ const closeLongPositionSetupConfig: BaseMethodConfig<
                     ...accounts
                 }
             },
-            args: transformArgs(config.args),
+            args: transformArgs(args),
             setup: ixes.setupIx,
         };
     },
