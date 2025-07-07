@@ -29,6 +29,11 @@ export type AddCollateralInstructionAccounts = {
     collateralTokenProgram: PublicKey;
 };
 
+export type AddCollateralWithSharesInstructionAccounts = {
+    withdraw: TokenInstructionAccounts;
+    addCollateral: AddCollateralInstructionAccounts;
+};
+
 export async function processAddCollateralInstruction(
     config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
     options: {

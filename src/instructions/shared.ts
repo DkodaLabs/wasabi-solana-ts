@@ -5,11 +5,6 @@ import { handleOpenTokenAccounts, PDA } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
-import {
-    AddCollateralArgs,
-    AddCollateralAccounts,
-    AddCollateralInstructionAccounts
-} from './addCollateralToShortPosition';
 import { TokenInstructionAccounts } from './tokenAccounts';
 import { BN } from '@coral-xyz/anchor';
 
@@ -60,11 +55,6 @@ export function extractInstructionData(instructions: TransactionInstruction[]): 
 
     return { hops, data, remainingAccounts };
 }
-
-export type AddCollateralWithSharesInstructionAccounts = {
-    withdraw: TokenInstructionAccounts;
-    addCollateral: AddCollateralInstructionAccounts;
-};
 
 export type ProcessPositionOptions = {
     useShares: boolean;
@@ -118,6 +108,7 @@ export async function processPositionInstruction(
     const position = isUpdate
         ? new PublicKey(config.args.positionId)
         : PDA.getPosition(config.accounts.owner, pool, lpVault, config.args.nonce);
+    const globalSettings = PDA.getGlobalSettings();
 
     let params = [
         new BN(config.args.minTargetAmount),
@@ -132,6 +123,16 @@ export async function processPositionInstruction(
     if (!isUpdate) {
         params = [config.args.nonce || 0, ...params];
     }
+
+    const commonWithdrawAccounts = {
+        owner: config.accounts.owner,
+        ownerAssetAccount: ownerPaymentAta,
+        globalSettings,
+        assetTokenProgram: currencyTokenProgram,
+        sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+        eventAuthority: PDA.getEventAuthority(),
+        program: config.program.programId
+    };
 
     const commonPositionAccounts = {
         owner: config.accounts.owner,
@@ -157,7 +158,7 @@ export async function processPositionInstruction(
         permission: PDA.getAdmin(config.accounts.authority),
         feeWallet: config.accounts.feeWallet,
         debtController: PDA.getDebtController(),
-        globalSettings: PDA.getGlobalSettings(),
+        globalSettings,
         systemProgram: SystemProgram.programId
     };
 
@@ -166,7 +167,7 @@ export async function processPositionInstruction(
             ...commonPositionAccounts,
             ownerTargetCurrencyAccount: ownerPaymentAta,
             currencyTokenProgram,
-            collateralTokenProgram,
+            collateralTokenProgram
         };
 
         if (useShares) {
@@ -179,11 +180,9 @@ export async function processPositionInstruction(
                 collateralTokenProgram
             );
             const sharesMint = PDA.getSharesMint(withdrawLpVault, config.accounts.collateral);
-            const globalSettings = PDA.getGlobalSettings();
 
             const withdrawAccounts: TokenInstructionAccounts = {
-                owner: config.accounts.owner,
-                ownerAssetAccount: ownerPaymentAta,
+                ...commonWithdrawAccounts,
                 ownerSharesAccount: getAssociatedTokenAddressSync(
                     sharesMint,
                     config.accounts.owner,
@@ -194,11 +193,7 @@ export async function processPositionInstruction(
                 vault: withdrawVault,
                 assetMint: config.accounts.collateral,
                 sharesMint,
-                globalSettings,
-                assetTokenProgram: collateralTokenProgram,
-                sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
-                eventAuthority: PDA.getEventAuthority(),
-                program: config.program.programId
+                assetTokenProgram: collateralTokenProgram
             };
 
             if (isUpdate) {
@@ -237,16 +232,14 @@ export async function processPositionInstruction(
         const longPositionAccounts: OpenLongPositionInstructionAccounts = {
             ...commonPositionAccounts,
             ownerCurrencyAccount: ownerPaymentAta,
-            tokenProgram: currencyTokenProgram,
+            tokenProgram: currencyTokenProgram
         };
 
         if (useShares) {
             const sharesMint = PDA.getSharesMint(lpVault, config.accounts.currency);
-            const globalSettings = PDA.getGlobalSettings();
 
             const withdrawAccounts: TokenInstructionAccounts = {
-                owner: config.accounts.owner,
-                ownerAssetAccount: ownerPaymentAta,
+                ...commonWithdrawAccounts,
                 ownerSharesAccount: getAssociatedTokenAddressSync(
                     sharesMint,
                     config.accounts.owner,
@@ -257,11 +250,7 @@ export async function processPositionInstruction(
                 vault,
                 assetMint: config.accounts.currency,
                 sharesMint,
-                globalSettings,
-                assetTokenProgram: currencyTokenProgram,
-                sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
-                eventAuthority: PDA.getEventAuthority(),
-                program: config.program.programId
+                assetTokenProgram: currencyTokenProgram
             };
 
             if (isUpdate) {
@@ -298,5 +287,3 @@ export async function processPositionInstruction(
         }
     }
 }
-
-
