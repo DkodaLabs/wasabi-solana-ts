@@ -115,19 +115,26 @@ export async function processPositionInstruction(
         position = PDA.getPosition(config.accounts.owner, pool, lpVault, nonce)
     }
 
-    let params = [
-        new BN(minTargetAmount),
-        new BN(downPayment),
-        new BN(principal),
-        new BN(fee),
-        new BN(expiration),
+    const createUpdateParams = () => [
+        new BN(minTargetAmount.toString()),
+        new BN(downPayment.toString()),
+        new BN(principal.toString()),
+        new BN(fee.toString()),
+        new BN(expiration.toString()),
         { hops },
         data
-    ];
+    ] as const;
 
-    if (!isUpdate) {
-        params = [nonce || 0, ...params];
-    }
+    const createOpenParams = () => [
+        nonce || 0,
+        new BN(minTargetAmount.toString()),
+        new BN(downPayment.toString()),
+        new BN(principal.toString()),
+        new BN(fee.toString()),
+        new BN(expiration.toString()),
+        { hops },
+        data
+    ] as const;
 
     const commonWithdrawAccounts = {
         owner: config.accounts.owner,
@@ -202,7 +209,7 @@ export async function processPositionInstruction(
             };
 
             if (isUpdate) {
-                const editShortShares = config.program.methods.increaseShortWithShares(...params);
+                const editShortShares = config.program.methods.increaseShortWithShares(...createUpdateParams());
                 editShortShares.remainingAccounts(remainingAccounts);
                 editShortShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -213,7 +220,7 @@ export async function processPositionInstruction(
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openShortShares = config.program.methods.openShortWithShares(...params);
+                const openShortShares = config.program.methods.openShortWithShares(...createOpenParams());
                 openShortShares.remainingAccounts(remainingAccounts);
                 openShortShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -226,13 +233,13 @@ export async function processPositionInstruction(
             }
         } else {
             if (isUpdate) {
-                const increaseShortPosition = config.program.methods.increaseShortPosition(...params);
+                const increaseShortPosition = config.program.methods.increaseShortPosition(...createUpdateParams());
                 increaseShortPosition.remainingAccounts(remainingAccounts);
                 increaseShortPosition.accountsStrict({ ...shortPositionAccounts });
 
                 return increaseShortPosition.instruction().then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openShortPosition = config.program.methods.openShortPosition(...params);
+                const openShortPosition = config.program.methods.openShortPosition(...createOpenParams());
                 openShortPosition.remainingAccounts(remainingAccounts);
                 openShortPosition.accountsStrict(shortPositionAccounts);
 
@@ -267,7 +274,7 @@ export async function processPositionInstruction(
             };
 
             if (isUpdate) {
-                const updateLongShares = config.program.methods.updateLongWithShares(...params);
+                const updateLongShares = config.program.methods.updateLongWithShares(...createUpdateParams());
                 updateLongShares.remainingAccounts(remainingAccounts);
                 updateLongShares.accountsStrict({
                     withdraw: withdrawAccounts,
@@ -278,7 +285,7 @@ export async function processPositionInstruction(
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openLongShares = config.program.methods.openLongWithShares(...params);
+                const openLongShares = config.program.methods.openLongWithShares(...createOpenParams());
                 openLongShares.accountsStrict({
                     withdraw: withdrawAccounts,
                     openPosition: longPositionAccounts
@@ -291,13 +298,13 @@ export async function processPositionInstruction(
             }
         } else {
             if (isUpdate) {
-                const updateLongPosition = config.program.methods.updateLongPosition(...params);
+                const updateLongPosition = config.program.methods.updateLongPosition(...createUpdateParams());
                 updateLongPosition.remainingAccounts(remainingAccounts);
                 updateLongPosition.accountsStrict({ ...longPositionAccounts });
 
                 return updateLongPosition.instruction().then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             } else {
-                const openPosition = config.program.methods.openLongPosition(...params);
+                const openPosition = config.program.methods.openLongPosition(...createOpenParams());
                 openPosition.accountsStrict(longPositionAccounts);
                 openPosition.remainingAccounts(remainingAccounts);
 

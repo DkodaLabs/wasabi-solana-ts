@@ -75,9 +75,9 @@ export async function processAddCollateralInstruction(
     };
 
     const params = [
-        new BN(args.downPayment),
-        new BN(args.fee),
-        new BN(args.expiration)
+        new BN(args.downPayment.toString()),
+        new BN(args.fee.toString()),
+        new BN(args.expiration.toString())
     ] as const;
 
     if (useShares) {

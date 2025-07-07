@@ -101,11 +101,11 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
                 sysvarInfo: SYSVAR_INSTRUCTIONS_PUBKEY
             },
             args: {
-                minTargetAmount: new BN(args.minTargetAmount),
-                downPayment: new BN(args.downPayment),
-                principal: new BN(args.principal),
-                fee: new BN(args.fee),
-                expiration: new BN(args.expiration)
+                minTargetAmount: new BN(args.minTargetAmount.toString()),
+                downPayment: new BN(args.downPayment.toString()),
+                principal: new BN(args.principal.toString()),
+                fee: new BN(args.fee.toString()),
+                expiration: new BN(args.expiration.toString())
             },
             setup: setupIx,
             cleanup: cleanupIx

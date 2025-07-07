@@ -153,11 +153,11 @@ const openShortPositionSetupConfig: BaseMethodConfig<
             },
             args: {
                 nonce: nonce,
-                minTargetAmount: new BN(minTargetAmount),
-                downPayment: new BN(downPayment),
-                principal: new BN(principal),
-                fee: new BN(fee),
-                expiration: new BN(expiration)
+                minTargetAmount: new BN(minTargetAmount.toString()),
+                downPayment: new BN(downPayment.toString()),
+                principal: new BN(principal.toString()),
+                fee: new BN(fee.toString()),
+                expiration: new BN(expiration.toString())
             },
             setup: setupIx,
             cleanup: cleanupIx
