@@ -14,6 +14,570 @@ export type WasabiSolana = {
   },
   "instructions": [
     {
+      "name": "addCollateralToLongPosition",
+      "discriminator": [
+        243,
+        29,
+        95,
+        148,
+        101,
+        65,
+        18,
+        181
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The wallet that owns the assets"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCurrencyAccount",
+          "docs": [
+            "The wallet's currency token account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault",
+          "docs": [
+            "The LP Vault that was borrowed from"
+          ],
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The LP Vault's token account"
+          ],
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "position",
+          "docs": [
+            "The Position that is being edited"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The LongPool that 'owns' the Position"
+          ],
+          "writable": true
+        },
+        {
+          "name": "currency",
+          "docs": [
+            "The mint of the asset that was borrowed"
+          ],
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "addCollateralToLongWithShares",
+      "discriminator": [
+        80,
+        227,
+        237,
+        106,
+        69,
+        38,
+        193,
+        6
+      ],
+      "accounts": [
+        {
+          "name": "withdraw",
+          "accounts": [
+            {
+              "name": "owner",
+              "docs": [
+                "The key of the user that owns the assets"
+              ],
+              "signer": true
+            },
+            {
+              "name": "ownerAssetAccount",
+              "docs": [
+                "The Owner's token account that holds the assets"
+              ],
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "owner"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "assetTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "assetMint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "ownerSharesAccount",
+              "docs": [
+                "The Owner's token account that stores share tokens"
+              ],
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "owner"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "sharesTokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "sharesMint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "lpVault",
+              "writable": true
+            },
+            {
+              "name": "vault",
+              "writable": true,
+              "relations": [
+                "lpVault"
+              ]
+            },
+            {
+              "name": "assetMint"
+            },
+            {
+              "name": "sharesMint",
+              "writable": true,
+              "relations": [
+                "lpVault"
+              ]
+            },
+            {
+              "name": "globalSettings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "assetTokenProgram"
+            },
+            {
+              "name": "sharesTokenProgram",
+              "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            },
+            {
+              "name": "eventAuthority",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      95,
+                      95,
+                      101,
+                      118,
+                      101,
+                      110,
+                      116,
+                      95,
+                      97,
+                      117,
+                      116,
+                      104,
+                      111,
+                      114,
+                      105,
+                      116,
+                      121
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "program"
+            }
+          ]
+        },
+        {
+          "name": "editPosition",
+          "accounts": [
+            {
+              "name": "owner",
+              "docs": [
+                "The wallet that owns the assets"
+              ],
+              "writable": true,
+              "signer": true
+            },
+            {
+              "name": "ownerCurrencyAccount",
+              "docs": [
+                "The wallet's currency token account"
+              ],
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "owner"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "tokenProgram"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "currency"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "lpVault",
+              "docs": [
+                "The LP Vault that was borrowed from"
+              ],
+              "writable": true,
+              "relations": [
+                "position"
+              ]
+            },
+            {
+              "name": "vault",
+              "docs": [
+                "The LP Vault's token account"
+              ],
+              "writable": true,
+              "relations": [
+                "lpVault"
+              ]
+            },
+            {
+              "name": "position",
+              "docs": [
+                "The Position that is being edited"
+              ],
+              "writable": true
+            },
+            {
+              "name": "pool",
+              "docs": [
+                "The LongPool that 'owns' the Position"
+              ],
+              "writable": true
+            },
+            {
+              "name": "currency",
+              "docs": [
+                "The mint of the asset that was borrowed"
+              ],
+              "relations": [
+                "pool"
+              ]
+            },
+            {
+              "name": "globalSettings",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      103,
+                      108,
+                      111,
+                      98,
+                      97,
+                      108,
+                      95,
+                      115,
+                      101,
+                      116,
+                      116,
+                      105,
+                      110,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "tokenProgram"
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "downPayment",
+          "type": "u64"
+        },
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "addCollateralToShortPosition",
       "discriminator": [
         160,
@@ -119,10 +683,6 @@ export type WasabiSolana = {
           "name": "collateral"
         },
         {
-          "name": "feeWallet",
-          "writable": true
-        },
-        {
           "name": "globalSettings",
           "pda": {
             "seeds": [
@@ -156,10 +716,6 @@ export type WasabiSolana = {
       "args": [
         {
           "name": "downPayment",
-          "type": "u64"
-        },
-        {
-          "name": "fee",
           "type": "u64"
         },
         {
@@ -496,10 +1052,6 @@ export type WasabiSolana = {
               "name": "collateral"
             },
             {
-              "name": "feeWallet",
-              "writable": true
-            },
-            {
               "name": "globalSettings",
               "pda": {
                 "seeds": [
@@ -535,10 +1087,6 @@ export type WasabiSolana = {
       "args": [
         {
           "name": "downPayment",
-          "type": "u64"
-        },
-        {
-          "name": "fee",
           "type": "u64"
         },
         {
@@ -10825,6 +11373,19 @@ export type WasabiSolana = {
   ],
   "events": [
     {
+      "name": "collateralAdded",
+      "discriminator": [
+        172,
+        68,
+        58,
+        249,
+        157,
+        64,
+        74,
+        141
+      ]
+    },
+    {
       "name": "collateralAddedToPosition",
       "discriminator": [
         52,
@@ -11371,6 +11932,38 @@ export type WasabiSolana = {
           },
           {
             "name": "feesToBePaid",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "collateralAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "downPaymentAdded",
+            "type": "u64"
+          },
+          {
+            "name": "collateralAdded",
+            "type": "u64"
+          },
+          {
+            "name": "principalReduced",
+            "type": "u64"
+          },
+          {
+            "name": "interestPaid",
             "type": "u64"
           }
         ]
