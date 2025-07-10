@@ -2,7 +2,7 @@ import { ConfigArgs } from '../base';
 import { AddCollateralAccounts, AddCollateralArgs } from './addCollateralToShortPosition';
 import { TransactionInstruction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
-import { processAddCollateralInstruction as sharedProcessAddCollateralInstruction } from './shared';
+import { processAddCollateralInstruction } from './shared';
 
 export type AddCollateralToLongInstructionAccounts = {
     owner: PublicKey;
@@ -18,7 +18,7 @@ export type AddCollateralToLongInstructionAccounts = {
 
 export async function processAddCollateralToLongInstruction(
     config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
-    useShares: boolean,
+    useShares: boolean
 ): Promise<TransactionInstruction[]> {
-    return sharedProcessAddCollateralInstruction(config, { useShares, isLong: true });
+    return processAddCollateralInstruction(config, { useShares, isLong: true });
 }

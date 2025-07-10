@@ -132,6 +132,16 @@
           ]
         },
         {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
           "name": "global_settings",
           "pda": {
             "seeds": [
@@ -524,6 +534,16 @@
               ]
             },
             {
+              "name": "authority",
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
               "name": "global_settings",
               "pda": {
                 "seeds": [
@@ -675,6 +695,16 @@
         },
         {
           "name": "collateral"
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "global_settings",
@@ -1044,6 +1074,16 @@
             },
             {
               "name": "collateral"
+            },
+            {
+              "name": "authority",
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
             },
             {
               "name": "global_settings",

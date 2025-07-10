@@ -138,6 +138,16 @@ export type WasabiSolana = {
           ]
         },
         {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
           "name": "globalSettings",
           "pda": {
             "seeds": [
@@ -530,6 +540,16 @@ export type WasabiSolana = {
               ]
             },
             {
+              "name": "authority",
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
+            },
+            {
               "name": "globalSettings",
               "pda": {
                 "seeds": [
@@ -681,6 +701,16 @@ export type WasabiSolana = {
         },
         {
           "name": "collateral"
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
         },
         {
           "name": "globalSettings",
@@ -1050,6 +1080,16 @@ export type WasabiSolana = {
             },
             {
               "name": "collateral"
+            },
+            {
+              "name": "authority",
+              "signer": true,
+              "relations": [
+                "permission"
+              ]
+            },
+            {
+              "name": "permission"
             },
             {
               "name": "globalSettings",

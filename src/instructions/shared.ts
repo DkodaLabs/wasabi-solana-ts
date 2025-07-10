@@ -362,6 +362,8 @@ export async function processAddCollateralInstruction(
         new BN(args.expiration.toString())
     ] as const;
 
+    const globalSettings = PDA.getGlobalSettings();
+    const permission = PDA.getAdmin(config.accounts.authority);
     const createShortAccounts = () => ({
         owner: config.accounts.owner,
         ownerTargetCurrencyAccount: ownerPaymentAta,
@@ -369,7 +371,9 @@ export async function processAddCollateralInstruction(
         pool,
         collateralVault: position.collateralVault,
         collateral: position.collateral,
-        globalSettings: PDA.getGlobalSettings(),
+        authority: config.accounts.authority,
+        permission,
+        globalSettings,
         collateralTokenProgram,
     });
 
@@ -386,7 +390,9 @@ export async function processAddCollateralInstruction(
         position: config.accounts.position,
         pool,
         currency: position.currency,
-        globalSettings: PDA.getGlobalSettings(),
+        authority: config.accounts.authority,
+        permission,
+        globalSettings,
         tokenProgram: currencyTokenProgram,
         eventAuthority: PDA.getEventAuthority(),
         program: config.program.programId
