@@ -7,6 +7,7 @@ import { OpenLongPositionInstructionAccounts } from './openLongPositionV2';
 import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
 import { TokenInstructionAccounts } from './tokenAccounts';
 import { BN } from '@coral-xyz/anchor';
+import { AddCollateralAccounts, AddCollateralArgs } from './addCollateralToShortPosition';
 
 export type Hop = {
     programId: PublicKey;
@@ -312,6 +313,160 @@ export async function processPositionInstruction(
                     .instruction()
                     .then((ix) => [...(setupIx || []), ix, ...(cleanupIx || [])]);
             }
+        }
+    }
+}
+
+export async function processAddCollateralInstruction(
+    config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
+    options: {
+        useShares: boolean;
+        isLong: boolean;
+    }
+): Promise<TransactionInstruction[]> {
+    const { useShares, isLong } = options;
+    const args = validateArgs(config.args);
+
+    const position = await config.program.account.position.fetchNullable(config.accounts.position);
+    if (!position) throw new Error('Position not found');
+
+    const pool = isLong
+        ? PDA.getLongPool(position.collateral, position.currency)
+        : PDA.getShortPool(position.collateral, position.currency);
+
+    const { ownerPaymentAta, setupIx, cleanupIx, currencyTokenProgram, collateralTokenProgram } =
+        await handleOpenTokenAccounts({
+            program: config.program,
+            owner: config.accounts.owner,
+            mintCache: config.mintCache,
+            downPayment: args.downPayment,
+            fee: isLong ? args.interest : 0,
+            currency: position.currency,
+            collateral: position.collateral,
+            isLongPool: isLong,
+            useShares
+        });
+
+    if (!ownerPaymentAta) {
+        throw new Error('Owner payment account does not exist');
+    }
+
+    const createShortParams = () => [
+        new BN(args.downPayment.toString()),
+        new BN(args.expiration.toString())
+    ] as const;
+
+    const createLongParams = () => [
+        new BN(args.downPayment.toString()),
+        new BN(args.interest.toString()),
+        new BN(args.expiration.toString())
+    ] as const;
+
+    const createShortAccounts = () => ({
+        owner: config.accounts.owner,
+        ownerTargetCurrencyAccount: ownerPaymentAta,
+        position: config.accounts.position,
+        pool,
+        collateralVault: position.collateralVault,
+        collateral: position.collateral,
+        globalSettings: PDA.getGlobalSettings(),
+        collateralTokenProgram,
+    });
+
+    const createLongAccounts = () => ({
+        owner: config.accounts.owner,
+        ownerCurrencyAccount: ownerPaymentAta,
+        lpVault: PDA.getLpVault(position.currency),
+        vault: getAssociatedTokenAddressSync(
+            position.currency,
+            PDA.getLpVault(position.currency),
+            true,
+            currencyTokenProgram
+        ),
+        position: config.accounts.position,
+        pool,
+        currency: position.currency,
+        globalSettings: PDA.getGlobalSettings(),
+        tokenProgram: currencyTokenProgram,
+        eventAuthority: PDA.getEventAuthority(),
+        program: config.program.programId
+    });
+
+    const createWithdrawAccounts = (asset: PublicKey, lpVault: PublicKey, vault: PublicKey, sharesMint: PublicKey, tokenProgram: PublicKey) => ({
+        owner: config.accounts.owner,
+        ownerAssetAccount: ownerPaymentAta,
+        ownerSharesAccount: getAssociatedTokenAddressSync(
+            sharesMint,
+            config.accounts.owner,
+            false,
+            TOKEN_2022_PROGRAM_ID
+        ),
+        lpVault,
+        vault,
+        assetMint: asset,
+        sharesMint,
+        globalSettings: PDA.getGlobalSettings(),
+        assetTokenProgram: tokenProgram,
+        sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+        eventAuthority: PDA.getEventAuthority(),
+        program: config.program.programId
+    });
+
+    if (!isLong) {
+        if (useShares) {
+            const lpVault = PDA.getLpVault(position.collateral);
+            const vault = getAssociatedTokenAddressSync(position.collateral, lpVault, true, currencyTokenProgram);
+            const sharesMint = PDA.getSharesMint(lpVault, position.collateral);
+            const withdrawAccounts = createWithdrawAccounts(position.collateral, lpVault, vault, sharesMint, currencyTokenProgram);
+
+            const addCollateral = config.program.methods.addCollateralToShortWithShares(...createShortParams());
+            addCollateral.accountsStrict({
+                withdraw: withdrawAccounts,
+                editPosition: createShortAccounts()
+            });
+
+            return addCollateral.instruction().then((ix: TransactionInstruction) => [
+                ...(setupIx || []),
+                ix,
+                ...(cleanupIx || [])
+            ]);
+        } else {
+            const addCollateral = config.program.methods.addCollateralToShortPosition(...createShortParams());
+            addCollateral.accountsStrict(createShortAccounts());
+
+            return addCollateral.instruction().then((ix: TransactionInstruction) => [
+                ...(setupIx || []),
+                ix,
+                ...(cleanupIx || [])
+            ]);
+        }
+    } else {
+        if (useShares) {
+            const lpVault = PDA.getLpVault(position.currency);
+            const vault = getAssociatedTokenAddressSync(position.currency, lpVault, true, currencyTokenProgram);
+            const sharesMint = PDA.getSharesMint(lpVault, position.currency);
+            const withdrawAccounts = createWithdrawAccounts(position.currency, lpVault, vault, sharesMint, currencyTokenProgram);
+
+            const addCollateral = config.program.methods.addCollateralToLongWithShares(...createLongParams());
+            addCollateral.accountsStrict({
+                withdraw: withdrawAccounts,
+                editPosition: createLongAccounts()
+            });
+
+            return addCollateral.instruction().then((ix: TransactionInstruction) => [
+                ...(setupIx || []),
+                ix,
+                ...(cleanupIx || [])
+            ]);
+        } else {
+            const addCollateral = config.program.methods.addCollateralToLongPosition(...createLongParams());
+            addCollateral.accountsStrict(createLongAccounts());
+
+            return addCollateral.instruction().then((ix: TransactionInstruction) => [
+                ...(setupIx || []),
+                ix,
+                ...(cleanupIx || [])
+            ]);
         }
     }
 }
