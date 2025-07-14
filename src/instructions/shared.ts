@@ -339,7 +339,7 @@ export async function processAddCollateralInstruction(
             program: config.program,
             owner: config.accounts.owner,
             mintCache: config.mintCache,
-            downPayment: args.downPayment,
+            downPayment: args.amount,
             fee: isLong ? args.interest : 0,
             currency: position.currency,
             collateral: position.collateral,
@@ -352,12 +352,12 @@ export async function processAddCollateralInstruction(
     }
 
     const createShortParams = () => [
-        new BN(args.downPayment.toString()),
+        new BN(args.amount.toString()),
         new BN(args.expiration.toString())
     ] as const;
 
     const createLongParams = () => [
-        new BN(args.downPayment.toString()),
+        new BN(args.amount.toString()),
         new BN(args.interest.toString()),
         new BN(args.expiration.toString())
     ] as const;
@@ -374,7 +374,7 @@ export async function processAddCollateralInstruction(
         authority: config.accounts.authority,
         permission,
         globalSettings,
-        collateralTokenProgram,
+        tokenProgram: collateralTokenProgram,
     });
 
     const createLongAccounts = () => ({

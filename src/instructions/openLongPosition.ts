@@ -36,7 +36,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = validateProviderPubkey(config.program.provider.publicKey);
+        const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.nonce) {
             throw new Error('Nonce is required for `openLongPositionSetup');
@@ -103,8 +103,8 @@ const openLongPositionSetupConfig: BaseMethodConfig<
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 position: PDA.getPosition(config.accounts.owner, pool, lpVault, args.nonce),
-                authority: config.accounts.authority || payer,
-                permission: await getPermission(config.program, payer),
+                authority,
+                permission: await getPermission(config.program, authority),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(
                     currencyMint,

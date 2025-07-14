@@ -180,7 +180,6 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "downPayment",
           "type": "u64"
         },
         {
@@ -584,7 +583,7 @@ export type WasabiSolana = {
       ],
       "args": [
         {
-          "name": "downPayment",
+          "name": "amount",
           "type": "u64"
         },
         {
@@ -632,7 +631,7 @@ export type WasabiSolana = {
               },
               {
                 "kind": "account",
-                "path": "collateralTokenProgram"
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -740,12 +739,12 @@ export type WasabiSolana = {
           }
         },
         {
-          "name": "collateralTokenProgram"
+          "name": "tokenProgram"
         }
       ],
       "args": [
         {
-          "name": "downPayment",
+          "name": "amount",
           "type": "u64"
         },
         {
@@ -1011,7 +1010,7 @@ export type WasabiSolana = {
                   },
                   {
                     "kind": "account",
-                    "path": "collateralTokenProgram"
+                    "path": "tokenProgram"
                   },
                   {
                     "kind": "account",
@@ -1119,14 +1118,14 @@ export type WasabiSolana = {
               }
             },
             {
-              "name": "collateralTokenProgram"
+              "name": "tokenProgram"
             }
           ]
         }
       ],
       "args": [
         {
-          "name": "downPayment",
+          "name": "amount",
           "type": "u64"
         },
         {

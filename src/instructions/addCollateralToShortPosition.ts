@@ -1,9 +1,12 @@
 import { ConfigArgs } from '../base';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { processAddCollateralInstruction } from './shared';
+import { PayInType } from './openPosition';
+
+export type AddCollateralParams = { payInType: PayInType } & AddCollateralArgs & AddCollateralAccounts;
 
 export type AddCollateralArgs = {
-    downPayment: bigint;
+    amount: bigint;
     interest: bigint;
     expiration: bigint;
 };
@@ -22,12 +25,12 @@ export type AddCollateralToShortInstructionAccounts = {
     collateralVault: PublicKey;
     collateral: PublicKey;
     globalSettings: PublicKey;
-    collateralTokenProgram: PublicKey;
+    tokenProgram: PublicKey;
 };
 
 export async function processAddCollateralToShortInstruction(
     config: ConfigArgs<AddCollateralArgs, AddCollateralAccounts>,
-    useShares: boolean,
+    useShares: boolean
 ): Promise<TransactionInstruction[]> {
     return processAddCollateralInstruction(config, { useShares, isLong: false });
 }
