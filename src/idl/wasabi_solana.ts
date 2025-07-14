@@ -180,6 +180,7 @@ export type WasabiSolana = {
       ],
       "args": [
         {
+          "name": "amount",
           "type": "u64"
         },
         {
