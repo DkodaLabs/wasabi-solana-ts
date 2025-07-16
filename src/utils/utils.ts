@@ -961,6 +961,7 @@ export async function handleCloseTokenAccounts(
         program: Program<WasabiSolana>;
         owner: PublicKey;
         mintCache: MintCache;
+        authority?: PublicKey;
     },
     poolAccount: {
         isLongPool: boolean;
@@ -994,7 +995,7 @@ export async function handleCloseTokenAccounts(
     if (!ownerPayoutAtaInfo) {
         setupIx.push(
             createAssociatedTokenAccountIdempotentInstruction(
-                config.owner,
+                config.authority || config.owner,
                 ownerPayoutAta,
                 config.owner,
                 payoutMint,
@@ -1003,15 +1004,15 @@ export async function handleCloseTokenAccounts(
         );
     }
 
-    if (payoutIsSol) {
+    if (payoutIsSol && (!config.authority || config.authority.equals(config.owner))) {
         cleanupIx.push(
-            createCloseAccountInstruction(
-                ownerPayoutAta,
-                config.owner,
-                config.owner,
-                [],
-                payoutTokenProgram
-            )
+          createCloseAccountInstruction(
+            ownerPayoutAta,
+            config.owner,
+            config.owner,
+            [],
+            payoutTokenProgram
+          )
         );
     }
 

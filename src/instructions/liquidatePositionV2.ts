@@ -42,6 +42,7 @@ const liquidatePositionConfig: BaseMethodConfig<
                 {
                     program: config.program,
                     owner: config.accounts.owner,
+                    authority: config.program.provider.publicKey,
                     mintCache,
                 },
                 poolAccount
