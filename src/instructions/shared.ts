@@ -326,6 +326,7 @@ export async function processAddCollateralInstruction(
 ): Promise<TransactionInstruction[]> {
     const { useShares, isLong } = options;
     const args = validateArgs(config.args);
+    const authority = config.accounts.authority  || config.program.provider.publicKey;
 
     const position = await config.program.account.position.fetchNullable(config.accounts.position);
     if (!position) throw new Error('Position not found');
@@ -363,7 +364,7 @@ export async function processAddCollateralInstruction(
     ] as const;
 
     const globalSettings = PDA.getGlobalSettings();
-    const permission = PDA.getAdmin(config.accounts.authority);
+    const permission = PDA.getAdmin(authority);
     const createShortAccounts = () => ({
         owner: config.accounts.owner,
         ownerTargetCurrencyAccount: ownerPaymentAta,
@@ -371,7 +372,7 @@ export async function processAddCollateralInstruction(
         pool,
         collateralVault: position.collateralVault,
         collateral: position.collateral,
-        authority: config.accounts.authority,
+        authority,
         permission,
         globalSettings,
         tokenProgram: collateralTokenProgram,
@@ -390,7 +391,7 @@ export async function processAddCollateralInstruction(
         position: config.accounts.position,
         pool,
         currency: position.currency,
-        authority: config.accounts.authority,
+        authority,
         permission,
         globalSettings,
         tokenProgram: currencyTokenProgram,

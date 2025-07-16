@@ -14,18 +14,7 @@ export type AddCollateralArgs = {
 export type AddCollateralAccounts = {
     owner: PublicKey;
     position: PublicKey;
-    authority: PublicKey;
-};
-
-export type AddCollateralToShortInstructionAccounts = {
-    owner: PublicKey;
-    ownerTargetCurrencyAccount: PublicKey;
-    position: PublicKey;
-    pool: PublicKey;
-    collateralVault: PublicKey;
-    collateral: PublicKey;
-    globalSettings: PublicKey;
-    tokenProgram: PublicKey;
+    authority?: PublicKey;
 };
 
 export async function processAddCollateralToShortInstruction(
