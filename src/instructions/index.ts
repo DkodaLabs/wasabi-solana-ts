@@ -1,3 +1,4 @@
+export * from './addCollateralToLongPosition.js';
 export * from './addCollateralToShortPosition.js';
 export * from './closeLongPosition.js';
 export * from './closePositionV2.js';

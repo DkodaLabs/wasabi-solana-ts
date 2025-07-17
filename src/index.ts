@@ -8,7 +8,7 @@ import {
     createStopLossInstruction,
     DonateAccounts,
     DonateArgs,
-    processAddCollateralInstruction
+    processAddCollateralToShortInstruction
 } from './instructions';
 
 export * from './utils/index.js';
@@ -75,6 +75,7 @@ import {
     OpenPositionAccounts
 } from './instructions';
 import { processPositionInstruction } from './instructions/shared';
+import { processAddCollateralToLongInstruction } from './instructions/addCollateralToLongPosition';
 
 export class Wasabi {
     program: Program<WasabiSolana>;
@@ -203,17 +204,14 @@ export class Wasabi {
         args: AddCollateralArgs,
         accounts: AddCollateralAccounts
     ): Promise<TransactionInstruction[]> {
-        return await processAddCollateralInstruction(
+        return await processAddCollateralToShortInstruction(
             {
                 program: this.program,
                 args,
                 accounts,
                 mintCache: this.mintCache
             },
-            {
-                useShares: false,
-                methodName: 'AddCollateralToShortPosition'
-            }
+            false,
         );
     }
 
@@ -221,17 +219,44 @@ export class Wasabi {
         args: AddCollateralArgs,
         accounts: AddCollateralAccounts
     ): Promise<TransactionInstruction[]> {
-        return await processAddCollateralInstruction(
+        return await processAddCollateralToShortInstruction(
             {
                 program: this.program,
                 args,
                 accounts,
                 mintCache: this.mintCache
             },
+            true,
+        );
+    }
+    async createAddCollateralToLongPositionInstruction(
+
+        args: AddCollateralArgs,
+        accounts: AddCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processAddCollateralToLongInstruction(
             {
-                useShares: true,
-                methodName: 'AddCollateralToShortWithShares'
-            }
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            false,
+        );
+    }
+
+    async createAddCollateralToLongWithSharesInstruction(
+        args: AddCollateralArgs,
+        accounts: AddCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processAddCollateralToLongInstruction(
+            {
+                program: this.program,
+                args,
+                accounts,
+                mintCache: this.mintCache
+            },
+            true,
         );
     }
 

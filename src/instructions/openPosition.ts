@@ -37,6 +37,8 @@ export type OpenPositionSetupArgs = {
     fee: bigint; // u64
     /// The timestamp when this position request expires as a unixtimestamp
     expiration: bigint; // i64
+    /// The interest to be paid. (AddCollateralToLong only)
+    interest?: bigint; // u64
 };
 
 export type OpenPositionSetupAccounts = {

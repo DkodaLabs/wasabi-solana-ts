@@ -69,7 +69,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const { nonce, minTargetAmount, downPayment, principal, fee, expiration } = validateArgs(config.args);
-        const payer = validateProviderPubkey(config.program.provider.publicKey);
+        const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
 
         if (!nonce) {
             throw new Error("Nonce is required for 'openShortPositionSetup'");
@@ -136,8 +136,8 @@ const openShortPositionSetupConfig: BaseMethodConfig<
                 collateral: collateralMint,
                 openPositionRequest: PDA.getOpenPositionRequest(config.accounts.owner),
                 position: PDA.getPosition(config.accounts.owner, pool, lpVault, nonce),
-                authority: payer,
-                permission: await getPermission(config.program, payer),
+                authority,
+                permission: await getPermission(config.program, authority),
                 feeWallet: config.accounts.feeWallet,
                 feeWalletAta: getAssociatedTokenAddressSync(
                     collateralMint,
