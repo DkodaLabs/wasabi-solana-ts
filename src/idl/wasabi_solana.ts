@@ -125,8 +125,7 @@ export type WasabiSolana = {
           "name": "pool",
           "docs": [
             "The LongPool that 'owns' the Position"
-          ],
-          "writable": true
+          ]
         },
         {
           "name": "currency",
@@ -146,6 +145,33 @@ export type WasabiSolana = {
         },
         {
           "name": "permission"
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "globalSettings",
@@ -527,8 +553,7 @@ export type WasabiSolana = {
               "name": "pool",
               "docs": [
                 "The LongPool that 'owns' the Position"
-              ],
-              "writable": true
+              ]
             },
             {
               "name": "currency",
@@ -548,6 +573,33 @@ export type WasabiSolana = {
             },
             {
               "name": "permission"
+            },
+            {
+              "name": "debtController",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
             },
             {
               "name": "globalSettings",
@@ -11852,6 +11904,11 @@ export type WasabiSolana = {
       "code": 6040,
       "name": "insufficientPrincipalRepaid",
       "msg": "Insufficient principal repaid"
+    },
+    {
+      "code": 6041,
+      "name": "maxInterestExceeded",
+      "msg": "Interest payment exceeds maximum interest"
     }
   ],
   "types": [

@@ -119,8 +119,7 @@
           "name": "pool",
           "docs": [
             "The LongPool that 'owns' the Position"
-          ],
-          "writable": true
+          ]
         },
         {
           "name": "currency",
@@ -140,6 +139,33 @@
         },
         {
           "name": "permission"
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "global_settings",
@@ -521,8 +547,7 @@
               "name": "pool",
               "docs": [
                 "The LongPool that 'owns' the Position"
-              ],
-              "writable": true
+              ]
             },
             {
               "name": "currency",
@@ -542,6 +567,33 @@
             },
             {
               "name": "permission"
+            },
+            {
+              "name": "debt_controller",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      100,
+                      101,
+                      98,
+                      116,
+                      95,
+                      99,
+                      111,
+                      110,
+                      116,
+                      114,
+                      111,
+                      108,
+                      108,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
             },
             {
               "name": "global_settings",
@@ -11846,6 +11898,11 @@
       "code": 6040,
       "name": "InsufficientPrincipalRepaid",
       "msg": "Insufficient principal repaid"
+    },
+    {
+      "code": 6041,
+      "name": "MaxInterestExceeded",
+      "msg": "Interest payment exceeds maximum interest"
     }
   ],
   "types": [
