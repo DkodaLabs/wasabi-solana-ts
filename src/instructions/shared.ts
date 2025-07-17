@@ -363,6 +363,7 @@ export async function processAddCollateralInstruction(
         new BN(args.expiration.toString())
     ] as const;
 
+    const debtController = PDA.getDebtController();
     const globalSettings = PDA.getGlobalSettings();
     const permission = PDA.getAdmin(authority);
     const createShortAccounts = () => ({
@@ -393,6 +394,7 @@ export async function processAddCollateralInstruction(
         currency: position.currency,
         authority,
         permission,
+        debtController,
         globalSettings,
         tokenProgram: currencyTokenProgram,
         eventAuthority: PDA.getEventAuthority(),
