@@ -36,7 +36,7 @@ const openLongPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
+        const authority = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.nonce) {
             throw new Error('Nonce is required for `openLongPositionSetup');

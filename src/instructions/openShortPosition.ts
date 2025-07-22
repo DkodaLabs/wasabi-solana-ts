@@ -69,7 +69,7 @@ const openShortPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const { nonce, minTargetAmount, downPayment, principal, fee, expiration } = validateArgs(config.args);
-        const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
+        const authority = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!nonce) {
             throw new Error("Nonce is required for 'openShortPositionSetup'");

@@ -17,7 +17,7 @@ const increaseLongPositionSetupConfig: BaseMethodConfig<
 > = {
     process: async (config: ConfigArgs<OpenPositionSetupArgs, OpenPositionSetupAccounts>) => {
         const args = validateArgs(config.args);
-        const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
+        const authority = validateProviderPubkey(config.program.provider.publicKey);
 
         if (!args.positionId) {
             throw new Error('positionId is required for increaseLongPositionSetup');
