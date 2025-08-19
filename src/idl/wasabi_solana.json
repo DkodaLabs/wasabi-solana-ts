@@ -7693,6 +7693,269 @@
       ]
     },
     {
+      "name": "record_interest_for_long_position",
+      "discriminator": [
+        46,
+        3,
+        12,
+        151,
+        56,
+        105,
+        134,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "interest",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "record_interest_for_short_position",
+      "discriminator": [
+        0,
+        204,
+        6,
+        181,
+        120,
+        76,
+        118,
+        43
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lp_vault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "currency_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateral_vault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "debt_controller",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_settings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currency_token_program"
+        },
+        {
+          "name": "collateral_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "redeem",
       "discriminator": [
         184,
@@ -11524,6 +11787,19 @@
       ]
     },
     {
+      "name": "InterestPaid",
+      "discriminator": [
+        43,
+        107,
+        86,
+        243,
+        116,
+        70,
+        96,
+        87
+      ]
+    },
+    {
       "name": "NativeYieldClaimed",
       "discriminator": [
         199,
@@ -11901,6 +12177,11 @@
     },
     {
       "code": 6041,
+      "name": "InvalidInterestAmount",
+      "msg": "Invalid interest amount"
+    },
+    {
+      "code": 6042,
       "name": "MaxInterestExceeded",
       "msg": "Interest payment exceeds maximum interest"
     }
@@ -12307,6 +12588,34 @@
           {
             "name": "can_borrow_from_vaults",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InterestPaid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "interest_paid",
+            "type": "u64"
+          },
+          {
+            "name": "principal_added",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_reduced",
+            "type": "u64"
+          },
+          {
+            "name": "down_payment_reduced",
+            "type": "u64"
           }
         ]
       }

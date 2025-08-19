@@ -7699,6 +7699,269 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "recordInterestForLongPosition",
+      "discriminator": [
+        46,
+        3,
+        12,
+        151,
+        56,
+        105,
+        134,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lpVault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "interest",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "recordInterestForShortPosition",
+      "discriminator": [
+        0,
+        204,
+        6,
+        181,
+        120,
+        76,
+        118,
+        43
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "lpVault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "currencyVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "collateralVault",
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "debtController",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  98,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  111,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "currencyTokenProgram"
+        },
+        {
+          "name": "collateralTokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "interest",
+          "type": "u64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "redeem",
       "discriminator": [
         184,
@@ -11530,6 +11793,19 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "interestPaid",
+      "discriminator": [
+        43,
+        107,
+        86,
+        243,
+        116,
+        70,
+        96,
+        87
+      ]
+    },
+    {
       "name": "nativeYieldClaimed",
       "discriminator": [
         199,
@@ -11907,6 +12183,11 @@ export type WasabiSolana = {
     },
     {
       "code": 6041,
+      "name": "invalidInterestAmount",
+      "msg": "Invalid interest amount"
+    },
+    {
+      "code": 6042,
       "name": "maxInterestExceeded",
       "msg": "Interest payment exceeds maximum interest"
     }
@@ -12313,6 +12594,34 @@ export type WasabiSolana = {
           {
             "name": "canBorrowFromVaults",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "interestPaid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "interestPaid",
+            "type": "u64"
+          },
+          {
+            "name": "principalAdded",
+            "type": "u64"
+          },
+          {
+            "name": "collateralReduced",
+            "type": "u64"
+          },
+          {
+            "name": "downPaymentReduced",
+            "type": "u64"
           }
         ]
       }
