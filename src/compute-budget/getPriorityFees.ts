@@ -32,8 +32,7 @@ async function postData(url = '', data = {}, headers: any = {}) {
   return response.json();
 }
 
-export const getPriorityFeeEstimate = async (accountKeys: string[]): Promise<PriorityFeeResponse> => {
-  const url = "https://mainnet.helius-rpc.com/?api-key=ecd81fde-de19-4778-9a9e-74359ad23fd5";
+export const getPriorityFeeEstimate = async (url: string, accountKeys: string[]): Promise<PriorityFeeResponse> => {
   const body = {
     "jsonrpc": "2.0",
     "id": "helius-example",

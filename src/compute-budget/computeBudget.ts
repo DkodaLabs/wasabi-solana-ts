@@ -45,7 +45,10 @@ async function getDynamicPriorityFee(
     speed: 'NORMAL' | 'FAST' | 'TURBO'
 ): Promise<number> {
     try {
-        const heliusFeeEstimates = await getPriorityFeeEstimate(writableAccounts.map(a => a.toBase58()));
+        const heliusFeeEstimates = await getPriorityFeeEstimate(
+          connection.rpcEndpoint,
+          writableAccounts.map(a => a.toBase58())
+        );
         if (speed === "NORMAL") {
             return heliusFeeEstimates.result.priorityFeeLevels.medium;
         } else if (speed === "FAST") {

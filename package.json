@@ -1,10 +1,10 @@
 {
   "name": "wasabi-solana-ts",
-  "version": "1.2.0-regular-interest-1",
+  "version": "1.2.1",
   "description": "Typescript library for the Wasabi program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "author": "Andrew Fraser [andrew@dkoda.xyz]",
+  "author": "Hasan Atay [hasan@dkoda.xyz]",
   "license": "MIT",
   "private": false,
   "exports": {
