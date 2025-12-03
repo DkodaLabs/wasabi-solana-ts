@@ -976,9 +976,9 @@ export async function handleCloseTokenAccounts(
     const currencyInfo = minInfos.get(poolAccount.currency);
     const collateralInfo = minInfos.get(poolAccount.collateral);
 
+    const payoutMint = poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral;
     const payoutMintInfo = poolAccount.isLongPool ? currencyInfo : collateralInfo;
-    const payoutMint = payoutMintInfo[0];
-    const payoutTokenProgram = payoutMintInfo[1].owner;
+    const payoutTokenProgram = payoutMintInfo.owner;
     const payoutIsSol = payoutMint.equals(NATIVE_MINT);
 
     const ownerPayoutAta = getAssociatedTokenAddressSync(
@@ -1024,8 +1024,8 @@ export async function handleCloseTokenAccounts(
         ownerPayoutAta,
         setupIx,
         cleanupIx,
-        currencyTokenProgram: currencyInfo[1].owner,
-        collateralTokenProgram: collateralInfo[1].owner
+        currencyTokenProgram: currencyInfo.owner,
+        collateralTokenProgram: collateralInfo.owner
     };
 }
 
