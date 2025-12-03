@@ -969,10 +969,12 @@ export async function handleCloseTokenAccounts(
         collateral: PublicKey;
     }
 ): Promise<CloseTokenAccounts> {
-    const [currencyInfo, collateralInfo] = await config.mintCache.getMintInfos([
+    const minInfos = await config.mintCache.getMintInfos([
         poolAccount.currency,
         poolAccount.collateral
     ]);
+    const currencyInfo = minInfos.get(poolAccount.currency);
+    const collateralInfo = minInfos.get(poolAccount.collateral);
 
     const payoutMintInfo = poolAccount.isLongPool ? currencyInfo : collateralInfo;
     const payoutMint = payoutMintInfo[0];
