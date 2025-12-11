@@ -3,7 +3,7 @@ import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PDA, getPermission, handleMintsAndTokenProgram, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type InitPoolAccounts = {
     currency: PublicKey;
@@ -30,7 +30,7 @@ export async function getInitPoolInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: InitPoolAccounts,
     pool_type: 'long' | 'short',
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<InitPoolInstructionAccounts> {
     const payer = validateProviderPubkey(program.provider.publicKey);
     const { currencyMint, collateralMint, currencyTokenProgram, collateralTokenProgram } =

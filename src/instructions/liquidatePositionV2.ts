@@ -8,9 +8,10 @@ import { SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
+import { handleCloseTokenAccounts, PDA, validateArgs, validateMintCache } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { handleOrdersCheck } from './closePosition';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 type LiquidateInstructionAccounts = {
     closePosition: ClosePositionInternalInstructionAccounts;
@@ -106,7 +107,7 @@ export async function createLiquidatePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

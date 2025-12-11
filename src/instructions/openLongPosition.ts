@@ -20,7 +20,7 @@ import {
     OpenPositionSetupInstructionBaseAccounts,
 } from './openPosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type OpenLongPositionSetupInstructionAccounts = {
     ownerCollateralAccount: PublicKey;
@@ -184,7 +184,7 @@ export async function createOpenLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -198,7 +198,7 @@ export async function createOpenLongPositionSetupInstruction(
 export async function createOpenLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

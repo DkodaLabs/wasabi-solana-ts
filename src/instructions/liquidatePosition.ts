@@ -12,7 +12,8 @@ import {
     transformArgs
 } from './closePosition';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache, validateArgs } from '../utils';
+import { validateArgs } from '../utils';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 type LiquidatePositionSetupInstructionAccounts = {
     closePositionSetup: ClosePositionSetupInstructionAccounts;
@@ -82,7 +83,7 @@ export async function createLiquidatePositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -96,7 +97,7 @@ export async function createLiquidatePositionSetupInstruction(
 export async function createLiquidatePositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

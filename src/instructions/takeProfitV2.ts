@@ -8,9 +8,10 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
-import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
+import { handleCloseTokenAccounts, PDA, validateArgs, validateMintCache } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { handleOrdersCheck } from './closePosition';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 type TakeProfitInstructionAccounts = {
     takeProfitOrder: PublicKey;
@@ -109,7 +110,7 @@ export async function createTakeProfitInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

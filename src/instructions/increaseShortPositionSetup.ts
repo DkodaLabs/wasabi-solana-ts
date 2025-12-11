@@ -1,6 +1,6 @@
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { OpenPositionSetupAccounts, OpenPositionSetupArgs } from './openPosition';
-import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPubkey } from '../utils';
+import { getPermission, handlePaymentTokenMint, PDA, validateArgs, validateProviderPubkey } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
     PublicKey,
@@ -11,6 +11,7 @@ import {
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { OpenShortPositionSetupInstructionAccounts } from './openShortPosition';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 const increaseShortPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -125,7 +126,7 @@ export async function createIncreaseShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

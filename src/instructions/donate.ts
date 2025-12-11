@@ -6,8 +6,9 @@ import {
     ConfigArgs,
     handleMethodCall,
 } from '../base';
-import { PDA, handleMint, getPermission, MintCache, validateArgs, validateProviderPubkey } from '../utils';
+import { PDA, handleMint, getPermission, validateArgs, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type DonateArgs = {
     amount: bigint; // u64
@@ -81,7 +82,7 @@ export async function createDonateInstruction(
     program: Program<WasabiSolana>,
     args: DonateArgs,
     accounts: DonateAccounts,
-    mintCache?: MintCache,
+    mintCache?: TokenMintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

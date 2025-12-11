@@ -21,7 +21,7 @@ import {
     validateProviderPubkey
 } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type OpenShortPositionSetupInstructionAccounts = {
     owner: PublicKey;
@@ -229,7 +229,7 @@ export async function createOpenShortPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -243,7 +243,7 @@ export async function createOpenShortPositionSetupInstruction(
 export async function createOpenShortPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: OpenPositionCleanupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

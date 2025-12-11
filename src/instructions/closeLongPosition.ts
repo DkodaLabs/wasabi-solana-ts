@@ -12,7 +12,8 @@ import {
 } from './closePosition';
 import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache, validateArgs } from '../utils';
+import { validateArgs } from '../utils';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 type CloseLongPositionSetupInstructionAccounts = {
     owner: PublicKey;
@@ -88,7 +89,7 @@ export async function createCloseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -102,7 +103,7 @@ export async function createCloseLongPositionSetupInstruction(
 export async function createCloseLongPositionCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

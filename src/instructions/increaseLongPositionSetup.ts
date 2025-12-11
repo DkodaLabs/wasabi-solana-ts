@@ -3,12 +3,13 @@ import {
     OpenPositionSetupAccounts,
     OpenPositionSetupArgs
 } from './openPosition';
-import { getPermission, handlePaymentTokenMint, MintCache, PDA, validateArgs, validateProviderPubkey } from '../utils';
+import { getPermission, handlePaymentTokenMint, PDA, validateArgs, validateProviderPubkey } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import { OpenLongPositionSetupInstructionAccounts } from './openLongPosition';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 const increaseLongPositionSetupConfig: BaseMethodConfig<
     OpenPositionSetupArgs,
@@ -125,7 +126,7 @@ export async function createIncreaseLongPositionSetupInstruction(
     program: Program<WasabiSolana>,
     args: OpenPositionSetupArgs,
     accounts: OpenPositionSetupAccounts,
-    mintCache?: MintCache,
+    mintCache?: TokenMintCache,
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

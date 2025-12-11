@@ -17,7 +17,7 @@ import {
 import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
 import { WasabiSolana } from '../idl/wasabi_solana';
-import { MintCache } from '../utils/mintCache';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type CloseType = 'MARKET' | 'LIQUIDATION' | 'TAKE_PROFIT' | 'STOP_LOSS';
 
@@ -147,7 +147,7 @@ export async function getClosePositionSetupInstructionAccounts(
     program: Program<WasabiSolana>,
     accounts: ClosePositionSetupAccounts,
     closeType?: CloseType,
-    mintCache?: MintCache,
+    mintCache?: TokenMintCache,
     amount?: number
 ): Promise<CpsuAndIx> {
     const [
