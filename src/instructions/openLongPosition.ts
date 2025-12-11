@@ -152,7 +152,7 @@ const openLongPositionCleanupConfig: BaseMethodConfig<
                 config.program.provider.connection,
                 config.accounts.currency,
                 config.accounts.collateral,
-                { owner: config.accounts.pool, mintCache: config.mintCache }
+                { mintCache: config.mintCache }
             );
 
         return {

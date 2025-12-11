@@ -702,7 +702,6 @@ export async function handleMintsAndTokenProgram(
     currency: PublicKey,
     collateral: PublicKey,
     options: {
-        owner?: PublicKey;
         mintCache?: TokenMintCache;
     }
 ): Promise<TokenProgramsResult> {
@@ -710,18 +709,17 @@ export async function handleMintsAndTokenProgram(
         throw new Error('Mints cannot be the same');
     }
 
+    const mintCache = options.mintCache || new TokenMintCache(connection);
 
-
-    const [currencyResult, collateralResult] = await Promise.all([
-        handleMint(connection, currency, { owner: options.owner, mintCache: options.mintCache }),
-        handleMint(connection, collateral, { owner: options.owner, mintCache: options.mintCache })
-    ]);
+    const mints = await mintCache.getAccounts([currency, collateral]);
+    const currencyTokenProgram = mints.get(currency.toString())!.program;
+    const collateralTokenProgram = mints.get(collateral.toString())!.program;
 
     return {
-        currencyMint: currencyResult.mint,
-        collateralMint: collateralResult.mint,
-        currencyTokenProgram: currencyResult.tokenProgram,
-        collateralTokenProgram: collateralResult.tokenProgram
+        currencyMint: new PublicKey(currency),
+        collateralMint: new PublicKey(collateral),
+        currencyTokenProgram,
+        collateralTokenProgram
     };
 }
 
