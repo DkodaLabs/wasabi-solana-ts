@@ -2,10 +2,11 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { handleCloseTokenAccounts, MintCache, PDA, validateArgs, validateMintCache } from '../utils';
+import { handleCloseTokenAccounts, PDA, validateArgs, validateMintCache } from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 import { handleOrdersCheck } from './closePosition';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 export type ClosePositionArgs = {
     amount: number | bigint;
@@ -147,7 +148,7 @@ export async function createClosePositionInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionArgs,
     accounts: ClosePositionAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,

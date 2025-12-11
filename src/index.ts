@@ -26,7 +26,6 @@ import * as idl from './idl/wasabi_solana.json';
 
 export { idl };
 import { Program } from '@coral-xyz/anchor';
-import { MintCache } from './utils/mintCache.js';
 import {
     OpenPositionCleanupAccounts,
     OpenPositionSetupAccounts,
@@ -76,12 +75,13 @@ import {
 } from './instructions';
 import { processPositionInstruction } from './instructions/shared';
 import { processAddCollateralToLongInstruction } from './instructions/addCollateralToLongPosition';
+import {TokenMintCache} from "./cache/TokenMintCache";
 
 export class Wasabi {
     program: Program<WasabiSolana>;
-    mintCache: MintCache;
+    mintCache: TokenMintCache;
 
-    constructor(program: Program<WasabiSolana>, mintCache: MintCache) {
+    constructor(program: Program<WasabiSolana>, mintCache: TokenMintCache) {
         this.program = program;
         this.mintCache = mintCache;
     }

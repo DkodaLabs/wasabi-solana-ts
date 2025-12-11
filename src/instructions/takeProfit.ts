@@ -15,8 +15,9 @@ import {
     ClosePositionCleanupInstructionAccounts,
     ExitOrderSetupInstructionAccounts
 } from './closePosition';
-import { MintCache, PDA, validateArgs } from '../utils';
+import { PDA, validateArgs } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
+import {TokenMintCache} from "../cache/TokenMintCache";
 
 type TakeProfitCleanupInstructionAccounts = {
     takeProfitOrder: PublicKey;
@@ -85,7 +86,7 @@ export async function createTakeProfitSetupInstruction(
     program: Program<WasabiSolana>,
     args: ClosePositionSetupArgs,
     accounts: ClosePositionSetupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
@@ -99,7 +100,7 @@ export async function createTakeProfitSetupInstruction(
 export async function createTakeProfitCleanupInstruction(
     program: Program<WasabiSolana>,
     accounts: ClosePositionCleanupAccounts,
-    mintCache?: MintCache
+    mintCache?: TokenMintCache
 ): Promise<TransactionInstruction[]> {
     return handleMethodCall({
         program,
