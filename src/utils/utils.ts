@@ -721,6 +721,8 @@ export async function handleMintsAndTokenProgram(
         throw new Error('Mints cannot be the same');
     }
 
+
+
     const [currencyResult, collateralResult] = await Promise.all([
         handleMint(connection, currency, { owner: options.owner, mintCache: options.mintCache }),
         handleMint(connection, collateral, { owner: options.owner, mintCache: options.mintCache })

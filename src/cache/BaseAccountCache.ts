@@ -41,9 +41,9 @@ export abstract class BaseAccountCache<T> {
         const missingAddresses = new Set<PublicKey>();
 
         for (const address of addresses) {
-            const cachedAccount = this.cache.get<T>(address.toBase58());
+            const cachedAccount = this.cache.get<T>(address.toString());
             if (cachedAccount) {
-                result.set(address.toBase58(), cachedAccount);
+                result.set(address.toString(), cachedAccount);
             } else {
                 missingAddresses.add(address);
             }
@@ -58,8 +58,8 @@ export abstract class BaseAccountCache<T> {
                 if (account) {
                     const parsedAccount = this.parseAccount(account);
 
-                    result.set(address.toBase58(), parsedAccount);
-                    this.cache.set(address.toBase58(), parsedAccount);
+                    result.set(address.toString(), parsedAccount);
+                    this.cache.set(address.toString(), parsedAccount);
                 }
             }
         }
@@ -74,7 +74,7 @@ export abstract class BaseAccountCache<T> {
      */
     public async getAccount(address: PublicKey): Promise<T> {
         const result = await this.getAccounts([address]);
-        return result.get(address.toBase58())!;
+        return result.get(address.toString())!;
     }
 
     /**
