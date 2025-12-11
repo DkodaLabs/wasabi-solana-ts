@@ -82,22 +82,11 @@ export async function getTokenProgram(
     mint: PublicKey,
     mintCache?: TokenMintCache
 ): Promise<PublicKey | null> {
-    if (mintCache) {
-        const mintInfo = await mintCache.getAccount(mint);
-        return mintInfo.program;
+    if (mintCache === undefined) {
+        mintCache = new TokenMintCache(connection);
     }
-
-    const mintInfo = await connection.getAccountInfo(mint);
-
-    if (!mintInfo) {
-        return null;
-    }
-
-    if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-        return mintInfo.owner;
-    } else {
-        return null;
-    }
+    const mintInfo = await mintCache.getAccount(mint);
+    return mintInfo.program;
 }
 
 export async function getTokenProgramAndDecimals(
@@ -810,6 +799,10 @@ export async function handlePaymentTokenMintWithAuthority(
                 : await createUnwrapSolInstructionWithPayer(connection, authority, owner);
     }
 
+    if (mintCache === undefined) {
+        mintCache = new TokenMintCache(connection);
+    }
+
     const mints = await mintCache.getAccounts([currency, collateral]);
     const currencyTokenProgram = mints.get(currency.toString()).program;
     const collateralTokenProgram = mints.get(collateral.toString()).program;
@@ -867,23 +860,12 @@ export async function handleOpenTokenAccounts({
     let currencyTokenProgram: PublicKey;
     let collateralTokenProgram: PublicKey;
 
-    if (mintCache !== undefined) {
-        const mints = await mintCache.getAccounts([currency, collateral]);
-        currencyTokenProgram = mints.get(currency.toString()).program;
-        collateralTokenProgram = mints.get(collateral.toString()).program;
-    } else {
-        const result = await program.provider.connection.getMultipleAccountsInfo([
-            currency,
-            collateral
-        ]);
-
-        if (!result) {
-            throw new Error('Could not get mint info');
-        }
-
-        currencyTokenProgram = result[0].owner;
-        collateralTokenProgram = result[1].owner;
+    if (mintCache === undefined) {
+        mintCache = new TokenMintCache(program.provider.connection);
     }
+    const mints = await mintCache.getAccounts([currency, collateral]);
+    currencyTokenProgram = mints.get(currency.toString()).program;
+    collateralTokenProgram = mints.get(collateral.toString()).program;
 
     const paymentMint = isLongPool ? currency : collateral;
     const paymentTokenProgram = isLongPool ? currencyTokenProgram : collateralTokenProgram;
