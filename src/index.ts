@@ -23,6 +23,7 @@ export * from './bundle-builder/index.js';
 export * from './market-deployer/index.js';
 import { WasabiSolana } from './idl/wasabi_solana.js';
 import * as idl from './idl/wasabi_solana.json';
+export * from './cache/index.js';
 
 export { idl };
 import { Program } from '@coral-xyz/anchor';
