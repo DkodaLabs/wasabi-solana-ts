@@ -23,6 +23,7 @@ import {
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 import {TokenMintCache} from "../cache/TokenMintCache";
+import NodeCache from "node-cache";
 
 export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 
@@ -50,6 +51,21 @@ export const SEED_PREFIX = {
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
     const [publicKey] = PublicKey.findProgramAddressSync(seeds, programId);
     return publicKey;
+}
+
+const tokenAccountCache = new NodeCache({ stdTTL: 5 * 60 }); // 5 minutes TTL
+
+const getTokenAccountCached = async (connection: Connection, address: PublicKey): Promise<AccountInfo<Buffer> | null> => {
+    const cached = tokenAccountCache.get<AccountInfo<Buffer>>(address.toString());
+    if (cached) {
+        return cached;
+    }
+
+    const accountInfo = await connection.getAccountInfo(address);
+    if (accountInfo) {
+        tokenAccountCache.set(address.toString(), accountInfo);
+    }
+    return accountInfo;
 }
 
 export async function getPermission(
@@ -87,24 +103,6 @@ export async function getTokenProgram(
     }
     const mintInfo = await mintCache.getAccount(mint);
     return mintInfo.program;
-}
-
-export async function getTokenProgramAndDecimals(
-    connection: Connection,
-    mint: PublicKey
-): Promise<[PublicKey, number] | null> {
-    const mintInfo = await connection.getAccountInfo(mint);
-
-    if (!mintInfo) {
-        return null;
-    }
-
-    if (mintInfo.owner.equals(TOKEN_PROGRAM_ID) || mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-        const mintDecimals = MintLayout.decode(mintInfo.data).decimals;
-        return [mintInfo.owner, mintDecimals];
-    } else {
-        return null;
-    }
 }
 
 export const PDA = {
@@ -484,7 +482,7 @@ export async function createAtaIfNeeded(
 ): Promise<TransactionInstruction | null> {
     if (isNativeMint(mint)) return null;
 
-    const account = await connection.getAccountInfo(ata);
+    const account = await getTokenAccountCached(connection, ata);
     if (!account) {
         return createAssociatedTokenAccountIdempotentInstruction(
             payer ? payer : owner,
@@ -521,7 +519,7 @@ export async function createWrapSolInstruction(
         tokenProgram
     );
 
-    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+    const ownerWrappedSolAccount = await getTokenAccountCached(connection, ownerWrappedSolAta);
 
     if (!ownerWrappedSolAccount) {
         setupIx.push(
@@ -586,7 +584,7 @@ export async function createUnwrapSolInstructionWithPayer(
         tokenProgram
     );
 
-    const ownerWrappedSolAccount = await connection.getAccountInfo(ownerWrappedSolAta);
+    const ownerWrappedSolAccount = await getTokenAccountCached(connection, ownerWrappedSolAta);
 
     if (!ownerWrappedSolAccount) {
         setupIx.push(
@@ -675,7 +673,7 @@ export async function handleMint(
 
     if (options.owner) {
         const userAta = getAssociatedTokenAddressSync(mint, options.owner, true, tokenProgram);
-        const userTokenAccount = await connection.getAccountInfo(userAta);
+        const userTokenAccount = await getTokenAccountCached(connection, userAta);
 
         if (!userTokenAccount) {
             instructions.setupIx.push(
@@ -892,7 +890,8 @@ export async function handleOpenTokenAccounts({
         );
     }
 
-    const ownerPaymentAtaInfo = await program.provider.connection.getAccountInfo(ownerPaymentAta);
+    const ownerPaymentAtaInfo =
+      await getTokenAccountCached(program.provider.connection, ownerPaymentAta);
 
     if (!ownerPaymentAtaInfo) {
         setupIx = [
@@ -959,9 +958,7 @@ export async function handleCloseTokenAccounts(
         payoutTokenProgram
     );
 
-    const ownerPayoutAtaInfo = await config.program.provider.connection.getAccountInfo(
-        ownerPayoutAta
-    );
+    const ownerPayoutAtaInfo = await getTokenAccountCached(config.program.provider.connection, ownerPayoutAta);
 
     const setupIx: TransactionInstruction[] = [];
     const cleanupIx: TransactionInstruction[] = [];
