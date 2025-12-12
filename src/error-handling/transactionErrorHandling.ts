@@ -1,4 +1,5 @@
 import { IDL as JupiterIDL } from './jupiter';
+import { IDL as TitanIDL } from './titan';
 import {
     SendTransactionError,
     VersionedTransaction,
@@ -42,6 +43,11 @@ const jupiterExpectedErrors = [
     6001 // SlippageToleranceExceeded
 ];
 
+const titanProgramId = 'T1TANpTeScyeqVzzgNViGDNrkQ6qHz9KrSBS4aNXvGT';
+const titanExpectedErrors = [
+    6008 // LessThanMinimumAmountOut
+];
+
 //@ts-ignore
 const raydiumErrors = [
     6028, // Invalid first tick array
@@ -82,6 +88,23 @@ const findJupiterError = (code: number): ErrorObject | undefined => {
     return jupiterErrorIndex[code];
 };
 
+const titanErrorIndex: Record<number, ErrorObject> = TitanIDL.errors.reduce(
+    (acc: Record<number, ErrorObject>, error) => {
+        const expected = titanExpectedErrors.includes(error.code);
+        acc[error.code] = {
+            ...error,
+            expected,
+            program: 'Titan'
+        };
+        return acc;
+    },
+    {}
+);
+
+const findTitanError = (code: number): ErrorObject | undefined => {
+    return titanErrorIndex[code];
+};
+
 export const parseSendTransactionError = (
     error: SendTransactionError,
     transaction: VersionedTransaction
@@ -119,6 +142,8 @@ export const parseError = (
         return findWasabiError(errorCode);
     } else if (programId === jupiterProgramId) {
         return findJupiterError(errorCode);
+    } else if (programId === titanProgramId) {
+        return findTitanError(errorCode);
     }
 
     return undefined;
@@ -178,12 +203,16 @@ export const parseErrorLogs = (logs: string[] | undefined): ErrorObject | undefi
 
         const match = log.match(/^Program ([a-zA-Z0-9]+) failed: (?:.*?): (0x[0-9a-fA-F]+)$/);
         if (match) {
-            if (match[1].localeCompare(jupiterProgramId) === 0) {
-                return findJupiterError(parseInt(match[2]));
-            } else if (match[1].localeCompare(wasabiProgramId) === 0) {
-                return findWasabiError(parseInt(match[2]));
-            } else if (match[1].localeCompare(SystemProgram.programId.toBase58())) {
-                return parseSystemError(parseInt(match[2]), SystemProgram.programId.toBase58());
+            const [_, failingProgramId, errorHex] = match;
+            const errorCode = parseInt(errorHex);
+            if (failingProgramId.localeCompare(jupiterProgramId) === 0) {
+                return findJupiterError(errorCode);
+            } else if (failingProgramId.localeCompare(titanProgramId) === 0) {
+                return findTitanError(errorCode);
+            } else if (failingProgramId.localeCompare(wasabiProgramId) === 0) {
+                return findWasabiError(errorCode);
+            } else if (failingProgramId.localeCompare(SystemProgram.programId.toBase58())) {
+                return parseSystemError(errorCode, SystemProgram.programId.toBase58());
             }
         }
     }
