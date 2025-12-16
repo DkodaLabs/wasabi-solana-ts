@@ -7693,16 +7693,16 @@
       ]
     },
     {
-      "name": "record_interest_for_long_position",
+      "name": "record_long_interest",
       "discriminator": [
-        46,
-        3,
-        12,
-        151,
-        56,
-        105,
-        134,
-        60
+        101,
+        57,
+        251,
+        97,
+        19,
+        118,
+        203,
+        222
       ],
       "accounts": [
         {
@@ -7716,25 +7716,16 @@
           "name": "permission"
         },
         {
-          "name": "lp_vault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lp_vault"
-          ]
+          "name": "pool",
+          "writable": true
         },
         {
           "name": "position",
           "writable": true
         },
         {
-          "name": "currency",
+          "name": "lp_vault",
+          "writable": true,
           "relations": [
             "position"
           ]
@@ -7792,9 +7783,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "token_program"
         }
       ],
       "args": [
@@ -7805,16 +7793,16 @@
       ]
     },
     {
-      "name": "record_interest_for_short_position",
+      "name": "record_short_interest",
       "discriminator": [
-        0,
-        204,
-        6,
-        181,
+        54,
+        196,
+        121,
+        111,
         120,
-        76,
-        118,
-        43
+        233,
+        41,
+        104
       ],
       "accounts": [
         {
@@ -7828,26 +7816,19 @@
           "name": "permission"
         },
         {
-          "name": "lp_vault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lp_vault"
-          ]
+          "name": "pool",
+          "writable": true
         },
         {
           "name": "position",
           "writable": true
         },
         {
-          "name": "pool",
-          "writable": true
+          "name": "lp_vault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
         },
         {
           "name": "currency_vault",
@@ -7860,20 +7841,22 @@
           "name": "collateral_vault",
           "writable": true,
           "relations": [
-            "pool"
-          ]
-        },
-        {
-          "name": "currency",
-          "relations": [
+            "pool",
             "position"
           ]
         },
         {
-          "name": "collateral",
+          "name": "vault",
+          "writable": true,
           "relations": [
-            "position"
+            "lp_vault"
           ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
         },
         {
           "name": "debt_controller",
@@ -12177,11 +12160,6 @@
     },
     {
       "code": 6041,
-      "name": "InvalidInterestAmount",
-      "msg": "Invalid interest amount"
-    },
-    {
-      "code": 6042,
       "name": "MaxInterestExceeded",
       "msg": "Interest payment exceeds maximum interest"
     }
@@ -12602,6 +12580,10 @@
             "type": "pubkey"
           },
           {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
             "name": "interest_paid",
             "type": "u64"
           },
@@ -12616,6 +12598,10 @@
           {
             "name": "down_payment_reduced",
             "type": "u64"
+          },
+          {
+            "name": "is_long",
+            "type": "bool"
           }
         ]
       }
