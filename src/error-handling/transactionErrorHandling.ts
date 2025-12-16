@@ -211,7 +211,7 @@ export const parseErrorLogs = (logs: string[] | undefined): ErrorObject | undefi
                 return findTitanError(errorCode);
             } else if (failingProgramId.localeCompare(wasabiProgramId) === 0) {
                 return findWasabiError(errorCode);
-            } else if (failingProgramId.localeCompare(SystemProgram.programId.toBase58())) {
+            } else if (failingProgramId.localeCompare(SystemProgram.programId.toBase58()) === 0) {
                 return parseSystemError(errorCode, SystemProgram.programId.toBase58());
             }
         }
