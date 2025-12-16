@@ -1,6 +1,6 @@
 {
   "name": "wasabi-solana-ts",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Typescript library for the Wasabi program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -30,6 +30,8 @@ type ErrorObject = {
     program: string;
 };
 
+export const NOT_ENOUGH_SOL_ERROR = "Insufficient SOL for transaction fees. Please add more SOL and try again.";
+
 const wasabiProgramId = 'spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c';
 const wasabiExpectedErrors = [
     6004, // MinTokensNotMet
@@ -285,14 +287,14 @@ export const matchError = (error: Error): ErrorObject | undefined => {
         '.*InsufficientFundsForFee.*': {
             code: 0,
             name: 'InsufficientFundsForFee',
-            msg: 'Fee Error: Insufficient funds for fee',
+            msg: NOT_ENOUGH_SOL_ERROR,
             expected: true,
             program: 'ComputeBudget'
         },
         '.*InsufficientFundsForRent.*': {
             code: 0,
             name: 'InsufficientFundsForRent',
-            msg: 'Rent Error: Insufficient funds for rent',
+            msg: NOT_ENOUGH_SOL_ERROR,
             expected: true,
             program: 'System'
         },
