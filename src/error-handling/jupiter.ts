@@ -1,2879 +1,2535 @@
-export type Jupiter = {
-    version: "0.1.0";
-    name: "jupiter";
-    instructions: [
+export const IDL = {
+    "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "metadata": {
+        "name": "jupiter",
+        "version": "0.1.0",
+        "spec": "0.1.0",
+        "description": "Jupiter aggregator program"
+    },
+    "instructions": [
         {
-            name: "route";
-            docs: ["route_plan Topologically sorted trade DAG"];
-            accounts: [
+            "name": "claim",
+            "discriminator": [
+                62,
+                198,
+                214,
+                193,
+                213,
+                159,
+                108,
+                210
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "wallet",
+                    "writable": true,
+                    "address": "7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP"
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
+                    "name": "program_authority",
+                    "writable": true
                 },
                 {
-                    name: "userSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "userDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
-                },
-                {
-                    name: "inAmount";
-                    type: "u64";
-                },
-                {
-                    name: "quotedOutAmount";
-                    type: "u64";
-                },
-                {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
+                    "name": "id",
+                    "type": "u8"
                 }
-            ];
-            returns: "u64";
+            ],
+            "returns": "u64"
         },
         {
-            name: "routeWithTokenLedger";
-            accounts: [
+            "name": "claim_token",
+            "discriminator": [
+                116,
+                206,
+                27,
+                191,
+                166,
+                19,
+                0,
+                73
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "payer",
+                    "writable": true,
+                    "signer": true
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
+                    "name": "wallet",
+                    "address": "7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP"
                 },
                 {
-                    name: "userSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "program_authority"
                 },
                 {
-                    name: "userDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "program_token_account",
+                    "writable": true
                 },
                 {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "account",
+                                "path": "wallet"
+                            },
+                            {
+                                "kind": "account",
+                                "path": "token_program"
+                            },
+                            {
+                                "kind": "account",
+                                "path": "mint"
+                            }
+                        ],
+                        "program": {
+                            "kind": "const",
+                            "value": [
+                                140,
+                                151,
+                                37,
+                                143,
+                                78,
+                                36,
+                                137,
+                                241,
+                                187,
+                                61,
+                                16,
+                                41,
+                                20,
+                                142,
+                                13,
+                                131,
+                                11,
+                                90,
+                                19,
+                                153,
+                                218,
+                                255,
+                                16,
+                                132,
+                                4,
+                                142,
+                                123,
+                                216,
+                                219,
+                                233,
+                                248,
+                                89
+                            ]
+                        }
+                    }
                 },
                 {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "mint"
                 },
                 {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "token_program"
                 },
                 {
-                    name: "tokenLedger";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                },
+                {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
-                },
-                {
-                    name: "quotedOutAmount";
-                    type: "u64";
-                },
-                {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
+                    "name": "id",
+                    "type": "u8"
                 }
-            ];
-            returns: "u64";
+            ],
+            "returns": "u64"
         },
         {
-            name: "sharedAccountsRoute";
-            docs: [
-                "Route by using program owned token accounts and open orders accounts."
-            ];
-            accounts: [
+            "name": "close_token",
+            "discriminator": [
+                26,
+                74,
+                236,
+                151,
+                104,
+                64,
+                183,
+                249
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "operator",
+                    "signer": true,
+                    "address": "9RAufBfjGQjDfrwxeyKmZWPADHSb8HcoqCdrmpqvCr1g"
                 },
                 {
-                    name: "programAuthority";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "wallet",
+                    "writable": true,
+                    "address": "7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP"
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
+                    "name": "program_authority"
                 },
                 {
-                    name: "sourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "program_token_account",
+                    "writable": true
                 },
                 {
-                    name: "programSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "mint",
+                    "writable": true
                 },
                 {
-                    name: "programDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "sourceMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "token2022Program";
-                    isMut: false;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "token_program"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "id";
-                    type: "u8";
+                    "name": "id",
+                    "type": "u8"
                 },
                 {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
-                },
-                {
-                    name: "inAmount";
-                    type: "u64";
-                },
-                {
-                    name: "quotedOutAmount";
-                    type: "u64";
-                },
-                {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
+                    "name": "burn_all",
+                    "type": "bool"
                 }
-            ];
-            returns: "u64";
+            ]
         },
         {
-            name: "sharedAccountsRouteWithTokenLedger";
-            accounts: [
+            "name": "create_token_ledger",
+            "discriminator": [
+                232,
+                242,
+                197,
+                253,
+                240,
+                143,
+                129,
+                52
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "token_ledger",
+                    "writable": true,
+                    "signer": true
                 },
                 {
-                    name: "programAuthority";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "payer",
+                    "writable": true,
+                    "signer": true
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
-                },
-                {
-                    name: "sourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "programSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "programDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                },
-                {
-                    name: "sourceMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "token2022Program";
-                    isMut: false;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "tokenLedger";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
                 }
-            ];
-            args: [
-                {
-                    name: "id";
-                    type: "u8";
-                },
-                {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
-                },
-                {
-                    name: "quotedOutAmount";
-                    type: "u64";
-                },
-                {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
-                }
-            ];
-            returns: "u64";
+            ],
+            "args": []
         },
         {
-            name: "exactOutRoute";
-            accounts: [
+            "name": "create_token_account",
+            "discriminator": [
+                147,
+                241,
+                123,
+                100,
+                244,
+                132,
+                174,
+                118
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "token_account",
+                    "writable": true
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
+                    "name": "user",
+                    "writable": true,
+                    "signer": true
                 },
                 {
-                    name: "userSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "mint"
                 },
                 {
-                    name: "userDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "sourceMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
-                },
-                {
-                    name: "token2022Program";
-                    isMut: false;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
-                },
-                {
-                    name: "outAmount";
-                    type: "u64";
-                },
-                {
-                    name: "quotedInAmount";
-                    type: "u64";
-                },
-                {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
+                    "name": "bump",
+                    "type": "u8"
                 }
-            ];
-            returns: "u64";
+            ]
         },
         {
-            name: "sharedAccountsExactOutRoute";
-            docs: [
-                "Route by using program owned token accounts and open orders accounts."
-            ];
-            accounts: [
+            "name": "exact_out_route",
+            "discriminator": [
+                208,
+                51,
+                239,
+                151,
+                123,
+                43,
+                237,
+                92
+            ],
+            "accounts": [
                 {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "programAuthority";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_transfer_authority",
+                    "signer": true
                 },
                 {
-                    name: "userTransferAuthority";
-                    isMut: false;
-                    isSigner: true;
+                    "name": "user_source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "sourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "user_destination_token_account",
+                    "writable": true
                 },
                 {
-                    name: "programSourceTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "optional": true
                 },
                 {
-                    name: "programDestinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "source_mint"
                 },
                 {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "destination_mint"
                 },
                 {
-                    name: "sourceMint";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
                 },
                 {
-                    name: "destinationMint";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "token_2022_program",
+                    "optional": true
                 },
                 {
-                    name: "platformFeeAccount";
-                    isMut: true;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
                 },
                 {
-                    name: "token2022Program";
-                    isMut: false;
-                    isSigner: false;
-                    isOptional: true;
+                    "name": "program"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "id";
-                    type: "u8";
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
                 },
                 {
-                    name: "routePlan";
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep";
-                        };
-                    };
+                    "name": "out_amount",
+                    "type": "u64"
                 },
                 {
-                    name: "outAmount";
-                    type: "u64";
+                    "name": "quoted_in_amount",
+                    "type": "u64"
                 },
                 {
-                    name: "quotedInAmount";
-                    type: "u64";
+                    "name": "slippage_bps",
+                    "type": "u16"
                 },
                 {
-                    name: "slippageBps";
-                    type: "u16";
-                },
-                {
-                    name: "platformFeeBps";
-                    type: "u8";
+                    "name": "platform_fee_bps",
+                    "type": "u8"
                 }
-            ];
-            returns: "u64";
+            ],
+            "returns": "u64"
         },
         {
-            name: "setTokenLedger";
-            accounts: [
+            "name": "route",
+            "discriminator": [
+                229,
+                23,
+                203,
+                151,
+                122,
+                227,
+                173,
+                42
+            ],
+            "accounts": [
                 {
-                    name: "tokenLedger";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "tokenAccount";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_transfer_authority",
+                    "signer": true
+                },
+                {
+                    "name": "user_source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "user_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            args: [];
+            ],
+            "args": [
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u8"
+                }
+            ],
+            "returns": "u64"
         },
         {
-            name: "createOpenOrders";
-            accounts: [
+            "name": "route_with_token_ledger",
+            "discriminator": [
+                150,
+                86,
+                71,
+                116,
+                167,
+                93,
+                14,
+                104
+            ],
+            "accounts": [
                 {
-                    name: "openOrders";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "payer";
-                    isMut: true;
-                    isSigner: true;
+                    "name": "user_transfer_authority",
+                    "signer": true
                 },
                 {
-                    name: "dexProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_destination_token_account",
+                    "writable": true
                 },
                 {
-                    name: "rent";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "optional": true
                 },
                 {
-                    name: "market";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "token_ledger"
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            args: [];
+            ],
+            "args": [
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u8"
+                }
+            ],
+            "returns": "u64"
         },
         {
-            name: "createTokenAccount";
-            accounts: [
+            "name": "set_token_ledger",
+            "discriminator": [
+                228,
+                85,
+                185,
+                112,
+                78,
+                79,
+                77,
+                2
+            ],
+            "accounts": [
                 {
-                    name: "tokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_ledger",
+                    "writable": true
                 },
                 {
-                    name: "user";
-                    isMut: true;
-                    isSigner: true;
-                },
-                {
-                    name: "mint";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "tokenProgram";
-                    isMut: false;
-                    isSigner: false;
-                },
-                {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "token_account"
                 }
-            ];
-            args: [
-                {
-                    name: "bump";
-                    type: "u8";
-                }
-            ];
+            ],
+            "args": []
         },
         {
-            name: "createProgramOpenOrders";
-            accounts: [
+            "name": "shared_accounts_exact_out_route",
+            "discriminator": [
+                176,
+                209,
+                105,
+                168,
+                154,
+                125,
+                69,
+                62
+            ],
+            "accounts": [
                 {
-                    name: "openOrders";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "payer";
-                    isMut: true;
-                    isSigner: true;
+                    "name": "program_authority"
                 },
                 {
-                    name: "programAuthority";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_transfer_authority",
+                    "signer": true
                 },
                 {
-                    name: "dexProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "program_source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "rent";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "program_destination_token_account",
+                    "writable": true
                 },
                 {
-                    name: "market";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "token_2022_program",
+                    "optional": true
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "id";
-                    type: "u8";
+                    "name": "id",
+                    "type": "u8"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u8"
                 }
-            ];
+            ],
+            "returns": "u64"
         },
         {
-            name: "claim";
-            accounts: [
+            "name": "shared_accounts_route",
+            "discriminator": [
+                193,
+                32,
+                155,
+                51,
+                65,
+                214,
+                156,
+                129
+            ],
+            "accounts": [
                 {
-                    name: "wallet";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "token_program"
                 },
                 {
-                    name: "programAuthority";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "program_authority"
                 },
                 {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
-                }
-            ];
-            args: [
+                    "name": "user_transfer_authority",
+                    "signer": true
+                },
                 {
-                    name: "id";
-                    type: "u8";
+                    "name": "source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "token_2022_program",
+                    "optional": true
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            returns: "u64";
+            ],
+            "args": [
+                {
+                    "name": "id",
+                    "type": "u8"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u8"
+                }
+            ],
+            "returns": "u64"
         },
         {
-            name: "claimToken";
-            accounts: [
+            "name": "shared_accounts_route_with_token_ledger",
+            "discriminator": [
+                230,
+                121,
+                143,
+                80,
+                119,
+                159,
+                106,
+                170
+            ],
+            "accounts": [
                 {
-                    name: "payer";
-                    isMut: true;
-                    isSigner: true;
+                    "name": "token_program"
                 },
                 {
-                    name: "wallet";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "program_authority"
                 },
                 {
-                    name: "programAuthority";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_transfer_authority",
+                    "signer": true
                 },
                 {
-                    name: "programTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "destinationTokenAccount";
-                    isMut: true;
-                    isSigner: false;
+                    "name": "program_source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "mint";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "program_destination_token_account",
+                    "writable": true
                 },
                 {
-                    name: "associatedTokenTokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "destination_token_account",
+                    "writable": true
                 },
                 {
-                    name: "associatedTokenProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "source_mint"
                 },
                 {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "platform_fee_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "token_2022_program",
+                    "optional": true
+                },
+                {
+                    "name": "token_ledger"
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            args: [
+            ],
+            "args": [
                 {
-                    name: "id";
-                    type: "u8";
+                    "name": "id",
+                    "type": "u8"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStep"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u8"
                 }
-            ];
-            returns: "u64";
+            ],
+            "returns": "u64"
         },
         {
-            name: "createTokenLedger";
-            accounts: [
+            "name": "exact_out_route_v2",
+            "discriminator": [
+                157,
+                138,
+                184,
+                82,
+                21,
+                244,
+                243,
+                36
+            ],
+            "accounts": [
                 {
-                    name: "tokenLedger";
-                    isMut: true;
-                    isSigner: true;
+                    "name": "user_transfer_authority",
+                    "signer": true
                 },
                 {
-                    name: "payer";
-                    isMut: true;
-                    isSigner: true;
+                    "name": "user_source_token_account",
+                    "writable": true
                 },
                 {
-                    name: "systemProgram";
-                    isMut: false;
-                    isSigner: false;
+                    "name": "user_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "source_token_program"
+                },
+                {
+                    "name": "destination_token_program"
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
                 }
-            ];
-            args: [];
+            ],
+            "args": [
+                {
+                    "name": "out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "positive_slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStepV2"
+                            }
+                        }
+                    }
+                }
+            ],
+            "returns": "u64"
+        },
+        {
+            "name": "route_v2",
+            "discriminator": [
+                187,
+                100,
+                250,
+                204,
+                49,
+                196,
+                175,
+                20
+            ],
+            "accounts": [
+                {
+                    "name": "user_transfer_authority",
+                    "signer": true
+                },
+                {
+                    "name": "user_source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "user_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "source_token_program"
+                },
+                {
+                    "name": "destination_token_program"
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "positive_slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStepV2"
+                            }
+                        }
+                    }
+                }
+            ],
+            "returns": "u64"
+        },
+        {
+            "name": "shared_accounts_exact_out_route_v2",
+            "discriminator": [
+                53,
+                96,
+                229,
+                202,
+                216,
+                187,
+                250,
+                24
+            ],
+            "accounts": [
+                {
+                    "name": "program_authority"
+                },
+                {
+                    "name": "user_transfer_authority",
+                    "signer": true
+                },
+                {
+                    "name": "source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "source_token_program"
+                },
+                {
+                    "name": "destination_token_program"
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "id",
+                    "type": "u8"
+                },
+                {
+                    "name": "out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "positive_slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStepV2"
+                            }
+                        }
+                    }
+                }
+            ],
+            "returns": "u64"
+        },
+        {
+            "name": "shared_accounts_route_v2",
+            "discriminator": [
+                209,
+                152,
+                83,
+                147,
+                124,
+                254,
+                216,
+                233
+            ],
+            "accounts": [
+                {
+                    "name": "program_authority"
+                },
+                {
+                    "name": "user_transfer_authority",
+                    "signer": true
+                },
+                {
+                    "name": "source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_source_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "program_destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "destination_token_account",
+                    "writable": true
+                },
+                {
+                    "name": "source_mint"
+                },
+                {
+                    "name": "destination_mint"
+                },
+                {
+                    "name": "source_token_program"
+                },
+                {
+                    "name": "destination_token_program"
+                },
+                {
+                    "name": "event_authority",
+                    "address": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "id",
+                    "type": "u8"
+                },
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "quoted_out_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "platform_fee_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "positive_slippage_bps",
+                    "type": "u16"
+                },
+                {
+                    "name": "route_plan",
+                    "type": {
+                        "vec": {
+                            "defined": {
+                                "name": "RoutePlanStepV2"
+                            }
+                        }
+                    }
+                }
+            ],
+            "returns": "u64"
         }
-    ];
-    accounts: [
+    ],
+    "accounts": [
         {
-            name: "TokenLedger";
-            type: {
-                kind: "struct";
-                fields: [
-                    {
-                        name: "tokenAccount";
-                        type: "publicKey";
-                    },
-                    {
-                        name: "amount";
-                        type: "u64";
-                    }
-                ];
-            };
+            "name": "TokenLedger",
+            "discriminator": [
+                156,
+                247,
+                9,
+                188,
+                54,
+                108,
+                85,
+                77
+            ]
         }
-    ];
-    types: [
+    ],
+    "events": [
         {
-            name: "AmountWithSlippage";
-            type: {
-                kind: "struct";
-                fields: [
-                    {
-                        name: "amount";
-                        type: "u64";
-                    },
-                    {
-                        name: "slippageBps";
-                        type: "u16";
-                    }
-                ];
-            };
+            "name": "FeeEvent",
+            "discriminator": [
+                73,
+                79,
+                78,
+                127,
+                184,
+                213,
+                13,
+                220
+            ]
         },
         {
-            name: "RoutePlanStep";
-            type: {
-                kind: "struct";
-                fields: [
-                    {
-                        name: "swap";
-                        type: {
-                            defined: "Swap";
-                        };
-                    },
-                    {
-                        name: "percent";
-                        type: "u8";
-                    },
-                    {
-                        name: "inputIndex";
-                        type: "u8";
-                    },
-                    {
-                        name: "outputIndex";
-                        type: "u8";
-                    }
-                ];
-            };
+            "name": "SwapEvent",
+            "discriminator": [
+                64,
+                198,
+                205,
+                232,
+                38,
+                8,
+                113,
+                226
+            ]
         },
         {
-            name: "PlatformFeeType";
-            type: {
-                kind: "enum";
-                variants: [
-                    {
-                        name: "SourceMint";
-                        fields: [
-                            {
-                                name: "mint";
-                                type: "publicKey";
-                            }
-                        ];
-                    },
-                    {
-                        name: "DestinationMint";
-                        fields: [
-                            {
-                                name: "mint";
-                                type: "publicKey";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Zero";
-                    }
-                ];
-            };
+            "name": "SwapsEvent",
+            "discriminator": [
+                152,
+                47,
+                78,
+                235,
+                192,
+                96,
+                110,
+                106
+            ]
         },
         {
-            name: "Side";
-            type: {
-                kind: "enum";
-                variants: [
-                    {
-                        name: "Bid";
-                    },
-                    {
-                        name: "Ask";
-                    }
-                ];
-            };
+            "name": "CandidateSwapResults",
+            "discriminator": [
+                45,
+                9,
+                244,
+                30,
+                229,
+                52,
+                168,
+                123
+            ]
         },
         {
-            name: "Swap";
-            type: {
-                kind: "enum";
-                variants: [
-                    {
-                        name: "Saber";
-                    },
-                    {
-                        name: "SaberAddDecimalsDeposit";
-                    },
-                    {
-                        name: "SaberAddDecimalsWithdraw";
-                    },
-                    {
-                        name: "TokenSwap";
-                    },
-                    {
-                        name: "Sencha";
-                    },
-                    {
-                        name: "Step";
-                    },
-                    {
-                        name: "Cropper";
-                    },
-                    {
-                        name: "Raydium";
-                    },
-                    {
-                        name: "Crema";
-                        fields: [
-                            {
-                                name: "aToB";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Lifinity";
-                    },
-                    {
-                        name: "Mercurial";
-                    },
-                    {
-                        name: "Cykura";
-                    },
-                    {
-                        name: "Serum";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "MarinadeDeposit";
-                    },
-                    {
-                        name: "MarinadeUnstake";
-                    },
-                    {
-                        name: "Aldrin";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "AldrinV2";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "Whirlpool";
-                        fields: [
-                            {
-                                name: "aToB";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Invariant";
-                        fields: [
-                            {
-                                name: "xToY";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Meteora";
-                    },
-                    {
-                        name: "GooseFX";
-                    },
-                    {
-                        name: "DeltaFi";
-                        fields: [
-                            {
-                                name: "stable";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Balansol";
-                    },
-                    {
-                        name: "MarcoPolo";
-                        fields: [
-                            {
-                                name: "xToY";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Dradex";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "LifinityV2";
-                    },
-                    {
-                        name: "RaydiumClmm";
-                    },
-                    {
-                        name: "Openbook";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "Phoenix";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "Symmetry";
-                        fields: [
-                            {
-                                name: "fromTokenId";
-                                type: "u64";
-                            },
-                            {
-                                name: "toTokenId";
-                                type: "u64";
-                            }
-                        ];
-                    },
-                    {
-                        name: "TokenSwapV2";
-                    },
-                    {
-                        name: "HeliumTreasuryManagementRedeemV0";
-                    },
-                    {
-                        name: "StakeDexStakeWrappedSol";
-                    },
-                    {
-                        name: "StakeDexSwapViaStake";
-                        fields: [
-                            {
-                                name: "bridgeStakeSeed";
-                                type: "u32";
-                            }
-                        ];
-                    },
-                    {
-                        name: "GooseFXV2";
-                    },
-                    {
-                        name: "Perps";
-                    },
-                    {
-                        name: "PerpsAddLiquidity";
-                    },
-                    {
-                        name: "PerpsRemoveLiquidity";
-                    },
-                    {
-                        name: "MeteoraDlmm";
-                    },
-                    {
-                        name: "OpenBookV2";
-                        fields: [
-                            {
-                                name: "side";
-                                type: {
-                                    defined: "Side";
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "RaydiumClmmV2";
-                    },
-                    {
-                        name: "StakeDexPrefundWithdrawStakeAndDepositStake";
-                        fields: [
-                            {
-                                name: "bridgeStakeSeed";
-                                type: "u32";
-                            }
-                        ];
-                    },
-                    {
-                        name: "Clone";
-                        fields: [
-                            {
-                                name: "poolIndex";
-                                type: "u8";
-                            },
-                            {
-                                name: "quantityIsInput";
-                                type: "bool";
-                            },
-                            {
-                                name: "quantityIsCollateral";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "SanctumS";
-                        fields: [
-                            {
-                                name: "srcLstValueCalcAccs";
-                                type: "u8";
-                            },
-                            {
-                                name: "dstLstValueCalcAccs";
-                                type: "u8";
-                            },
-                            {
-                                name: "srcLstIndex";
-                                type: "u32";
-                            },
-                            {
-                                name: "dstLstIndex";
-                                type: "u32";
-                            }
-                        ];
-                    },
-                    {
-                        name: "SanctumSAddLiquidity";
-                        fields: [
-                            {
-                                name: "lstValueCalcAccs";
-                                type: "u8";
-                            },
-                            {
-                                name: "lstIndex";
-                                type: "u32";
-                            }
-                        ];
-                    },
-                    {
-                        name: "SanctumSRemoveLiquidity";
-                        fields: [
-                            {
-                                name: "lstValueCalcAccs";
-                                type: "u8";
-                            },
-                            {
-                                name: "lstIndex";
-                                type: "u32";
-                            }
-                        ];
-                    },
-                    {
-                        name: "RaydiumCP";
-                    },
-                    {
-                        name: "WhirlpoolSwapV2";
-                        fields: [
-                            {
-                                name: "aToB";
-                                type: "bool";
-                            },
-                            {
-                                name: "remainingAccountsInfo";
-                                type: {
-                                    option: {
-                                        defined: "RemainingAccountsInfo";
-                                    };
-                                };
-                            }
-                        ];
-                    },
-                    {
-                        name: "OneIntro";
-                    },
-                    {
-                        name: "PumpdotfunWrappedBuy";
-                    },
-                    {
-                        name: "PumpdotfunWrappedSell";
-                    },
-                    {
-                        name: "PerpsV2";
-                    },
-                    {
-                        name: "PerpsV2AddLiquidity";
-                    },
-                    {
-                        name: "PerpsV2RemoveLiquidity";
-                    },
-                    {
-                        name: "MoonshotWrappedBuy";
-                    },
-                    {
-                        name: "MoonshotWrappedSell";
-                    },
-                    {
-                        name: "StabbleStableSwap";
-                    },
-                    {
-                        name: "StabbleWeightedSwap";
-                    },
-                    {
-                        name: "Obric";
-                        fields: [
-                            {
-                                name: "xToY";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "FoxBuyFromEstimatedCost";
-                    },
-                    {
-                        name: "FoxClaimPartial";
-                        fields: [
-                            {
-                                name: "isY";
-                                type: "bool";
-                            }
-                        ];
-                    },
-                    {
-                        name: "SolFi";
-                        fields: [
-                            {
-                                name: "isQuoteToBase";
-                                type: "bool";
-                            }
-                        ];
-                    }
-                ];
-            };
-        },
-        {
-            name: "RemainingAccountsSlice";
-            type: {
-                kind: "struct";
-                fields: [
-                    {
-                        name: "accountsType";
-                        type: {
-                            defined: "AccountsType";
-                        };
-                    },
-                    {
-                        name: "length";
-                        type: "u8";
-                    }
-                ];
-            };
-        },
-        {
-            name: "RemainingAccountsInfo";
-            type: {
-                kind: "struct";
-                fields: [
-                    {
-                        name: "slices";
-                        type: {
-                            vec: {
-                                defined: "RemainingAccountsSlice";
-                            };
-                        };
-                    }
-                ];
-            };
-        },
-        {
-            name: "AccountsType";
-            type: {
-                kind: "enum";
-                variants: [
-                    {
-                        name: "TransferHookA";
-                    },
-                    {
-                        name: "TransferHookB";
-                    }
-                ];
-            };
+            "name": "BestSwapOutAmountViolation",
+            "discriminator": [
+                124,
+                66,
+                196,
+                51,
+                218,
+                173,
+                46,
+                93
+            ]
         }
-    ];
-    events: [
+    ],
+    "errors": [
         {
-            name: "SwapEvent";
-            fields: [
-                {
-                    name: "amm";
-                    type: "publicKey";
-                    index: false;
-                },
-                {
-                    name: "inputMint";
-                    type: "publicKey";
-                    index: false;
-                },
-                {
-                    name: "inputAmount";
-                    type: "u64";
-                    index: false;
-                },
-                {
-                    name: "outputMint";
-                    type: "publicKey";
-                    index: false;
-                },
-                {
-                    name: "outputAmount";
-                    type: "u64";
-                    index: false;
-                }
-            ];
+            "code": 6000,
+            "name": "EmptyRoute",
+            "msg": "Empty route"
         },
         {
-            name: "FeeEvent";
-            fields: [
-                {
-                    name: "account";
-                    type: "publicKey";
-                    index: false;
-                },
-                {
-                    name: "mint";
-                    type: "publicKey";
-                    index: false;
-                },
-                {
-                    name: "amount";
-                    type: "u64";
-                    index: false;
-                }
-            ];
+            "code": 6001,
+            "name": "SlippageToleranceExceeded",
+            "msg": "Slippage tolerance exceeded"
+        },
+        {
+            "code": 6002,
+            "name": "InvalidCalculation",
+            "msg": "Invalid calculation"
+        },
+        {
+            "code": 6003,
+            "name": "MissingPlatformFeeAccount",
+            "msg": "Missing platform fee account"
+        },
+        {
+            "code": 6004,
+            "name": "InvalidSlippage",
+            "msg": "Invalid slippage"
+        },
+        {
+            "code": 6005,
+            "name": "NotEnoughPercent",
+            "msg": "Not enough percent to 100"
+        },
+        {
+            "code": 6006,
+            "name": "InvalidInputIndex",
+            "msg": "Token input index is invalid"
+        },
+        {
+            "code": 6007,
+            "name": "InvalidOutputIndex",
+            "msg": "Token output index is invalid"
+        },
+        {
+            "code": 6008,
+            "name": "NotEnoughAccountKeys",
+            "msg": "Not Enough Account keys"
+        },
+        {
+            "code": 6009,
+            "name": "NonZeroMinimumOutAmountNotSupported",
+            "msg": "Non zero minimum out amount not supported"
+        },
+        {
+            "code": 6010,
+            "name": "InvalidRoutePlan",
+            "msg": "Invalid route plan"
+        },
+        {
+            "code": 6011,
+            "name": "InvalidReferralAuthority",
+            "msg": "Invalid referral authority"
+        },
+        {
+            "code": 6012,
+            "name": "LedgerTokenAccountDoesNotMatch",
+            "msg": "Token account doesn't match the ledger"
+        },
+        {
+            "code": 6013,
+            "name": "InvalidTokenLedger",
+            "msg": "Invalid token ledger"
+        },
+        {
+            "code": 6014,
+            "name": "IncorrectTokenProgramID",
+            "msg": "Token program ID is invalid"
+        },
+        {
+            "code": 6015,
+            "name": "TokenProgramNotProvided",
+            "msg": "Token program not provided"
+        },
+        {
+            "code": 6016,
+            "name": "SwapNotSupported",
+            "msg": "Swap not supported"
+        },
+        {
+            "code": 6017,
+            "name": "ExactOutAmountNotMatched",
+            "msg": "Exact out amount doesn't match"
+        },
+        {
+            "code": 6018,
+            "name": "SourceAndDestinationMintCannotBeTheSame",
+            "msg": "Source mint and destination mint cannot the same"
+        },
+        {
+            "code": 6019,
+            "name": "InvalidMint",
+            "msg": "Invalid mint"
+        },
+        {
+            "code": 6020,
+            "name": "InvalidProgramAuthority",
+            "msg": "Invalid program authority"
+        },
+        {
+            "code": 6021,
+            "name": "InvalidOutputTokenAccount",
+            "msg": "Invalid output token account"
+        },
+        {
+            "code": 6022,
+            "name": "InvalidFeeWallet",
+            "msg": "Invalid fee wallet"
+        },
+        {
+            "code": 6023,
+            "name": "InvalidAuthority",
+            "msg": "Invalid authority"
+        },
+        {
+            "code": 6024,
+            "name": "InsufficientFunds",
+            "msg": "Insufficient funds"
+        },
+        {
+            "code": 6025,
+            "name": "InvalidTokenAccount",
+            "msg": "Invalid token account"
+        },
+        {
+            "code": 6026,
+            "name": "BondingCurveAlreadyCompleted",
+            "msg": "Bonding curve already completed"
         }
-    ];
-    errors: [
+    ],
+    "types": [
         {
-            code: 6000;
-            name: "EmptyRoute";
-            msg: "Empty route";
+            "name": "FeeEvent",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "account",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
         },
         {
-            code: 6001;
-            name: "SlippageToleranceExceeded";
-            msg: "Slippage tolerance exceeded";
+            "name": "RemainingAccountsInfo",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "slices",
+                        "type": {
+                            "vec": {
+                                "defined": {
+                                    "name": "RemainingAccountsSlice"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
         },
         {
-            code: 6002;
-            name: "InvalidCalculation";
-            msg: "Invalid calculation";
+            "name": "RemainingAccountsSlice",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "accounts_type",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "length",
+                        "type": "u8"
+                    }
+                ]
+            }
         },
         {
-            code: 6003;
-            name: "MissingPlatformFeeAccount";
-            msg: "Missing platform fee account";
+            "name": "AccountsType",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "TransferHookA"
+                    },
+                    {
+                        "name": "TransferHookB"
+                    },
+                    {
+                        "name": "TransferHookReward"
+                    },
+                    {
+                        "name": "TransferHookInput"
+                    },
+                    {
+                        "name": "TransferHookIntermediate"
+                    },
+                    {
+                        "name": "TransferHookOutput"
+                    },
+                    {
+                        "name": "SupplementalTickArrays"
+                    },
+                    {
+                        "name": "SupplementalTickArraysOne"
+                    },
+                    {
+                        "name": "SupplementalTickArraysTwo"
+                    }
+                ]
+            }
         },
         {
-            code: 6004;
-            name: "InvalidSlippage";
-            msg: "Invalid slippage";
+            "name": "DefiTunaAccountsType",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "TransferHookA"
+                    },
+                    {
+                        "name": "TransferHookB"
+                    },
+                    {
+                        "name": "TransferHookInput"
+                    },
+                    {
+                        "name": "TransferHookIntermediate"
+                    },
+                    {
+                        "name": "TransferHookOutput"
+                    },
+                    {
+                        "name": "SupplementalTickArrays"
+                    },
+                    {
+                        "name": "SupplementalTickArraysOne"
+                    },
+                    {
+                        "name": "SupplementalTickArraysTwo"
+                    }
+                ]
+            }
         },
         {
-            code: 6005;
-            name: "NotEnoughPercent";
-            msg: "Not enough percent to 100";
+            "name": "RoutePlanStep",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "swap",
+                        "type": {
+                            "defined": {
+                                "name": "Swap"
+                            }
+                        }
+                    },
+                    {
+                        "name": "percent",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "input_index",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "output_index",
+                        "type": "u8"
+                    }
+                ]
+            }
         },
         {
-            code: 6006;
-            name: "InvalidInputIndex";
-            msg: "Token input index is invalid";
+            "name": "RoutePlanStepV2",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "swap",
+                        "type": {
+                            "defined": {
+                                "name": "Swap"
+                            }
+                        }
+                    },
+                    {
+                        "name": "bps",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "input_index",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "output_index",
+                        "type": "u8"
+                    }
+                ]
+            }
         },
         {
-            code: 6007;
-            name: "InvalidOutputIndex";
-            msg: "Token output index is invalid";
+            "name": "Side",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Bid"
+                    },
+                    {
+                        "name": "Ask"
+                    }
+                ]
+            }
         },
         {
-            code: 6008;
-            name: "NotEnoughAccountKeys";
-            msg: "Not Enough Account keys";
+            "name": "Swap",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Saber"
+                    },
+                    {
+                        "name": "SaberAddDecimalsDeposit"
+                    },
+                    {
+                        "name": "SaberAddDecimalsWithdraw"
+                    },
+                    {
+                        "name": "TokenSwap"
+                    },
+                    {
+                        "name": "Sencha"
+                    },
+                    {
+                        "name": "Step"
+                    },
+                    {
+                        "name": "Cropper"
+                    },
+                    {
+                        "name": "Raydium"
+                    },
+                    {
+                        "name": "Crema",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Lifinity"
+                    },
+                    {
+                        "name": "Mercurial"
+                    },
+                    {
+                        "name": "Cykura"
+                    },
+                    {
+                        "name": "Serum",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "MarinadeDeposit"
+                    },
+                    {
+                        "name": "MarinadeUnstake"
+                    },
+                    {
+                        "name": "Aldrin",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "AldrinV2",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Whirlpool",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Invariant",
+                        "fields": [
+                            {
+                                "name": "x_to_y",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Meteora"
+                    },
+                    {
+                        "name": "GooseFX"
+                    },
+                    {
+                        "name": "DeltaFi",
+                        "fields": [
+                            {
+                                "name": "stable",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Balansol"
+                    },
+                    {
+                        "name": "MarcoPolo",
+                        "fields": [
+                            {
+                                "name": "x_to_y",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Dradex",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "LifinityV2"
+                    },
+                    {
+                        "name": "RaydiumClmm"
+                    },
+                    {
+                        "name": "Openbook",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Phoenix",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Symmetry",
+                        "fields": [
+                            {
+                                "name": "from_token_id",
+                                "type": "u64"
+                            },
+                            {
+                                "name": "to_token_id",
+                                "type": "u64"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "TokenSwapV2"
+                    },
+                    {
+                        "name": "HeliumTreasuryManagementRedeemV0"
+                    },
+                    {
+                        "name": "StakeDexStakeWrappedSol"
+                    },
+                    {
+                        "name": "StakeDexSwapViaStake",
+                        "fields": [
+                            {
+                                "name": "bridge_stake_seed",
+                                "type": "u32"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "GooseFXV2"
+                    },
+                    {
+                        "name": "Perps"
+                    },
+                    {
+                        "name": "PerpsAddLiquidity"
+                    },
+                    {
+                        "name": "PerpsRemoveLiquidity"
+                    },
+                    {
+                        "name": "MeteoraDlmm"
+                    },
+                    {
+                        "name": "OpenBookV2",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "RaydiumClmmV2"
+                    },
+                    {
+                        "name": "StakeDexPrefundWithdrawStakeAndDepositStake",
+                        "fields": [
+                            {
+                                "name": "bridge_stake_seed",
+                                "type": "u32"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Clone",
+                        "fields": [
+                            {
+                                "name": "pool_index",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "quantity_is_input",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "quantity_is_collateral",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SanctumS",
+                        "fields": [
+                            {
+                                "name": "src_lst_value_calc_accs",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "dst_lst_value_calc_accs",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "src_lst_index",
+                                "type": "u32"
+                            },
+                            {
+                                "name": "dst_lst_index",
+                                "type": "u32"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SanctumSAddLiquidity",
+                        "fields": [
+                            {
+                                "name": "lst_value_calc_accs",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "lst_index",
+                                "type": "u32"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SanctumSRemoveLiquidity",
+                        "fields": [
+                            {
+                                "name": "lst_value_calc_accs",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "lst_index",
+                                "type": "u32"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "RaydiumCP"
+                    },
+                    {
+                        "name": "WhirlpoolSwapV2",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "remaining_accounts_info",
+                                "type": {
+                                    "option": {
+                                        "defined": {
+                                            "name": "RemainingAccountsInfo"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "OneIntro"
+                    },
+                    {
+                        "name": "PumpWrappedBuy"
+                    },
+                    {
+                        "name": "PumpWrappedSell"
+                    },
+                    {
+                        "name": "PerpsV2"
+                    },
+                    {
+                        "name": "PerpsV2AddLiquidity"
+                    },
+                    {
+                        "name": "PerpsV2RemoveLiquidity"
+                    },
+                    {
+                        "name": "MoonshotWrappedBuy"
+                    },
+                    {
+                        "name": "MoonshotWrappedSell"
+                    },
+                    {
+                        "name": "StabbleStableSwap"
+                    },
+                    {
+                        "name": "StabbleWeightedSwap"
+                    },
+                    {
+                        "name": "Obric",
+                        "fields": [
+                            {
+                                "name": "x_to_y",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "FoxBuyFromEstimatedCost"
+                    },
+                    {
+                        "name": "FoxClaimPartial",
+                        "fields": [
+                            {
+                                "name": "is_y",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SolFi",
+                        "fields": [
+                            {
+                                "name": "is_quote_to_base",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SolayerDelegateNoInit"
+                    },
+                    {
+                        "name": "SolayerUndelegateNoInit"
+                    },
+                    {
+                        "name": "TokenMill",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "DaosFunBuy"
+                    },
+                    {
+                        "name": "DaosFunSell"
+                    },
+                    {
+                        "name": "ZeroFi"
+                    },
+                    {
+                        "name": "StakeDexWithdrawWrappedSol"
+                    },
+                    {
+                        "name": "VirtualsBuy"
+                    },
+                    {
+                        "name": "VirtualsSell"
+                    },
+                    {
+                        "name": "Perena",
+                        "fields": [
+                            {
+                                "name": "in_index",
+                                "type": "u8"
+                            },
+                            {
+                                "name": "out_index",
+                                "type": "u8"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "PumpSwapBuy"
+                    },
+                    {
+                        "name": "PumpSwapSell"
+                    },
+                    {
+                        "name": "Gamma"
+                    },
+                    {
+                        "name": "MeteoraDlmmSwapV2",
+                        "fields": [
+                            {
+                                "name": "remaining_accounts_info",
+                                "type": {
+                                    "defined": {
+                                        "name": "RemainingAccountsInfo"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Woofi"
+                    },
+                    {
+                        "name": "MeteoraDammV2"
+                    },
+                    {
+                        "name": "MeteoraDynamicBondingCurveSwap"
+                    },
+                    {
+                        "name": "StabbleStableSwapV2"
+                    },
+                    {
+                        "name": "StabbleWeightedSwapV2"
+                    },
+                    {
+                        "name": "RaydiumLaunchlabBuy",
+                        "fields": [
+                            {
+                                "name": "share_fee_rate",
+                                "type": "u64"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "RaydiumLaunchlabSell",
+                        "fields": [
+                            {
+                                "name": "share_fee_rate",
+                                "type": "u64"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "BoopdotfunWrappedBuy"
+                    },
+                    {
+                        "name": "BoopdotfunWrappedSell"
+                    },
+                    {
+                        "name": "Plasma",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "GoonFi",
+                        "fields": [
+                            {
+                                "name": "is_bid",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "blacklist_bump",
+                                "type": "u8"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HumidiFi",
+                        "fields": [
+                            {
+                                "name": "swap_id",
+                                "type": "u64"
+                            },
+                            {
+                                "name": "is_base_to_quote",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "MeteoraDynamicBondingCurveSwapWithRemainingAccounts"
+                    },
+                    {
+                        "name": "TesseraV",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "PumpWrappedBuyV2"
+                    },
+                    {
+                        "name": "PumpWrappedSellV2"
+                    },
+                    {
+                        "name": "PumpSwapBuyV2"
+                    },
+                    {
+                        "name": "PumpSwapSellV2"
+                    },
+                    {
+                        "name": "Heaven",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SolFiV2",
+                        "fields": [
+                            {
+                                "name": "is_quote_to_base",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Aquifer"
+                    },
+                    {
+                        "name": "PumpWrappedBuyV3"
+                    },
+                    {
+                        "name": "PumpWrappedSellV3"
+                    },
+                    {
+                        "name": "PumpSwapBuyV3"
+                    },
+                    {
+                        "name": "PumpSwapSellV3"
+                    },
+                    {
+                        "name": "JupiterLendDeposit"
+                    },
+                    {
+                        "name": "JupiterLendRedeem"
+                    },
+                    {
+                        "name": "DefiTuna",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "remaining_accounts_info",
+                                "type": {
+                                    "option": {
+                                        "defined": {
+                                            "name": "RemainingAccountsInfo"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "AlphaQ",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "RaydiumV2"
+                    },
+                    {
+                        "name": "SarosDlmm",
+                        "fields": [
+                            {
+                                "name": "swap_for_y",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Futarchy",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "MeteoraDammV2WithRemainingAccounts"
+                    },
+                    {
+                        "name": "Obsidian"
+                    },
+                    {
+                        "name": "WhaleStreet",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "DynamicV1",
+                        "fields": [
+                            {
+                                "name": "candidate_swaps",
+                                "type": {
+                                    "vec": {
+                                        "defined": {
+                                            "name": "CandidateSwap"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "PumpWrappedBuyV4"
+                    },
+                    {
+                        "name": "PumpWrappedSellV4"
+                    },
+                    {
+                        "name": "CarrotIssue"
+                    },
+                    {
+                        "name": "CarrotRedeem"
+                    },
+                    {
+                        "name": "Manifest",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "BisonFi",
+                        "fields": [
+                            {
+                                "name": "a_to_b",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HumidiFiV2",
+                        "fields": [
+                            {
+                                "name": "swap_id",
+                                "type": "u64"
+                            },
+                            {
+                                "name": "is_base_to_quote",
+                                "type": "bool"
+                            }
+                        ]
+                    }
+                ]
+            }
         },
         {
-            code: 6009;
-            name: "NonZeroMinimumOutAmountNotSupported";
-            msg: "Non zero minimum out amount not supported";
+            "name": "CandidateSwap",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "HumidiFi",
+                        "fields": [
+                            {
+                                "name": "swap_id",
+                                "type": "u64"
+                            },
+                            {
+                                "name": "is_base_to_quote",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "TesseraV",
+                        "fields": [
+                            {
+                                "name": "side",
+                                "type": {
+                                    "defined": {
+                                        "name": "Side"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HumidiFiV2",
+                        "fields": [
+                            {
+                                "name": "swap_id",
+                                "type": "u64"
+                            },
+                            {
+                                "name": "is_base_to_quote",
+                                "type": "bool"
+                            }
+                        ]
+                    }
+                ]
+            }
         },
         {
-            code: 6010;
-            name: "InvalidRoutePlan";
-            msg: "Invalid route plan";
+            "name": "SwapEvent",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "amm",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "input_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_amount",
+                        "type": "u64"
+                    }
+                ]
+            }
         },
         {
-            code: 6011;
-            name: "InvalidReferralAuthority";
-            msg: "Invalid referral authority";
+            "name": "SwapEventV2",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "input_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_amount",
+                        "type": "u64"
+                    }
+                ]
+            }
         },
         {
-            code: 6012;
-            name: "LedgerTokenAccountDoesNotMatch";
-            msg: "Token account doesn't match the ledger";
+            "name": "SwapsEvent",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "swap_events",
+                        "type": {
+                            "vec": {
+                                "defined": {
+                                    "name": "SwapEventV2"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
         },
         {
-            code: 6013;
-            name: "InvalidTokenLedger";
-            msg: "Invalid token ledger";
+            "name": "TokenLedger",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "token_account",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
         },
         {
-            code: 6014;
-            name: "IncorrectTokenProgramID";
-            msg: "Token program ID is invalid";
+            "name": "BestSwapOutAmountViolation",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "expected_out_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "out_amount",
+                        "type": "u64"
+                    }
+                ]
+            }
         },
         {
-            code: 6015;
-            name: "TokenProgramNotProvided";
-            msg: "Token program not provided";
+            "name": "CandidateSwapResult",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "OutAmount",
+                        "fields": [
+                            "u64"
+                        ]
+                    },
+                    {
+                        "name": "ProgramError",
+                        "fields": [
+                            "u64"
+                        ]
+                    }
+                ]
+            }
         },
         {
-            code: 6016;
-            name: "SwapNotSupported";
-            msg: "Swap not supported";
-        },
-        {
-            code: 6017;
-            name: "ExactOutAmountNotMatched";
-            msg: "Exact out amount doesn't match";
-        },
-        {
-            code: 6018;
-            name: "SourceAndDestinationMintCannotBeTheSame";
-            msg: "Source mint and destination mint cannot the same";
+            "name": "CandidateSwapResults",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "results",
+                        "type": {
+                            "vec": {
+                                "defined": {
+                                    "name": "CandidateSwapResult"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
         }
-    ];
-};
-
-export const IDL: Jupiter = {
-    version: "0.1.0",
-    name: "jupiter",
-    instructions: [
-        {
-            name: "route",
-            docs: ["route_plan Topologically sorted trade DAG"],
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "userSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "userDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-            ],
-            args: [
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "inAmount",
-                    type: "u64",
-                },
-                {
-                    name: "quotedOutAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "routeWithTokenLedger",
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "userSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "userDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "tokenLedger",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "quotedOutAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "sharedAccountsRoute",
-            docs: [
-                "Route by using program owned token accounts and open orders accounts.",
-            ],
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "sourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "sourceMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "token2022Program",
-                    isMut: false,
-                    isSigner: false,
-                    isOptional: true,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "inAmount",
-                    type: "u64",
-                },
-                {
-                    name: "quotedOutAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "sharedAccountsRouteWithTokenLedger",
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "sourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "sourceMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "token2022Program",
-                    isMut: false,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "tokenLedger",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "quotedOutAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "exactOutRoute",
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "userSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "userDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "sourceMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "token2022Program",
-                    isMut: false,
-                    isSigner: false,
-                    isOptional: true,
-                },
-            ],
-            args: [
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "outAmount",
-                    type: "u64",
-                },
-                {
-                    name: "quotedInAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "sharedAccountsExactOutRoute",
-            docs: [
-                "Route by using program owned token accounts and open orders accounts.",
-            ],
-            accounts: [
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "userTransferAuthority",
-                    isMut: false,
-                    isSigner: true,
-                },
-                {
-                    name: "sourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programSourceTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programDestinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "sourceMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationMint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "platformFeeAccount",
-                    isMut: true,
-                    isSigner: false,
-                    isOptional: true,
-                },
-                {
-                    name: "token2022Program",
-                    isMut: false,
-                    isSigner: false,
-                    isOptional: true,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-                {
-                    name: "routePlan",
-                    type: {
-                        vec: {
-                            defined: "RoutePlanStep",
-                        },
-                    },
-                },
-                {
-                    name: "outAmount",
-                    type: "u64",
-                },
-                {
-                    name: "quotedInAmount",
-                    type: "u64",
-                },
-                {
-                    name: "slippageBps",
-                    type: "u16",
-                },
-                {
-                    name: "platformFeeBps",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "setTokenLedger",
-            accounts: [
-                {
-                    name: "tokenLedger",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "tokenAccount",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [],
-        },
-        {
-            name: "createOpenOrders",
-            accounts: [
-                {
-                    name: "openOrders",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "payer",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "dexProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "rent",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "market",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [],
-        },
-        {
-            name: "createTokenAccount",
-            accounts: [
-                {
-                    name: "tokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "user",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "mint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "tokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "bump",
-                    type: "u8",
-                },
-            ],
-        },
-        {
-            name: "createProgramOpenOrders",
-            accounts: [
-                {
-                    name: "openOrders",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "payer",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "dexProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "rent",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "market",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-            ],
-        },
-        {
-            name: "claim",
-            accounts: [
-                {
-                    name: "wallet",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "claimToken",
-            accounts: [
-                {
-                    name: "payer",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "wallet",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "programAuthority",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "programTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "destinationTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "mint",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "associatedTokenTokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "associatedTokenProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [
-                {
-                    name: "id",
-                    type: "u8",
-                },
-            ],
-            returns: "u64",
-        },
-        {
-            name: "createTokenLedger",
-            accounts: [
-                {
-                    name: "tokenLedger",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "payer",
-                    isMut: true,
-                    isSigner: true,
-                },
-                {
-                    name: "systemProgram",
-                    isMut: false,
-                    isSigner: false,
-                },
-            ],
-            args: [],
-        },
-    ],
-    accounts: [
-        {
-            name: "TokenLedger",
-            type: {
-                kind: "struct",
-                fields: [
-                    {
-                        name: "tokenAccount",
-                        type: "publicKey",
-                    },
-                    {
-                        name: "amount",
-                        type: "u64",
-                    },
-                ],
-            },
-        },
-    ],
-    types: [
-        {
-            name: "AmountWithSlippage",
-            type: {
-                kind: "struct",
-                fields: [
-                    {
-                        name: "amount",
-                        type: "u64",
-                    },
-                    {
-                        name: "slippageBps",
-                        type: "u16",
-                    },
-                ],
-            },
-        },
-        {
-            name: "RoutePlanStep",
-            type: {
-                kind: "struct",
-                fields: [
-                    {
-                        name: "swap",
-                        type: {
-                            defined: "Swap",
-                        },
-                    },
-                    {
-                        name: "percent",
-                        type: "u8",
-                    },
-                    {
-                        name: "inputIndex",
-                        type: "u8",
-                    },
-                    {
-                        name: "outputIndex",
-                        type: "u8",
-                    },
-                ],
-            },
-        },
-        {
-            name: "PlatformFeeType",
-            type: {
-                kind: "enum",
-                variants: [
-                    {
-                        name: "SourceMint",
-                        fields: [
-                            {
-                                name: "mint",
-                                type: "publicKey",
-                            },
-                        ],
-                    },
-                    {
-                        name: "DestinationMint",
-                        fields: [
-                            {
-                                name: "mint",
-                                type: "publicKey",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Zero",
-                    },
-                ],
-            },
-        },
-        {
-            name: "Side",
-            type: {
-                kind: "enum",
-                variants: [
-                    {
-                        name: "Bid",
-                    },
-                    {
-                        name: "Ask",
-                    },
-                ],
-            },
-        },
-        {
-            name: "Swap",
-            type: {
-                kind: "enum",
-                variants: [
-                    {
-                        name: "Saber",
-                    },
-                    {
-                        name: "SaberAddDecimalsDeposit",
-                    },
-                    {
-                        name: "SaberAddDecimalsWithdraw",
-                    },
-                    {
-                        name: "TokenSwap",
-                    },
-                    {
-                        name: "Sencha",
-                    },
-                    {
-                        name: "Step",
-                    },
-                    {
-                        name: "Cropper",
-                    },
-                    {
-                        name: "Raydium",
-                    },
-                    {
-                        name: "Crema",
-                        fields: [
-                            {
-                                name: "aToB",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Lifinity",
-                    },
-                    {
-                        name: "Mercurial",
-                    },
-                    {
-                        name: "Cykura",
-                    },
-                    {
-                        name: "Serum",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "MarinadeDeposit",
-                    },
-                    {
-                        name: "MarinadeUnstake",
-                    },
-                    {
-                        name: "Aldrin",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "AldrinV2",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "Whirlpool",
-                        fields: [
-                            {
-                                name: "aToB",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Invariant",
-                        fields: [
-                            {
-                                name: "xToY",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Meteora",
-                    },
-                    {
-                        name: "GooseFX",
-                    },
-                    {
-                        name: "DeltaFi",
-                        fields: [
-                            {
-                                name: "stable",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Balansol",
-                    },
-                    {
-                        name: "MarcoPolo",
-                        fields: [
-                            {
-                                name: "xToY",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Dradex",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "LifinityV2",
-                    },
-                    {
-                        name: "RaydiumClmm",
-                    },
-                    {
-                        name: "Openbook",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "Phoenix",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "Symmetry",
-                        fields: [
-                            {
-                                name: "fromTokenId",
-                                type: "u64",
-                            },
-                            {
-                                name: "toTokenId",
-                                type: "u64",
-                            },
-                        ],
-                    },
-                    {
-                        name: "TokenSwapV2",
-                    },
-                    {
-                        name: "HeliumTreasuryManagementRedeemV0",
-                    },
-                    {
-                        name: "StakeDexStakeWrappedSol",
-                    },
-                    {
-                        name: "StakeDexSwapViaStake",
-                        fields: [
-                            {
-                                name: "bridgeStakeSeed",
-                                type: "u32",
-                            },
-                        ],
-                    },
-                    {
-                        name: "GooseFXV2",
-                    },
-                    {
-                        name: "Perps",
-                    },
-                    {
-                        name: "PerpsAddLiquidity",
-                    },
-                    {
-                        name: "PerpsRemoveLiquidity",
-                    },
-                    {
-                        name: "MeteoraDlmm",
-                    },
-                    {
-                        name: "OpenBookV2",
-                        fields: [
-                            {
-                                name: "side",
-                                type: {
-                                    defined: "Side",
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "RaydiumClmmV2",
-                    },
-                    {
-                        name: "StakeDexPrefundWithdrawStakeAndDepositStake",
-                        fields: [
-                            {
-                                name: "bridgeStakeSeed",
-                                type: "u32",
-                            },
-                        ],
-                    },
-                    {
-                        name: "Clone",
-                        fields: [
-                            {
-                                name: "poolIndex",
-                                type: "u8",
-                            },
-                            {
-                                name: "quantityIsInput",
-                                type: "bool",
-                            },
-                            {
-                                name: "quantityIsCollateral",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "SanctumS",
-                        fields: [
-                            {
-                                name: "srcLstValueCalcAccs",
-                                type: "u8",
-                            },
-                            {
-                                name: "dstLstValueCalcAccs",
-                                type: "u8",
-                            },
-                            {
-                                name: "srcLstIndex",
-                                type: "u32",
-                            },
-                            {
-                                name: "dstLstIndex",
-                                type: "u32",
-                            },
-                        ],
-                    },
-                    {
-                        name: "SanctumSAddLiquidity",
-                        fields: [
-                            {
-                                name: "lstValueCalcAccs",
-                                type: "u8",
-                            },
-                            {
-                                name: "lstIndex",
-                                type: "u32",
-                            },
-                        ],
-                    },
-                    {
-                        name: "SanctumSRemoveLiquidity",
-                        fields: [
-                            {
-                                name: "lstValueCalcAccs",
-                                type: "u8",
-                            },
-                            {
-                                name: "lstIndex",
-                                type: "u32",
-                            },
-                        ],
-                    },
-                    {
-                        name: "RaydiumCP",
-                    },
-                    {
-                        name: "WhirlpoolSwapV2",
-                        fields: [
-                            {
-                                name: "aToB",
-                                type: "bool",
-                            },
-                            {
-                                name: "remainingAccountsInfo",
-                                type: {
-                                    option: {
-                                        defined: "RemainingAccountsInfo",
-                                    },
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        name: "OneIntro",
-                    },
-                    {
-                        name: "PumpdotfunWrappedBuy",
-                    },
-                    {
-                        name: "PumpdotfunWrappedSell",
-                    },
-                    {
-                        name: "PerpsV2",
-                    },
-                    {
-                        name: "PerpsV2AddLiquidity",
-                    },
-                    {
-                        name: "PerpsV2RemoveLiquidity",
-                    },
-                    {
-                        name: "MoonshotWrappedBuy",
-                    },
-                    {
-                        name: "MoonshotWrappedSell",
-                    },
-                    {
-                        name: "StabbleStableSwap",
-                    },
-                    {
-                        name: "StabbleWeightedSwap",
-                    },
-                    {
-                        name: "Obric",
-                        fields: [
-                            {
-                                name: "xToY",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "FoxBuyFromEstimatedCost",
-                    },
-                    {
-                        name: "FoxClaimPartial",
-                        fields: [
-                            {
-                                name: "isY",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                    {
-                        name: "SolFi",
-                        fields: [
-                            {
-                                name: "isQuoteToBase",
-                                type: "bool",
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-        {
-            name: "RemainingAccountsSlice",
-            type: {
-                kind: "struct",
-                fields: [
-                    {
-                        name: "accountsType",
-                        type: {
-                            defined: "AccountsType",
-                        },
-                    },
-                    {
-                        name: "length",
-                        type: "u8",
-                    },
-                ],
-            },
-        },
-        {
-            name: "RemainingAccountsInfo",
-            type: {
-                kind: "struct",
-                fields: [
-                    {
-                        name: "slices",
-                        type: {
-                            vec: {
-                                defined: "RemainingAccountsSlice",
-                            },
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            name: "AccountsType",
-            type: {
-                kind: "enum",
-                variants: [
-                    {
-                        name: "TransferHookA",
-                    },
-                    {
-                        name: "TransferHookB",
-                    },
-                ],
-            },
-        },
-    ],
-    events: [
-        {
-            name: "SwapEvent",
-            fields: [
-                {
-                    name: "amm",
-                    type: "publicKey",
-                    index: false,
-                },
-                {
-                    name: "inputMint",
-                    type: "publicKey",
-                    index: false,
-                },
-                {
-                    name: "inputAmount",
-                    type: "u64",
-                    index: false,
-                },
-                {
-                    name: "outputMint",
-                    type: "publicKey",
-                    index: false,
-                },
-                {
-                    name: "outputAmount",
-                    type: "u64",
-                    index: false,
-                },
-            ],
-        },
-        {
-            name: "FeeEvent",
-            fields: [
-                {
-                    name: "account",
-                    type: "publicKey",
-                    index: false,
-                },
-                {
-                    name: "mint",
-                    type: "publicKey",
-                    index: false,
-                },
-                {
-                    name: "amount",
-                    type: "u64",
-                    index: false,
-                },
-            ],
-        },
-    ],
-    errors: [
-        {
-            code: 6000,
-            name: "EmptyRoute",
-            msg: "Empty route",
-        },
-        {
-            code: 6001,
-            name: "SlippageToleranceExceeded",
-            msg: "Slippage tolerance exceeded",
-        },
-        {
-            code: 6002,
-            name: "InvalidCalculation",
-            msg: "Invalid calculation",
-        },
-        {
-            code: 6003,
-            name: "MissingPlatformFeeAccount",
-            msg: "Missing platform fee account",
-        },
-        {
-            code: 6004,
-            name: "InvalidSlippage",
-            msg: "Invalid slippage",
-        },
-        {
-            code: 6005,
-            name: "NotEnoughPercent",
-            msg: "Not enough percent to 100",
-        },
-        {
-            code: 6006,
-            name: "InvalidInputIndex",
-            msg: "Token input index is invalid",
-        },
-        {
-            code: 6007,
-            name: "InvalidOutputIndex",
-            msg: "Token output index is invalid",
-        },
-        {
-            code: 6008,
-            name: "NotEnoughAccountKeys",
-            msg: "Not Enough Account keys",
-        },
-        {
-            code: 6009,
-            name: "NonZeroMinimumOutAmountNotSupported",
-            msg: "Non zero minimum out amount not supported",
-        },
-        {
-            code: 6010,
-            name: "InvalidRoutePlan",
-            msg: "Invalid route plan",
-        },
-        {
-            code: 6011,
-            name: "InvalidReferralAuthority",
-            msg: "Invalid referral authority",
-        },
-        {
-            code: 6012,
-            name: "LedgerTokenAccountDoesNotMatch",
-            msg: "Token account doesn't match the ledger",
-        },
-        {
-            code: 6013,
-            name: "InvalidTokenLedger",
-            msg: "Invalid token ledger",
-        },
-        {
-            code: 6014,
-            name: "IncorrectTokenProgramID",
-            msg: "Token program ID is invalid",
-        },
-        {
-            code: 6015,
-            name: "TokenProgramNotProvided",
-            msg: "Token program not provided",
-        },
-        {
-            code: 6016,
-            name: "SwapNotSupported",
-            msg: "Swap not supported",
-        },
-        {
-            code: 6017,
-            name: "ExactOutAmountNotMatched",
-            msg: "Exact out amount doesn't match",
-        },
-        {
-            code: 6018,
-            name: "SourceAndDestinationMintCannotBeTheSame",
-            msg: "Source mint and destination mint cannot the same",
-        },
-    ],
+    ]
 };
