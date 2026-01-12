@@ -1,16 +1,13 @@
 import { IDL as JupiterIDL } from './jupiter';
 import { IDL as TitanIDL } from './titan';
+import { IDL as RaydiumIDL } from './raydium';
+import { IDL as DFlowIDL } from './dflow';
 import {
     SendTransactionError,
     VersionedTransaction,
-    TransactionInstruction,
     SystemProgram
 } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
-import * as idl from '../idl/wasabi_solana.json';
-import { WasabiSolana } from '../index';
-
-const WasabiIDL = idl as WasabiSolana;
+import * as WasabiIDL from '../idl/wasabi_solana.json';
 
 export class SimulationError extends Error {
     constructor(
@@ -30,79 +27,101 @@ type ErrorObject = {
     program: string;
 };
 
-const wasabiProgramId = 'spicyTHtbmarmUxwFSHYpA8G4uP2nRNq38RReMpoZ9c';
-const wasabiExpectedErrors = [
-    6004, // MinTokensNotMet
-    6015, // PrincipalTooHigh
-    6017, // PriceTargetNotReached
-    6026 // LiquidationThresholdNotReached
-];
+export const NOT_ENOUGH_SOL_ERROR = "Insufficient SOL for transaction fees. Please add more SOL and try again.";
 
-const jupiterProgramId = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
-const jupiterExpectedErrors = [
-    6001 // SlippageToleranceExceeded
-];
-
-const titanProgramId = 'T1TANpTeScyeqVzzgNViGDNrkQ6qHz9KrSBS4aNXvGT';
-const titanExpectedErrors = [
-    6008 // LessThanMinimumAmountOut
-];
-
-//@ts-ignore
-const raydiumErrors = [
-    6028, // Invalid first tick array
-]
-
-// Index errors by code for quick lookup
-const wasabiErrorIndex: Record<number, ErrorObject> = WasabiIDL.errors.reduce(
-    (acc: Record<number, ErrorObject>, error) => {
-        const expected = wasabiExpectedErrors.includes(error.code);
-        acc[error.code] = {
-            ...error,
-            expected,
-            program: 'Wasabi'
-        };
-        return acc;
-    },
-    {}
-);
-
-const findWasabiError = (code: number): ErrorObject | undefined => {
-    return wasabiErrorIndex[code];
+type ProgramIDL = {
+    address: string;
+    errors: {
+        code: number;
+        name: string;
+        msg: string;
+    }[];
 };
 
-const jupiterErrorIndex: Record<number, ErrorObject> = JupiterIDL.errors.reduce(
-    (acc: Record<number, ErrorObject>, error) => {
-        const expected = jupiterExpectedErrors.includes(error.code);
-        acc[error.code] = {
-            ...error,
-            expected,
-            program: 'Jupiter'
-        };
-        return acc;
-    },
-    {}
-);
+const IDLS: ProgramIDL[] = [
+    WasabiIDL as ProgramIDL,
+    JupiterIDL as ProgramIDL,
+    TitanIDL as ProgramIDL,
+    RaydiumIDL as ProgramIDL,
+    DFlowIDL as ProgramIDL
+];
 
-const findJupiterError = (code: number): ErrorObject | undefined => {
-    return jupiterErrorIndex[code];
+const programToExpectedErrors: Record<string, number[]> = {
+    [WasabiIDL.address]: [
+        6004, // MinTokensNotMet
+        6015, // PrincipalTooHigh
+        6017, // PriceTargetNotReached
+        6026 // LiquidationThresholdNotReached
+    ],
+    [JupiterIDL.address]: [
+        6001 // SlippageToleranceExceeded
+    ],
+    [TitanIDL.address]: [
+        6008 // LessThanMinimumAmountOut
+    ],
+    [RaydiumIDL.address]: [
+        6022, // TooLittleOutputReceived
+        6023, // TooMuchInputPaid
+    ],
+    [DFlowIDL.address]: [
+        15001, // SlippageLimitExceeded
+    ]
 };
 
-const titanErrorIndex: Record<number, ErrorObject> = TitanIDL.errors.reduce(
-    (acc: Record<number, ErrorObject>, error) => {
-        const expected = titanExpectedErrors.includes(error.code);
-        acc[error.code] = {
-            ...error,
-            expected,
-            program: 'Titan'
-        };
-        return acc;
-    },
-    {}
-);
+const programErrors: Record<string, Record<number, ErrorObject>> = {};
+const programNames: Record<string, string> = {
+    [WasabiIDL.address]: 'Wasabi',
+    [JupiterIDL.address]: 'Jupiter',
+    [TitanIDL.address]: 'Titan',
+    [RaydiumIDL.address]: 'Raydium',
+    [DFlowIDL.address]: 'DFlow',
+    [SystemProgram.programId.toBase58()]: 'System'
+};
 
-const findTitanError = (code: number): ErrorObject | undefined => {
-    return titanErrorIndex[code];
+for (const idl of IDLS) {
+    const expectedErrors = programToExpectedErrors[idl.address] ?? [];
+
+    programErrors[idl.address] = idl.errors.reduce(
+      (acc: Record<number, ErrorObject>, error) => {
+          acc[error.code] = {
+              ...error,
+              expected: expectedErrors.includes(error.code),
+              program: programNames[idl.address] ?? 'Unknown'
+          };
+          return acc;
+      },
+      {}
+    );
+}
+
+const findProgramError = (programId: string, code: number): ErrorObject | undefined => {
+    if (code === 0) {
+        return {
+            code,
+            name: 'InsufficientFundsForRent',
+            msg: 'Insufficient SOL to pay for rent',
+            expected: true,
+            program: programNames[programId] ?? 'Unknown'
+        };
+    } else if (code === 1) {
+        return {
+            code,
+            name: 'InsufficientFunds',
+            msg: 'Insufficient Funds',
+            expected: true,
+            program: programNames[programId] ?? 'Unknown'
+        };
+    } else if (code === 4) {
+        return {
+            code,
+            name: 'OwnerDoesNotMatch',
+            msg: 'Owner does not match',
+            expected: false,
+            program: programNames[programId] ?? 'Unknown'
+        };
+    }
+
+    return programErrors[programId]?.[code];
 };
 
 export const parseSendTransactionError = (
@@ -133,20 +152,7 @@ export const parseError = (
     const instruction = transaction.message.compiledInstructions[instructionNumber];
     const programId = transaction.message.staticAccountKeys[instruction.programIdIndex].toBase58();
 
-    const systemError = parseSystemError(errorCode, programId);
-    if (systemError) {
-        return systemError;
-    }
-
-    if (programId === wasabiProgramId) {
-        return findWasabiError(errorCode);
-    } else if (programId === jupiterProgramId) {
-        return findJupiterError(errorCode);
-    } else if (programId === titanProgramId) {
-        return findTitanError(errorCode);
-    }
-
-    return undefined;
+    return findProgramError(programId, errorCode);
 };
 
 export const parseSimulationError = (
@@ -205,53 +211,8 @@ export const parseErrorLogs = (logs: string[] | undefined): ErrorObject | undefi
         if (match) {
             const [_, failingProgramId, errorHex] = match;
             const errorCode = parseInt(errorHex);
-            if (failingProgramId.localeCompare(jupiterProgramId) === 0) {
-                return findJupiterError(errorCode);
-            } else if (failingProgramId.localeCompare(titanProgramId) === 0) {
-                return findTitanError(errorCode);
-            } else if (failingProgramId.localeCompare(wasabiProgramId) === 0) {
-                return findWasabiError(errorCode);
-            } else if (failingProgramId.localeCompare(SystemProgram.programId.toBase58())) {
-                return parseSystemError(errorCode, SystemProgram.programId.toBase58());
-            }
+            return findProgramError(failingProgramId, errorCode);
         }
-    }
-
-    return undefined;
-};
-
-const parseSystemError = (code: number, programId: string): ErrorObject | undefined => {
-    const program =
-        programId === wasabiProgramId
-            ? 'Wasabi'
-            : programId === jupiterProgramId
-                ? 'Jupiter'
-                : 'System';
-
-    if (code === 0) {
-        return {
-            code,
-            name: 'InsufficientFundsForRent',
-            msg: 'Insufficient SOL to pay for rent',
-            expected: true,
-            program
-        };
-    } else if (code === 1) {
-        return {
-            code,
-            name: 'InsufficientFunds',
-            msg: 'Insufficient Funds',
-            expected: true,
-            program
-        };
-    } else if (code === 4) {
-        return {
-            code,
-            name: 'OwnerDoesNotMatch',
-            msg: 'Owner does not match',
-            expected: false,
-            program
-        };
     }
 
     return undefined;
@@ -273,26 +234,26 @@ export const matchError = (error: Error): ErrorObject | undefined => {
             name: 'TransactionTooLarge',
             msg: 'Routing Error: Failed to find route',
             expected: true,
-            program: ''
+            program: 'System'
         },
         '.*encoding overruns Uint8Array.*': {
             code: 0,
             name: 'EncodingOverrunsUint8Array',
             msg: 'Routing Error: Failed to find route',
             expected: true,
-            program: ''
+            program: 'System'
         },
         '.*InsufficientFundsForFee.*': {
             code: 0,
             name: 'InsufficientFundsForFee',
-            msg: 'Fee Error: Insufficient funds for fee',
+            msg: NOT_ENOUGH_SOL_ERROR,
             expected: true,
             program: 'ComputeBudget'
         },
         '.*InsufficientFundsForRent.*': {
             code: 0,
             name: 'InsufficientFundsForRent',
-            msg: 'Rent Error: Insufficient funds for rent',
+            msg: NOT_ENOUGH_SOL_ERROR,
             expected: true,
             program: 'System'
         },
@@ -340,27 +301,4 @@ export const matchError = (error: Error): ErrorObject | undefined => {
     }
 
     return undefined;
-};
-
-export const getFailingSwapProgram = (instructions: TransactionInstruction[]): string => {
-    let failingProgramIdx = 0;
-    for (let i = 0; i < instructions.length; i++) {
-        if (instructions[i].programId.toBase58().localeCompare(wasabiProgramId) === 0) {
-            failingProgramIdx = i + 1;
-            break;
-        }
-    }
-
-    try {
-        const failingProgram = instructions[failingProgramIdx].programId.toBase58();
-        return failingProgram === jupiterProgramId
-            ? 'Jupiter'
-            : failingProgram === TOKEN_PROGRAM_ID.toBase58()
-            ? 'Token'
-            : failingProgram === TOKEN_2022_PROGRAM_ID.toBase58()
-            ? 'Token2022'
-            : 'Raydium';
-    } catch (error: any) {
-        return 'Unknown';
-    }
 };
