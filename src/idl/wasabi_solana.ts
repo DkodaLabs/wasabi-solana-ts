@@ -7699,16 +7699,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "recordInterestForLongPosition",
+      "name": "recordLongInterest",
       "discriminator": [
-        46,
-        3,
-        12,
-        151,
-        56,
-        105,
-        134,
-        60
+        101,
+        57,
+        251,
+        97,
+        19,
+        118,
+        203,
+        222
       ],
       "accounts": [
         {
@@ -7722,25 +7722,16 @@ export type WasabiSolana = {
           "name": "permission"
         },
         {
-          "name": "lpVault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
+          "name": "pool",
+          "writable": true
         },
         {
           "name": "position",
           "writable": true
         },
         {
-          "name": "currency",
+          "name": "lpVault",
+          "writable": true,
           "relations": [
             "position"
           ]
@@ -7798,9 +7789,6 @@ export type WasabiSolana = {
               }
             ]
           }
-        },
-        {
-          "name": "tokenProgram"
         }
       ],
       "args": [
@@ -7811,16 +7799,16 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "recordInterestForShortPosition",
+      "name": "recordShortInterest",
       "discriminator": [
-        0,
-        204,
-        6,
-        181,
+        54,
+        196,
+        121,
+        111,
         120,
-        76,
-        118,
-        43
+        233,
+        41,
+        104
       ],
       "accounts": [
         {
@@ -7834,26 +7822,19 @@ export type WasabiSolana = {
           "name": "permission"
         },
         {
-          "name": "lpVault",
-          "writable": true,
-          "relations": [
-            "position"
-          ]
-        },
-        {
-          "name": "vault",
-          "writable": true,
-          "relations": [
-            "lpVault"
-          ]
+          "name": "pool",
+          "writable": true
         },
         {
           "name": "position",
           "writable": true
         },
         {
-          "name": "pool",
-          "writable": true
+          "name": "lpVault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
         },
         {
           "name": "currencyVault",
@@ -7866,20 +7847,22 @@ export type WasabiSolana = {
           "name": "collateralVault",
           "writable": true,
           "relations": [
-            "pool"
-          ]
-        },
-        {
-          "name": "currency",
-          "relations": [
+            "pool",
             "position"
           ]
         },
         {
-          "name": "collateral",
+          "name": "vault",
+          "writable": true,
           "relations": [
-            "position"
+            "lpVault"
           ]
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "collateral"
         },
         {
           "name": "debtController",
@@ -12183,11 +12166,6 @@ export type WasabiSolana = {
     },
     {
       "code": 6041,
-      "name": "invalidInterestAmount",
-      "msg": "Invalid interest amount"
-    },
-    {
-      "code": 6042,
       "name": "maxInterestExceeded",
       "msg": "Interest payment exceeds maximum interest"
     }
@@ -12608,6 +12586,10 @@ export type WasabiSolana = {
             "type": "pubkey"
           },
           {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
             "name": "interestPaid",
             "type": "u64"
           },
@@ -12622,6 +12604,10 @@ export type WasabiSolana = {
           {
             "name": "downPaymentReduced",
             "type": "u64"
+          },
+          {
+            "name": "isLong",
+            "type": "bool"
           }
         ]
       }
