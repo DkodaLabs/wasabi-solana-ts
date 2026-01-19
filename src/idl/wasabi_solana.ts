@@ -8306,10 +8306,7 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "superAdminPermission"
-          ]
+          "signer": true
         },
         {
           "name": "superAdminPermission",
@@ -8545,10 +8542,7 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "superAdminPermission"
-          ]
+          "signer": true
         },
         {
           "name": "superAdminPermission",
@@ -8625,10 +8619,7 @@ export type WasabiSolana = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "superAdminPermission"
-          ]
+          "signer": true
         },
         {
           "name": "superAdminPermission",

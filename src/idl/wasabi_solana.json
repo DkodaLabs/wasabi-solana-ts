@@ -8300,10 +8300,7 @@
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "super_admin_permission"
-          ]
+          "signer": true
         },
         {
           "name": "super_admin_permission",
@@ -8539,10 +8536,7 @@
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "super_admin_permission"
-          ]
+          "signer": true
         },
         {
           "name": "super_admin_permission",
@@ -8619,10 +8613,7 @@
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "super_admin_permission"
-          ]
+          "signer": true
         },
         {
           "name": "super_admin_permission",
