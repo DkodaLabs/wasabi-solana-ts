@@ -54,6 +54,22 @@ const takeProfitConfig: BaseMethodConfig<
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
+        const excessTokenPurchaser = PDA.getExcessTokenPurchaser();
+
+        const excessTokenPurchaserCurrencyVault = getAssociatedTokenAddressSync(
+            poolAccount.currency,
+            excessTokenPurchaser,
+            true,
+            currencyTokenProgram
+        );
+
+        const excessTokenPurchaserCollateralVault = getAssociatedTokenAddressSync(
+            poolAccount.collateral,
+            excessTokenPurchaser,
+            true,
+            collateralTokenProgram
+        );
+
         return {
             accounts: {
                 takeProfitOrder: PDA.getTakeProfitOrder(config.accounts.position),
@@ -79,6 +95,9 @@ const takeProfitConfig: BaseMethodConfig<
                     liquidationWallet: config.accounts.liquidationWallet,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
+                    excessTokenPurchaser,
+                    excessTokenPurchaserCurrencyVault,
+                    excessTokenPurchaserCollateralVault,
                     currencyTokenProgram,
                     collateralTokenProgram,
                     systemProgram: SystemProgram.programId

@@ -4,7 +4,7 @@ import {
     ClosePositionArgs,
     ClosePositionInternalInstructionAccounts
 } from './closePositionV2';
-import { SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { WasabiSolana } from '../idl';
 import { extractInstructionData } from './shared';
@@ -53,6 +53,22 @@ const liquidatePositionConfig: BaseMethodConfig<
 
         const lpVault = PDA.getLpVault(poolAccount.currency);
 
+        const excessTokenPurchaser = PDA.getExcessTokenPurchaser();
+
+        const excessTokenPurchaserCurrencyVault = getAssociatedTokenAddressSync(
+            poolAccount.currency,
+            excessTokenPurchaser,
+            true,
+            currencyTokenProgram
+        );
+
+        const excessTokenPurchaserCollateralVault = getAssociatedTokenAddressSync(
+            poolAccount.collateral,
+            excessTokenPurchaser,
+            true,
+            collateralTokenProgram
+        );
+
         return {
             accounts: {
                 closePosition: {
@@ -77,6 +93,9 @@ const liquidatePositionConfig: BaseMethodConfig<
                     liquidationWallet: config.accounts.liquidationWallet,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
+                    excessTokenPurchaser,
+                    excessTokenPurchaserCurrencyVault,
+                    excessTokenPurchaserCollateralVault,
                     currencyTokenProgram,
                     collateralTokenProgram,
                     systemProgram: SystemProgram.programId
