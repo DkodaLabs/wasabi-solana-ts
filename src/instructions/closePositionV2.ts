@@ -48,6 +48,9 @@ export type ClosePositionInternalInstructionAccounts = {
     liquidationWallet: PublicKey;
     debtController: PublicKey;
     globalSettings: PublicKey;
+    excessTokenPurchaser: PublicKey;
+    excessTokenPurchaserCurrencyVault: PublicKey;
+    excessTokenPurchaserCollateralVault: PublicKey;
     currencyTokenProgram: PublicKey;
     collateralTokenProgram: PublicKey;
     systemProgram: PublicKey;
@@ -92,6 +95,22 @@ const closePostionConfig: BaseMethodConfig<
             throw new Error('Owner payout account does not exist');
         }
 
+        const excessTokenPurchaser = PDA.getExcessTokenPurchaser();
+
+        const excessTokenPurchaserCurrencyVault = getAssociatedTokenAddressSync(
+            poolAccount.currency,
+            excessTokenPurchaser,
+            true,
+            currencyTokenProgram
+        );
+
+        const excessTokenPurchaserCollateralVault = getAssociatedTokenAddressSync(
+            poolAccount.collateral,
+            excessTokenPurchaser,
+            true,
+            collateralTokenProgram
+        );
+
         return {
             accounts: {
                 owner: config.accounts.owner,
@@ -117,6 +136,9 @@ const closePostionConfig: BaseMethodConfig<
                     liquidationWallet: config.accounts.liquidationWallet,
                     debtController: PDA.getDebtController(),
                     globalSettings: PDA.getGlobalSettings(),
+                    excessTokenPurchaser,
+                    excessTokenPurchaserCurrencyVault,
+                    excessTokenPurchaserCollateralVault,
                     currencyTokenProgram,
                     collateralTokenProgram,
                     systemProgram: SystemProgram.programId

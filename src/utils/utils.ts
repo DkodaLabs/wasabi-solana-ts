@@ -45,7 +45,8 @@ export const SEED_PREFIX = {
     GLOBAL_SETTINGS: 'global_settings',
     EVENT_AUTHORITY: '__event_authority',
     STRATEGY: 'strategy',
-    STRATEGY_REQ: 'strategy_request'
+    STRATEGY_REQ: 'strategy_request',
+    EXCESS_TOKEN_PURCHASER: 'excess_token_purchaser'
 } as const;
 
 function findProgramAddress(seeds: Uint8Array[], programId: PublicKey): PublicKey {
@@ -238,6 +239,13 @@ export const PDA = {
     getStrategyRequest(strategy: PublicKey): PublicKey {
         return findProgramAddress(
             [utils.bytes.utf8.encode(SEED_PREFIX.STRATEGY_REQ), strategy.toBuffer()],
+            WASABI_PROGRAM_ID
+        );
+    },
+
+    getExcessTokenPurchaser(): PublicKey {
+        return findProgramAddress(
+            [utils.bytes.utf8.encode(SEED_PREFIX.EXCESS_TOKEN_PURCHASER)],
             WASABI_PROGRAM_ID
         );
     }
