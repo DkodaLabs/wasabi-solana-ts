@@ -1669,6 +1669,48 @@ export type WasabiSolana = {
               }
             },
             {
+              "name": "excessTokenPurchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excessTokenPurchaserCurrencyVault",
+              "writable": true
+            },
+            {
+              "name": "excessTokenPurchaserCollateralVault",
+              "writable": true
+            },
+            {
               "name": "currencyTokenProgram"
             },
             {
@@ -4394,6 +4436,97 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "initOrUpdateExcessTokenPurchaser",
+      "discriminator": [
+        219,
+        132,
+        240,
+        227,
+        147,
+        98,
+        56,
+        223
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "superAdminPermission"
+          ]
+        },
+        {
+          "name": "superAdminPermission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  99,
+                  101,
+                  115,
+                  115,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "discountBps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "initOrUpdatePermission",
       "discriminator": [
         37,
@@ -5065,6 +5198,48 @@ export type WasabiSolana = {
                   }
                 ]
               }
+            },
+            {
+              "name": "excessTokenPurchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excessTokenPurchaserCurrencyVault",
+              "writable": true
+            },
+            {
+              "name": "excessTokenPurchaserCollateralVault",
+              "writable": true
             },
             {
               "name": "currencyTokenProgram"
@@ -8211,6 +8386,124 @@ export type WasabiSolana = {
       "args": []
     },
     {
+      "name": "sellExcessTokens",
+      "discriminator": [
+        63,
+        204,
+        92,
+        189,
+        202,
+        135,
+        24,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "excessTokenPurchaser",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  99,
+                  101,
+                  115,
+                  115,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenInMint",
+          "docs": [
+            "The token being sold (excess token)"
+          ]
+        },
+        {
+          "name": "tokenOutMint",
+          "docs": [
+            "The token being received (quote token - USDC/SOL)"
+          ]
+        },
+        {
+          "name": "tokenInVault",
+          "docs": [
+            "Source token account (owned by excess_token_purchaser PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenOutVault",
+          "docs": [
+            "Destination token account (owned by excess_token_purchaser PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenInProgram"
+        },
+        {
+          "name": "tokenOutProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "amountIn",
+          "type": "u64"
+        },
+        {
+          "name": "minAmountOut",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "setFeeWallet",
       "discriminator": [
         108,
@@ -8953,6 +9246,48 @@ export type WasabiSolana = {
                   }
                 ]
               }
+            },
+            {
+              "name": "excessTokenPurchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excessTokenPurchaserCurrencyVault",
+              "writable": true
+            },
+            {
+              "name": "excessTokenPurchaserCollateralVault",
+              "writable": true
             },
             {
               "name": "currencyTokenProgram"
@@ -10154,6 +10489,48 @@ export type WasabiSolana = {
                   }
                 ]
               }
+            },
+            {
+              "name": "excessTokenPurchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excessTokenPurchaserCurrencyVault",
+              "writable": true
+            },
+            {
+              "name": "excessTokenPurchaserCollateralVault",
+              "writable": true
             },
             {
               "name": "currencyTokenProgram"
@@ -11583,6 +11960,19 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "excessTokenPurchaser",
+      "discriminator": [
+        33,
+        40,
+        217,
+        92,
+        131,
+        170,
+        113,
+        85
+      ]
+    },
+    {
       "name": "globalSettings",
       "discriminator": [
         109,
@@ -11738,6 +12128,32 @@ export type WasabiSolana = {
         169,
         136,
         52
+      ]
+    },
+    {
+      "name": "excessTokensPurchased",
+      "discriminator": [
+        18,
+        157,
+        137,
+        136,
+        57,
+        194,
+        162,
+        238
+      ]
+    },
+    {
+      "name": "excessTokensSold",
+      "discriminator": [
+        48,
+        107,
+        230,
+        142,
+        144,
+        144,
+        160,
+        235
       ]
     },
     {
@@ -12387,6 +12803,76 @@ export type WasabiSolana = {
           },
           {
             "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "excessTokenPurchaser",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the ExcessTokenPurchaser's PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "discountBps",
+            "docs": [
+              "discount in basis points, default it 100 (1%)"
+            ],
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "excessTokensPurchased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "excessToken",
+            "type": "pubkey"
+          },
+          {
+            "name": "excessAmount",
+            "type": "u64"
+          },
+          {
+            "name": "buybackToken",
+            "type": "pubkey"
+          },
+          {
+            "name": "buybackAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "excessTokensSold",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenIn",
+            "type": "pubkey"
+          },
+          {
+            "name": "amountIn",
+            "type": "u64"
+          },
+          {
+            "name": "tokenOut",
+            "type": "pubkey"
+          },
+          {
+            "name": "amountOut",
             "type": "u64"
           }
         ]

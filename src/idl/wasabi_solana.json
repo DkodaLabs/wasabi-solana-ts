@@ -1663,6 +1663,48 @@
               }
             },
             {
+              "name": "excess_token_purchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excess_token_purchaser_currency_vault",
+              "writable": true
+            },
+            {
+              "name": "excess_token_purchaser_collateral_vault",
+              "writable": true
+            },
+            {
               "name": "currency_token_program"
             },
             {
@@ -4388,6 +4430,97 @@
       ]
     },
     {
+      "name": "init_or_update_excess_token_purchaser",
+      "discriminator": [
+        219,
+        132,
+        240,
+        227,
+        147,
+        98,
+        56,
+        223
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "super_admin_permission"
+          ]
+        },
+        {
+          "name": "super_admin_permission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  99,
+                  101,
+                  115,
+                  115,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "discount_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "init_or_update_permission",
       "discriminator": [
         37,
@@ -5059,6 +5192,48 @@
                   }
                 ]
               }
+            },
+            {
+              "name": "excess_token_purchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excess_token_purchaser_currency_vault",
+              "writable": true
+            },
+            {
+              "name": "excess_token_purchaser_collateral_vault",
+              "writable": true
             },
             {
               "name": "currency_token_program"
@@ -8205,6 +8380,124 @@
       "args": []
     },
     {
+      "name": "sell_excess_tokens",
+      "discriminator": [
+        63,
+        204,
+        92,
+        189,
+        202,
+        135,
+        24,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "excess_token_purchaser",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  99,
+                  101,
+                  115,
+                  115,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_in_mint",
+          "docs": [
+            "The token being sold (excess token)"
+          ]
+        },
+        {
+          "name": "token_out_mint",
+          "docs": [
+            "The token being received (quote token - USDC/SOL)"
+          ]
+        },
+        {
+          "name": "token_in_vault",
+          "docs": [
+            "Source token account (owned by excess_token_purchaser PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_out_vault",
+          "docs": [
+            "Destination token account (owned by excess_token_purchaser PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_in_program"
+        },
+        {
+          "name": "token_out_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_amount_out",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        },
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "Route"
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "set_fee_wallet",
       "discriminator": [
         108,
@@ -8947,6 +9240,48 @@
                   }
                 ]
               }
+            },
+            {
+              "name": "excess_token_purchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excess_token_purchaser_currency_vault",
+              "writable": true
+            },
+            {
+              "name": "excess_token_purchaser_collateral_vault",
+              "writable": true
             },
             {
               "name": "currency_token_program"
@@ -10148,6 +10483,48 @@
                   }
                 ]
               }
+            },
+            {
+              "name": "excess_token_purchaser",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      120,
+                      99,
+                      101,
+                      115,
+                      115,
+                      95,
+                      116,
+                      111,
+                      107,
+                      101,
+                      110,
+                      95,
+                      112,
+                      117,
+                      114,
+                      99,
+                      104,
+                      97,
+                      115,
+                      101,
+                      114
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "excess_token_purchaser_currency_vault",
+              "writable": true
+            },
+            {
+              "name": "excess_token_purchaser_collateral_vault",
+              "writable": true
             },
             {
               "name": "currency_token_program"
@@ -11577,6 +11954,19 @@
       ]
     },
     {
+      "name": "ExcessTokenPurchaser",
+      "discriminator": [
+        33,
+        40,
+        217,
+        92,
+        131,
+        170,
+        113,
+        85
+      ]
+    },
+    {
       "name": "GlobalSettings",
       "discriminator": [
         109,
@@ -11732,6 +12122,32 @@
         169,
         136,
         52
+      ]
+    },
+    {
+      "name": "ExcessTokensPurchased",
+      "discriminator": [
+        18,
+        157,
+        137,
+        136,
+        57,
+        194,
+        162,
+        238
+      ]
+    },
+    {
+      "name": "ExcessTokensSold",
+      "discriminator": [
+        48,
+        107,
+        230,
+        142,
+        144,
+        144,
+        160,
+        235
       ]
     },
     {
@@ -12381,6 +12797,76 @@
           },
           {
             "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExcessTokenPurchaser",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the ExcessTokenPurchaser's PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "discount_bps",
+            "docs": [
+              "discount in basis points, default it 100 (1%)"
+            ],
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExcessTokensPurchased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "excess_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "excess_amount",
+            "type": "u64"
+          },
+          {
+            "name": "buyback_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyback_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExcessTokensSold",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "token_out",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_out",
             "type": "u64"
           }
         ]
