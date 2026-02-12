@@ -11678,6 +11678,63 @@
       ]
     },
     {
+      "name": "upgrade_pool_max_leverage",
+      "discriminator": [
+        33,
+        176,
+        124,
+        207,
+        207,
+        17,
+        200,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "super_admin_permission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "max_leverage",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "withdraw",
       "discriminator": [
         183,
@@ -12635,6 +12692,13 @@
               "The bump seed for this PDA"
             ],
             "type": "u8"
+          },
+          {
+            "name": "max_leverage",
+            "docs": [
+              "The maximum leverage for this pool"
+            ],
+            "type": "u64"
           }
         ]
       }
@@ -12817,7 +12881,7 @@
           {
             "name": "discount_bps",
             "docs": [
-              "discount in basis points, default it 100 (1%)"
+              "discount in basis points, default is 100 (1%)"
             ],
             "type": "u16"
           }

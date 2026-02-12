@@ -11684,6 +11684,63 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "upgradePoolMaxLeverage",
+      "discriminator": [
+        33,
+        176,
+        124,
+        207,
+        207,
+        17,
+        200,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "superAdminPermission",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  101,
+                  114,
+                  95,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "maxLeverage",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "withdraw",
       "discriminator": [
         183,
@@ -12641,6 +12698,13 @@ export type WasabiSolana = {
               "The bump seed for this PDA"
             ],
             "type": "u8"
+          },
+          {
+            "name": "maxLeverage",
+            "docs": [
+              "The maximum leverage for this pool"
+            ],
+            "type": "u64"
           }
         ]
       }
@@ -12823,7 +12887,7 @@ export type WasabiSolana = {
           {
             "name": "discountBps",
             "docs": [
-              "discount in basis points, default it 100 (1%)"
+              "discount in basis points, default is 100 (1%)"
             ],
             "type": "u16"
           }
