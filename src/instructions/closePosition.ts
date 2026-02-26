@@ -18,6 +18,7 @@ import { createCloseStopLossOrderInstruction } from './closeStopLossOrder';
 import { createCloseTakeProfitOrderInstruction } from './closeTakeProfitOrder';
 import { WasabiSolana } from '../idl/wasabi_solana';
 import {TokenMintCache} from "../cache/TokenMintCache";
+import {findOrdersCached} from "../cache/PositionOrderCache";
 
 export type CloseType = 'MARKET' | 'LIQUIDATION' | 'TAKE_PROFIT' | 'STOP_LOSS';
 
@@ -237,28 +238,24 @@ export async function handleOrdersCheck(
     const shouldCheckTakeProfit =
         closeType === 'MARKET' || closeType === 'LIQUIDATION' || closeType === 'STOP_LOSS';
 
-    const [stopLoss, takeProfit] = await Promise.all([
-        shouldCheckStopLoss
-            ? program.account.stopLossOrder
-                  .fetch(PDA.getStopLossOrder(positionAddress))
-                  .catch(() => null)
-            : null,
-        shouldCheckTakeProfit
-            ? program.account.takeProfitOrder
-                  .fetch(PDA.getTakeProfitOrder(positionAddress))
-                  .catch(() => null)
-            : null
-    ]);
+    let closeSL = false;
+    let closeTP = false;
+
+    if (shouldCheckStopLoss || shouldCheckTakeProfit) {
+        const orders = await findOrdersCached(program, positionAddress);
+        closeSL = shouldCheckStopLoss && orders.hasSL;
+        closeTP = shouldCheckTakeProfit && orders.hasTP;
+    }
 
     const ixes = [];
 
-    if (stopLoss) {
+    if (closeSL) {
         ixes.push(
             ...(await createCloseStopLossOrderInstruction(program, { position: positionAddress }))
         );
     }
 
-    if (takeProfit) {
+    if (closeTP) {
         ixes.push(
             ...(await createCloseTakeProfitOrderInstruction(program, { position: positionAddress }))
         );

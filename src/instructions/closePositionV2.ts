@@ -2,11 +2,17 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import { handleCloseTokenAccounts, PDA, validateArgs, validateMintCache } from '../utils';
+import {
+    handleCloseTokenAccounts,
+    PDA,
+    validateArgs,
+    validateMintCache
+} from '../utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 import { handleOrdersCheck } from './closePosition';
 import {TokenMintCache} from "../cache/TokenMintCache";
+import {findPoolCached} from "../cache/BasePoolCache";
 
 export type ClosePositionArgs = {
     amount: number | bigint;
@@ -66,9 +72,7 @@ const closePostionConfig: BaseMethodConfig<
         const mintCache = validateMintCache(config.mintCache);
         const { hops, data, remainingAccounts } = extractInstructionData(args.instructions);
 
-        const poolAccount = await config.program.account.basePool.fetchNullable(
-            config.accounts.pool
-        );
+        const poolAccount = await findPoolCached(config.program, config.accounts.pool);
 
         if (!poolAccount) {
             throw new Error('Pool does not exist');

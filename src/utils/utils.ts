@@ -24,6 +24,7 @@ import {
 import { Metaplex } from '@metaplex-foundation/js';
 import {TokenMintCache} from "../cache/TokenMintCache";
 import NodeCache from "node-cache";
+import {BasePoolAccountData} from "../cache/BasePoolCache";
 
 export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 
@@ -942,11 +943,7 @@ export async function handleCloseTokenAccounts(
         mintCache: TokenMintCache;
         authority?: PublicKey;
     },
-    poolAccount: {
-        isLongPool: boolean;
-        currency: PublicKey;
-        collateral: PublicKey;
-    }
+    poolAccount: BasePoolAccountData
 ): Promise<CloseTokenAccounts> {
     const mints = await config.mintCache.getAccounts([
         poolAccount.currency,
