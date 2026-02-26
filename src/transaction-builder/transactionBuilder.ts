@@ -152,7 +152,11 @@ export class TransactionBuilder {
                 ixesWithComputeBudget.slice(1)
             );
         } else {
-            const simResult = await this.connection.simulateTransaction(transaction);
+            const simResult =
+                await this.connection.simulateTransaction(transaction, {
+                    commitment: this.commitment,
+                    replaceRecentBlockhash: true,
+                });
             if (simResult.value.err) {
                 throw new SimulationError(
                     JSON.stringify(simResult.value.err),
