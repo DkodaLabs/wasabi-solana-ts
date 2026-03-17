@@ -13169,7 +13169,7 @@
             "type": "u64"
           },
           {
-            "name": "collateral_removed",
+            "name": "collateral_reduced",
             "type": "u64"
           },
           {
