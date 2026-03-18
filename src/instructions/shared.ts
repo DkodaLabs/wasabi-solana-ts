@@ -8,6 +8,8 @@ import { OpenShortPositionInstructionAccounts } from './openShortPositionV2';
 import { TokenInstructionAccounts } from './tokenAccounts';
 import { BN } from '@coral-xyz/anchor';
 import { AddCollateralAccounts, AddCollateralArgs } from './addCollateralToShortPosition';
+import { createAtaIfNeeded, validateProviderPubkey } from '../utils';
+import { RemoveCollateralAccounts, RemoveCollateralArgs } from './removeCollateralFromShortPosition';
 
 export type Hop = {
     programId: PublicKey;
@@ -477,5 +479,88 @@ export async function processAddCollateralInstruction(
                 ...(cleanupIx || [])
             ]);
         }
+    }
+}
+
+export async function processRemoveCollateralInstruction(
+    config: ConfigArgs<RemoveCollateralArgs, RemoveCollateralAccounts>,
+    options: {
+        isLong: boolean;
+    }
+): Promise<TransactionInstruction[]> {
+    const { isLong } = options;
+    const args = validateArgs(config.args);
+    const authority = config.accounts.authority || validateProviderPubkey(config.program.provider.publicKey);
+
+    const position = await config.program.account.position.fetchNullable(config.accounts.position);
+    if (!position) throw new Error('Position not found');
+
+    const pool = isLong
+        ? PDA.getLongPool(position.collateral, position.currency)
+        : PDA.getShortPool(position.collateral, position.currency);
+
+    const globalSettings = PDA.getGlobalSettings();
+    const permission = PDA.getAdmin(authority);
+
+    const mint = isLong ? position.currency : position.collateral;
+    const mintInfo = await config.mintCache.getAccount(mint);
+    const tokenProgram = mintInfo.program;
+
+    const ownerAta = getAssociatedTokenAddressSync(mint, config.accounts.owner, true, tokenProgram);
+    const setupIx: TransactionInstruction[] = [];
+    const createAtaIx = await createAtaIfNeeded(
+        config.program.provider.connection,
+        config.accounts.owner,
+        mint,
+        ownerAta,
+        tokenProgram,
+        config.accounts.owner
+    );
+    if (createAtaIx) setupIx.push(createAtaIx);
+
+    const createParams = () => [
+        new BN(args.amount.toString()),
+        new BN(args.currentSize.toString()),
+        new BN(args.expiration.toString())
+    ] as const;
+
+    if (isLong) {
+        const lpVault = PDA.getLpVault(position.currency);
+        const vault = getAssociatedTokenAddressSync(position.currency, lpVault, true, tokenProgram);
+
+        const remove = config.program.methods.removeCollateralFromLongPosition(...createParams());
+        remove.accountsStrict({
+            owner: config.accounts.owner,
+            ownerCurrencyAccount: ownerAta,
+            lpVault,
+            vault,
+            position: config.accounts.position,
+            pool,
+            currency: position.currency,
+            authority,
+            permission,
+            globalSettings,
+            tokenProgram
+        });
+
+        return remove.instruction().then((ix: TransactionInstruction) => [...setupIx, ix]);
+    } else {
+        const collateralVault = getAssociatedTokenAddressSync(position.collateral, pool, true, tokenProgram);
+
+        const remove = config.program.methods.removeCollateralFromShortPosition(...createParams());
+        remove.accountsStrict({
+            owner: config.accounts.owner,
+            ownerCollateralAccount: ownerAta,
+            position: config.accounts.position,
+            pool,
+            collateralVault,
+            collateral: position.collateral,
+            authority,
+            permission,
+            globalSettings,
+            tokenProgram
+        });
+
+        return remove.instruction().then((ix: TransactionInstruction) => [...setupIx, ix]);
     }
 }

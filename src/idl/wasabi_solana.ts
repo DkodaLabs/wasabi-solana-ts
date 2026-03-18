@@ -8355,6 +8355,316 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "removeCollateralFromLongPosition",
+      "discriminator": [
+        182,
+        132,
+        250,
+        211,
+        243,
+        54,
+        47,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCurrencyAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "currency"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lpVault",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "lpVault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "currency",
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "currentSize",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "removeCollateralFromShortPosition",
+      "discriminator": [
+        227,
+        212,
+        128,
+        200,
+        76,
+        152,
+        234,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ownerCollateralAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "collateral"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "collateralVault",
+          "writable": true,
+          "relations": [
+            "position",
+            "pool"
+          ]
+        },
+        {
+          "name": "collateral",
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "permission"
+          ]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "globalSettings",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "currentSize",
+          "type": "u64"
+        },
+        {
+          "name": "expiration",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "removePermission",
       "discriminator": [
         122,
@@ -12175,6 +12485,19 @@ export type WasabiSolana = {
       ]
     },
     {
+      "name": "collateralRemoved",
+      "discriminator": [
+        38,
+        57,
+        214,
+        30,
+        121,
+        178,
+        129,
+        4
+      ]
+    },
+    {
       "name": "deposit",
       "discriminator": [
         62,
@@ -12632,6 +12955,16 @@ export type WasabiSolana = {
       "code": 6041,
       "name": "maxInterestExceeded",
       "msg": "Interest payment exceeds maximum interest"
+    },
+    {
+      "code": 6042,
+      "name": "invalidMaxLeverage",
+      "msg": "Invalid max leverage"
+    },
+    {
+      "code": 6043,
+      "name": "currentPositionSizeMismatch",
+      "msg": "Position collateral amount changed"
     }
   ],
   "types": [
@@ -12819,6 +13152,34 @@ export type WasabiSolana = {
           },
           {
             "name": "feesAdded",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "collateralRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "downPaymentReduced",
+            "type": "u64"
+          },
+          {
+            "name": "collateralReduced",
+            "type": "u64"
+          },
+          {
+            "name": "principalAdded",
             "type": "u64"
           }
         ]
