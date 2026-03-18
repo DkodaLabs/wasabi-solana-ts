@@ -12485,7 +12485,7 @@ export type WasabiSolana = {
       ]
     },
     {
-      "name": "collateralReduced",
+      "name": "collateralRemoved",
       "discriminator": [
         38,
         57,
@@ -13158,7 +13158,7 @@ export type WasabiSolana = {
       }
     },
     {
-      "name": "collateralReduced",
+      "name": "collateralRemoved",
       "type": {
         "kind": "struct",
         "fields": [
