@@ -8,7 +8,11 @@ import {
     createStopLossInstruction,
     DonateAccounts,
     DonateArgs,
-    processAddCollateralToShortInstruction
+    processAddCollateralToShortInstruction,
+    processRemoveCollateralFromLongInstruction,
+    processRemoveCollateralFromShortInstruction,
+    RemoveCollateralAccounts,
+    RemoveCollateralArgs,
 } from './instructions';
 
 export * from './utils/index.js';
@@ -259,6 +263,30 @@ export class Wasabi {
             },
             true,
         );
+    }
+
+    async createRemoveCollateralFromLongPositionInstruction(
+        args: RemoveCollateralArgs,
+        accounts: RemoveCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processRemoveCollateralFromLongInstruction({
+            program: this.program,
+            args,
+            accounts,
+            mintCache: this.mintCache
+        });
+    }
+
+    async createRemoveCollateralFromShortPositionInstruction(
+        args: RemoveCollateralArgs,
+        accounts: RemoveCollateralAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await processRemoveCollateralFromShortInstruction({
+            program: this.program,
+            args,
+            accounts,
+            mintCache: this.mintCache
+        });
     }
 
     async createUpdateLongPositionInstruction(
