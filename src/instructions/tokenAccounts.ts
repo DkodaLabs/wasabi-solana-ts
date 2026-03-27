@@ -10,6 +10,9 @@ type TokenArgs = {
 
 type TokenAccounts = {
     assetMint: PublicKey;
+};
+
+type TokenAccountsWithOwner = TokenAccounts & {
     /** Optional override for the owner/payer. Defaults to program.provider.publicKey. */
     owner?: PublicKey;
 };
@@ -33,8 +36,8 @@ export type DepositArgs = TokenArgs;
 export type WithdrawArgs = TokenArgs;
 export type RedeemArgs = TokenArgs;
 export type MintArgs = TokenArgs;
-export type DepositAccounts = TokenAccounts;
-export type WithdrawAccounts = TokenAccounts;
+export type DepositAccounts = TokenAccountsWithOwner;
+export type WithdrawAccounts = TokenAccountsWithOwner;
 export type RedeemAccounts = TokenAccounts;
 export type MintAccounts = TokenAccounts;
 
