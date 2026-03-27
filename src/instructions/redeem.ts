@@ -11,7 +11,7 @@ import {
     TokenInstructionAccounts,
     getTokenInstructionAccounts
 } from './tokenAccounts';
-import { handleMint } from '../utils';
+import { handleMint, validateProviderPubkey } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 export const redeemConfig: BaseMethodConfig<RedeemArgs, RedeemAccounts, TokenInstructionAccounts> =
@@ -28,7 +28,7 @@ export const redeemConfig: BaseMethodConfig<RedeemArgs, RedeemAccounts, TokenIns
         );
 
         return {
-            accounts: await getTokenInstructionAccounts(config.program, mint, tokenProgram),
+            accounts: await getTokenInstructionAccounts(config.program, mint, tokenProgram, validateProviderPubkey(config.program.provider.publicKey)),
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
             cleanup: cleanupIx

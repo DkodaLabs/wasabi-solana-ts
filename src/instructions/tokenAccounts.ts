@@ -1,6 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
-import { PDA, validateProviderPubkey, WASABI_PROGRAM_ID } from '../utils';
+import { PDA, WASABI_PROGRAM_ID } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -10,6 +10,10 @@ type TokenArgs = {
 
 type TokenAccounts = {
     assetMint: PublicKey;
+};
+
+type TokenAccountsWithOwner = TokenAccounts & {
+    owner: PublicKey;
 };
 
 export type TokenInstructionAccounts = {
@@ -31,20 +35,21 @@ export type DepositArgs = TokenArgs;
 export type WithdrawArgs = TokenArgs;
 export type RedeemArgs = TokenArgs;
 export type MintArgs = TokenArgs;
-export type DepositAccounts = TokenAccounts;
-export type WithdrawAccounts = TokenAccounts;
+export type DepositAccounts = TokenAccountsWithOwner;
+export type WithdrawAccounts = TokenAccountsWithOwner;
 export type RedeemAccounts = TokenAccounts;
 export type MintAccounts = TokenAccounts;
 
 export async function getTokenInstructionAccounts(
     program: Program<WasabiSolana>,
     assetMint: PublicKey,
-    assetTokenProgram: PublicKey
+    assetTokenProgram: PublicKey,
+    owner: PublicKey
 ): Promise<TokenInstructionAccounts> {
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(assetMint, lpVault, true, assetTokenProgram);
     const sharesMint = PDA.getSharesMint(lpVault, assetMint);
-    const payer = validateProviderPubkey(program.provider.publicKey);
+    const payer = owner;
 
     return {
         owner: payer,
