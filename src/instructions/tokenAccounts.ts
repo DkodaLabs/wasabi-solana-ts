@@ -1,6 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
-import { PDA, validateProviderPubkey, WASABI_PROGRAM_ID } from '../utils';
+import { PDA, WASABI_PROGRAM_ID } from '../utils';
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
@@ -13,8 +13,7 @@ type TokenAccounts = {
 };
 
 type TokenAccountsWithOwner = TokenAccounts & {
-    /** Optional override for the owner/payer. Defaults to program.provider.publicKey. */
-    owner?: PublicKey;
+    owner: PublicKey;
 };
 
 export type TokenInstructionAccounts = {
@@ -45,12 +44,12 @@ export async function getTokenInstructionAccounts(
     program: Program<WasabiSolana>,
     assetMint: PublicKey,
     assetTokenProgram: PublicKey,
-    ownerOverride?: PublicKey
+    owner: PublicKey
 ): Promise<TokenInstructionAccounts> {
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(assetMint, lpVault, true, assetTokenProgram);
     const sharesMint = PDA.getSharesMint(lpVault, assetMint);
-    const payer = ownerOverride ?? validateProviderPubkey(program.provider.publicKey);
+    const payer = owner;
 
     return {
         owner: payer,

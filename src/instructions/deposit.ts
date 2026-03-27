@@ -12,20 +12,20 @@ import {
     TokenInstructionAccounts,
     getTokenInstructionAccounts
 } from './tokenAccounts';
-import { handleMint, validateArgs, validateProviderPubkey } from '../utils';
+import { handleMint, validateArgs } from '../utils';
 import { WasabiSolana } from '../idl/wasabi_solana';
 
 const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstructionAccounts> = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = config.accounts.owner ?? validateProviderPubkey(config.program.provider.publicKey);
+        const payer = config.accounts.owner;
 
         const setup: TransactionInstruction[] = [];
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
             {
-                owner: config.accounts.owner ?? config.program.provider.publicKey,
+                owner: config.accounts.owner,
                 wrapMode: 'wrap',
                 amount: args.amount,
                 mintCache: config.mintCache

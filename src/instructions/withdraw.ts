@@ -24,7 +24,7 @@ export const withdrawConfig: BaseMethodConfig<
             config.program.provider.connection,
             config.accounts.assetMint,
             {
-                owner: config.accounts.owner ?? config.program.provider.publicKey,
+                owner: config.accounts.owner,
                 wrapMode: 'unwrap',
                 mintCache: config.mintCache
             }
