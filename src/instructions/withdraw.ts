@@ -24,14 +24,14 @@ export const withdrawConfig: BaseMethodConfig<
             config.program.provider.connection,
             config.accounts.assetMint,
             {
-                owner: config.program.provider.publicKey,
+                owner: config.accounts.owner ?? config.program.provider.publicKey,
                 wrapMode: 'unwrap',
                 mintCache: config.mintCache
             }
         );
 
         return {
-            accounts: await getTokenInstructionAccounts(config.program, mint, tokenProgram),
+            accounts: await getTokenInstructionAccounts(config.program, mint, tokenProgram, config.accounts.owner),
             args: config.args ? new BN(config.args.amount.toString()) : undefined,
             setup: setupIx,
             cleanup: cleanupIx

@@ -18,14 +18,14 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstructionAccounts> = {
     process: async (config: ConfigArgs<DepositArgs, DepositAccounts>) => {
         const args = validateArgs(config.args);
-        const payer = validateProviderPubkey(config.program.provider.publicKey);
+        const payer = config.accounts.owner ?? validateProviderPubkey(config.program.provider.publicKey);
 
         const setup: TransactionInstruction[] = [];
         const { mint, tokenProgram, setupIx, cleanupIx } = await handleMint(
             config.program.provider.connection,
             config.accounts.assetMint,
             {
-                owner: config.program.provider.publicKey,
+                owner: config.accounts.owner ?? config.program.provider.publicKey,
                 wrapMode: 'wrap',
                 amount: args.amount,
                 mintCache: config.mintCache
@@ -36,7 +36,7 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
             setup.push(...setupIx);
         }
 
-        const accounts = await getTokenInstructionAccounts(config.program, mint, tokenProgram);
+        const accounts = await getTokenInstructionAccounts(config.program, mint, tokenProgram, config.accounts.owner);
 
         const ownerShares = await config.program.provider.connection.getAccountInfo(
             accounts.ownerSharesAccount

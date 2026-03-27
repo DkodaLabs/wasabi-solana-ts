@@ -10,6 +10,8 @@ type TokenArgs = {
 
 type TokenAccounts = {
     assetMint: PublicKey;
+    /** Optional override for the owner/payer. Defaults to program.provider.publicKey. */
+    owner?: PublicKey;
 };
 
 export type TokenInstructionAccounts = {
@@ -39,12 +41,13 @@ export type MintAccounts = TokenAccounts;
 export async function getTokenInstructionAccounts(
     program: Program<WasabiSolana>,
     assetMint: PublicKey,
-    assetTokenProgram: PublicKey
+    assetTokenProgram: PublicKey,
+    ownerOverride?: PublicKey
 ): Promise<TokenInstructionAccounts> {
     const lpVault = PDA.getLpVault(assetMint);
     const vault = getAssociatedTokenAddressSync(assetMint, lpVault, true, assetTokenProgram);
     const sharesMint = PDA.getSharesMint(lpVault, assetMint);
-    const payer = validateProviderPubkey(program.provider.publicKey);
+    const payer = ownerOverride ?? validateProviderPubkey(program.provider.publicKey);
 
     return {
         owner: payer,
