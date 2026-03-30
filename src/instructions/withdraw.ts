@@ -25,7 +25,7 @@ export const withdrawConfig: BaseMethodConfig<
             config.accounts.assetMint,
             {
                 owner: config.accounts.owner,
-                wrapMode: config.accounts.wrapMode,
+                wrapMode: config.args?.wrapMode,
                 mintCache: config.mintCache
             }
         );

@@ -6,6 +6,7 @@ import { WasabiSolana } from '../idl/wasabi_solana';
 
 type TokenArgs = {
     amount: number | bigint;
+    wrapMode?: 'wrap' | 'unwrap';
 };
 
 type TokenAccounts = {
@@ -14,7 +15,6 @@ type TokenAccounts = {
 
 type TokenAccountsWithOwner = TokenAccounts & {
     owner: PublicKey;
-    wrapMode?: 'wrap' | 'unwrap';
 };
 
 export type TokenInstructionAccounts = {
