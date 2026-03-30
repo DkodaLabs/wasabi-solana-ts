@@ -14,6 +14,7 @@ type TokenAccounts = {
 
 type TokenAccountsWithOwner = TokenAccounts & {
     owner: PublicKey;
+    wrapMode?: 'wrap' | 'unwrap';
 };
 
 export type TokenInstructionAccounts = {

@@ -26,7 +26,7 @@ const depositConfig: BaseMethodConfig<DepositArgs, DepositAccounts, TokenInstruc
             config.accounts.assetMint,
             {
                 owner: config.accounts.owner,
-                wrapMode: 'wrap',
+                wrapMode: config.accounts.wrapMode,
                 amount: args.amount,
                 mintCache: config.mintCache
             }
