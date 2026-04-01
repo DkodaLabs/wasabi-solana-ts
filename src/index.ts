@@ -3,7 +3,10 @@ import {
     AddCollateralArgs,
     ClosePositionAccounts,
     ClosePositionArgs,
+    ClosePositionIntoVaultAccounts,
+    ClosePositionIntoVaultArgs,
     createClosePositionInstruction,
+    createClosePositionIntoVaultInstruction,
     createLiquidatePositionInstruction,
     createStopLossInstruction,
     DonateAccounts,
@@ -177,6 +180,18 @@ export class Wasabi {
         accounts: ClosePositionAccounts
     ): Promise<TransactionInstruction[]> {
         return await createClosePositionInstruction(this.program, args, accounts, this.mintCache);
+    }
+
+    async createClosePositionIntoVaultInstruction(
+        args: ClosePositionIntoVaultArgs,
+        accounts: ClosePositionIntoVaultAccounts
+    ): Promise<TransactionInstruction[]> {
+        return await createClosePositionIntoVaultInstruction(
+            this.program,
+            args,
+            accounts,
+            this.mintCache
+        );
     }
 
     async createLiquidatePositionInstruction(

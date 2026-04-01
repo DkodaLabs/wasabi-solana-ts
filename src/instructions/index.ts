@@ -3,6 +3,7 @@ export * from './addCollateralToShortPosition.js';
 export * from './removeCollateralFromLongPosition.js';
 export * from './removeCollateralFromShortPosition.js';
 export * from './closeLongPosition.js';
+export * from './closePositionIntoVault.js';
 export * from './closePositionV2.js';
 export * from './openLongPositionV2.js';
 export * from './openShortPositionV2.js';
