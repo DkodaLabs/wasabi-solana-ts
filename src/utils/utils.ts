@@ -19,7 +19,9 @@ import {
     getAssociatedTokenAddressSync,
     createSyncNativeInstruction,
     createCloseAccountInstruction,
-    createAssociatedTokenAccountIdempotentInstruction
+    createAssociatedTokenAccountIdempotentInstruction,
+    createInitializeAccount3Instruction,
+    createTransferInstruction
 } from '@solana/spl-token';
 import { Metaplex } from '@metaplex-foundation/js';
 import {TokenMintCache} from "../cache/TokenMintCache";
@@ -614,6 +616,58 @@ export async function createUnwrapSolInstructionWithPayer(
     }
 
     return { setupIx, cleanupIx };
+}
+
+export async function createPartialUnwrapSolInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    amount: number | bigint,
+    recipient: PublicKey = owner,
+    useToken2022: boolean = false
+): Promise<{
+    setupIx: TransactionInstruction[];
+    cleanupIx: TransactionInstruction[];
+}> {
+    const [nativeMint, tokenProgram] = useToken2022
+        ? [NATIVE_MINT_2022, TOKEN_2022_PROGRAM_ID]
+        : [NATIVE_MINT, TOKEN_PROGRAM_ID];
+    const ownerWrappedSolAta = getAssociatedTokenAddressSync(
+        nativeMint,
+        owner,
+        false,
+        tokenProgram
+    );
+    const rentExemptLamports = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
+
+    // Use a seeded token account so the wallet owner is the only required signer.
+    const seed = `unwrap${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`.slice(0, 32);
+    const tempWrappedSolAccount = await PublicKey.createWithSeed(owner, seed, tokenProgram);
+
+    return {
+        setupIx: [
+            SystemProgram.createAccountWithSeed({
+                fromPubkey: owner,
+                basePubkey: owner,
+                seed,
+                newAccountPubkey: tempWrappedSolAccount,
+                lamports: rentExemptLamports,
+                space: AccountLayout.span,
+                programId: tokenProgram
+            }),
+            createInitializeAccount3Instruction(tempWrappedSolAccount, nativeMint, owner, tokenProgram)
+        ],
+        cleanupIx: [
+            createTransferInstruction(
+                ownerWrappedSolAta,
+                tempWrappedSolAccount,
+                owner,
+                amount,
+                [],
+                tokenProgram
+            ),
+            createCloseAccountInstruction(tempWrappedSolAccount, recipient, owner, [], tokenProgram)
+        ]
+    };
 }
 
 export function handleSOL(useToken2022: boolean = false): {
