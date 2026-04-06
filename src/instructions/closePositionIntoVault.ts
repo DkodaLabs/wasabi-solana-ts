@@ -2,13 +2,7 @@ import { BaseMethodConfig, ConfigArgs, handleMethodCall } from '../base';
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WasabiSolana } from '../idl';
 import { BN, Program } from '@coral-xyz/anchor';
-import {
-    handleCloseTokenAccounts,
-    PDA,
-    validateArgs,
-    validateMintCache,
-    WASABI_PROGRAM_ID
-} from '../utils';
+import { PDA, validateArgs, validateMintCache } from '../utils';
 import {
     TOKEN_2022_PROGRAM_ID,
     createAssociatedTokenAccountInstruction,
@@ -16,8 +10,6 @@ import {
 } from '@solana/spl-token';
 import { extractInstructionData } from './shared';
 import { handleOrdersCheck } from './closePosition';
-import { ClosePositionInternalInstructionAccounts } from './closePositionV2';
-import { TokenInstructionAccounts } from './tokenAccounts';
 import { TokenMintCache } from '../cache/TokenMintCache';
 import { findPoolCached } from '../cache/BasePoolCache';
 
@@ -36,12 +28,34 @@ export type ClosePositionIntoVaultAccounts = {
     position: PublicKey;
     pool: PublicKey;
     feeWallet: PublicKey;
-    liquidationWallet: PublicKey;
 };
 
 type ClosePositionIntoVaultInstructionAccounts = {
-    deposit: TokenInstructionAccounts;
-    closePosition: ClosePositionInternalInstructionAccounts;
+    owner: PublicKey;
+    position: PublicKey;
+    lpVault: PublicKey;
+    vault: PublicKey;
+    pool: PublicKey;
+    currencyVault: PublicKey;
+    collateralVault: PublicKey;
+    currency: PublicKey;
+    collateral: PublicKey;
+    authority: PublicKey;
+    permission: PublicKey;
+    feeWallet: PublicKey;
+    debtController: PublicKey;
+    globalSettings: PublicKey;
+    excessTokenPurchaser: PublicKey;
+    excessTokenPurchaserCurrencyVault: PublicKey;
+    excessTokenPurchaserCollateralVault: PublicKey;
+    payoutLpVault: PublicKey;
+    payoutVault: PublicKey;
+    ownerSharesAccount: PublicKey;
+    sharesMint: PublicKey;
+    currencyTokenProgram: PublicKey;
+    collateralTokenProgram: PublicKey;
+    sharesTokenProgram: PublicKey;
+    systemProgram: PublicKey;
 };
 
 const closePositionIntoVaultConfig: BaseMethodConfig<
@@ -62,25 +76,8 @@ const closePositionIntoVaultConfig: BaseMethodConfig<
             throw new Error('Pool does not exist');
         }
 
-        const [
-            {
-                ownerPayoutAta,
-                setupIx,
-                cleanupIx,
-                currencyTokenProgram,
-                collateralTokenProgram,
-                payoutMint
-            },
-            orderIxes
-        ] = await Promise.all([
-            handleCloseTokenAccounts(
-                {
-                    program: config.program,
-                    owner: config.accounts.owner,
-                    mintCache
-                },
-                poolAccount
-            ),
+        const [mints, orderIxes] = await Promise.all([
+            mintCache.getAccounts([poolAccount.currency, poolAccount.collateral]),
             handleOrdersCheck(
                 config.program,
                 config.accounts.position,
@@ -89,25 +86,46 @@ const closePositionIntoVaultConfig: BaseMethodConfig<
             )
         ]);
 
-        if (!ownerPayoutAta) {
-            throw new Error('Owner payout account does not exist');
-        }
+        const currencyTokenProgram = mints.get(poolAccount.currency.toString()).program;
+        const collateralTokenProgram = mints.get(poolAccount.collateral.toString()).program;
 
-        // The deposit vault is derived from the payout mint:
-        //   LONG  → payout is currency  → deposit into currency LP vault (same as close lpVault)
-        //   SHORT → payout is collateral → deposit into collateral LP vault
+        // LP vault borrowed by the position (LONG: currency vault, SHORT: base vault)
+        const lpVault = PDA.getLpVault(poolAccount.currency);
+        const vault = getAssociatedTokenAddressSync(
+            poolAccount.currency,
+            lpVault,
+            true,
+            currencyTokenProgram
+        );
+
+        // Payout destination LP vault and vault token account
+        // LONG: payout=currency -> same vault as lpVault
+        // SHORT: payout=collateral -> collateral LP vault
+        const payoutMint = poolAccount.isLongPool ? poolAccount.currency : poolAccount.collateral;
         const payoutTokenProgram = poolAccount.isLongPool
             ? currencyTokenProgram
             : collateralTokenProgram;
-
-        const depositLpVault = PDA.getLpVault(payoutMint);
-        const depositVault = getAssociatedTokenAddressSync(
+        const payoutLpVault = PDA.getLpVault(payoutMint);
+        const payoutVault = getAssociatedTokenAddressSync(
             payoutMint,
-            depositLpVault,
+            payoutLpVault,
             true,
             payoutTokenProgram
         );
-        const sharesMint = PDA.getSharesMint(depositLpVault, payoutMint);
+        const sharesMint = PDA.getSharesMint(payoutLpVault, payoutMint);
+        const excessTokenPurchaser = PDA.getExcessTokenPurchaser();
+        const excessTokenPurchaserCurrencyVault = getAssociatedTokenAddressSync(
+            poolAccount.currency,
+            excessTokenPurchaser,
+            true,
+            currencyTokenProgram
+        );
+        const excessTokenPurchaserCollateralVault = getAssociatedTokenAddressSync(
+            poolAccount.collateral,
+            excessTokenPurchaser,
+            true,
+            collateralTokenProgram
+        );
 
         const ownerSharesAccount = getAssociatedTokenAddressSync(
             sharesMint,
@@ -116,9 +134,8 @@ const closePositionIntoVaultConfig: BaseMethodConfig<
             TOKEN_2022_PROGRAM_ID
         );
 
-        const setup: TransactionInstruction[] = [...orderIxes, ...setupIx];
+        const setup: TransactionInstruction[] = [...orderIxes];
 
-        // Create the shares token account if it does not yet exist
         const sharesAccountInfo = await config.program.provider.connection.getAccountInfo(
             ownerSharesAccount
         );
@@ -134,68 +151,33 @@ const closePositionIntoVaultConfig: BaseMethodConfig<
             );
         }
 
-        const closeLpVault = PDA.getLpVault(poolAccount.currency);
-        const excessTokenPurchaser = PDA.getExcessTokenPurchaser();
-
-        const excessTokenPurchaserCurrencyVault = getAssociatedTokenAddressSync(
-            poolAccount.currency,
-            excessTokenPurchaser,
-            true,
-            currencyTokenProgram
-        );
-
-        const excessTokenPurchaserCollateralVault = getAssociatedTokenAddressSync(
-            poolAccount.collateral,
-            excessTokenPurchaser,
-            true,
-            collateralTokenProgram
-        );
-
         return {
             accounts: {
-                deposit: {
-                    owner: config.accounts.owner,
-                    ownerAssetAccount: ownerPayoutAta,
-                    ownerSharesAccount,
-                    lpVault: depositLpVault,
-                    vault: depositVault,
-                    assetMint: payoutMint,
-                    sharesMint,
-                    globalSettings: PDA.getGlobalSettings(),
-                    assetTokenProgram: payoutTokenProgram,
-                    sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
-                    eventAuthority: PDA.getEventAuthority(),
-                    program: WASABI_PROGRAM_ID
-                },
-                closePosition: {
-                    owner: config.accounts.owner,
-                    ownerPayoutAccount: ownerPayoutAta,
-                    lpVault: closeLpVault,
-                    vault: getAssociatedTokenAddressSync(
-                        poolAccount.currency,
-                        closeLpVault,
-                        true,
-                        currencyTokenProgram
-                    ),
-                    pool: config.accounts.pool,
-                    currencyVault: poolAccount.currencyVault,
-                    collateralVault: poolAccount.collateralVault,
-                    currency: poolAccount.currency,
-                    collateral: poolAccount.collateral,
-                    position: config.accounts.position,
-                    authority: config.accounts.authority,
-                    permission: PDA.getAdmin(config.accounts.authority),
-                    feeWallet: config.accounts.feeWallet,
-                    liquidationWallet: config.accounts.liquidationWallet,
-                    debtController: PDA.getDebtController(),
-                    globalSettings: PDA.getGlobalSettings(),
-                    excessTokenPurchaser,
-                    excessTokenPurchaserCurrencyVault,
-                    excessTokenPurchaserCollateralVault,
-                    currencyTokenProgram,
-                    collateralTokenProgram,
-                    systemProgram: SystemProgram.programId
-                }
+                owner: config.accounts.owner,
+                position: config.accounts.position,
+                lpVault,
+                vault,
+                pool: config.accounts.pool,
+                currencyVault: poolAccount.currencyVault,
+                collateralVault: poolAccount.collateralVault,
+                currency: poolAccount.currency,
+                collateral: poolAccount.collateral,
+                authority: config.accounts.authority,
+                permission: PDA.getAdmin(config.accounts.authority),
+                feeWallet: config.accounts.feeWallet,
+                debtController: PDA.getDebtController(),
+                globalSettings: PDA.getGlobalSettings(),
+                excessTokenPurchaser,
+                excessTokenPurchaserCurrencyVault,
+                excessTokenPurchaserCollateralVault,
+                payoutLpVault,
+                payoutVault,
+                ownerSharesAccount,
+                sharesMint,
+                currencyTokenProgram,
+                collateralTokenProgram,
+                sharesTokenProgram: TOKEN_2022_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
             },
             args: {
                 ...config.args,
@@ -203,7 +185,7 @@ const closePositionIntoVaultConfig: BaseMethodConfig<
                 data
             },
             setup,
-            cleanup: cleanupIx,
+            cleanup: [],
             remainingAccounts
         };
     },
